@@ -58,13 +58,26 @@ public:
 	float sTheta = 0;
 	int m = 1;
 	float gTrans = 0;
-	float gZoom = 0;
+	float gDolley = 0;
+	float gStrafe = 0;
 	float lightX = 0;
 	bool RPress= false;
+	bool Wflag = false;
+	bool Sflag = false;
+	bool Aflag = false;
+	bool Dflag = false;
 
 	//view angles, from mouse
 	float phi = 0;
 	float theta = 0;
+
+	//movement vectors
+	vec3 eye = vec3(0,0,0);
+	vec3 lookAtPoint = vec3(
+		cos(phi)*cos(theta),
+		sin(phi),
+		cos(phi)*cos((3.14159/2.0)-theta));
+	vec3 up = vec3(0,1,0);
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -72,11 +85,17 @@ public:
 		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
 		}
-		if (key == GLFW_KEY_A ) {
-			gTrans -= 0.2;
+		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+			Aflag = true;
 		}
-		if (key == GLFW_KEY_D ) {
-			gTrans += 0.2;
+		if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+			Aflag = false;
+		}
+		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+			Dflag = true;
+		}
+		if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+			Dflag = false;
 		}
 		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -87,11 +106,20 @@ public:
 		if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
 			RPress = !RPress;
 		}
-		if (key == GLFW_KEY_W) {
-			gZoom += 0.2;
+		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+			Wflag = true;
+		}
+		if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+			Wflag = false;
+		}
+		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+			Sflag = true;
+		}
+		if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+			Sflag = false;
 		}
 		if (key == GLFW_KEY_S) {
-			gZoom -= 0.2;
+			gDolley -= 0.2;
 		}
 		if (key == GLFW_KEY_Q ) {
 			lightX -= 0.3;
@@ -125,17 +153,27 @@ public:
 		phi = clamp(-posY/height * 3.14159, -3.14159 *.5, .5 * 3.14159);
 	}
 
-	mat4 getViewMatrix() {
+	mat4 getViewMatrix(vec3 *eye, vec3 *lookAtPoint, vec3 *up) {
 		int radius = 100;
-		vec3 eye = vec3(0,0,0);
-		vec3 lookAtPoint = vec3(
+		int step = .5;
+
+		vec3 u = normalize(*lookAtPoint - *eye);
+		vec3 v = cross(u, *up);
+
+		if (Wflag) {*eye += float(.1)*u; *lookAtPoint += float(.1)*u;}
+		if (Sflag) {*eye -= float(.1)*u; *lookAtPoint -= float(.1)*u;}
+		if (Aflag) {*eye -= float(.1)*v; *lookAtPoint -= float(.1)*v;}
+		if (Dflag) {*eye += float(.1)*v; *lookAtPoint += float(.1)*v;}
+		*eye += gStrafe*v;
+		gDolley=0;
+		gStrafe=0;
+		*lookAtPoint = vec3(
 			radius*cos(phi)*cos(theta),
 			radius*sin(phi),
 			radius*cos(phi)*cos((3.14159/2.0)-theta));
-		vec3 up = vec3(0,1,0);
+		*up = vec3(0,1,0);
 
-
-		return glm::lookAt(eye, lookAtPoint, up);
+		return glm::lookAt(*eye, *lookAtPoint, *up);
    }
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
@@ -296,19 +334,19 @@ public:
 
 		// View is global translation along negative z for now
 /* 		setViewAngles(window); */
-		vec3 cameraPos = vec3(0,0,-5+gZoom);
+/* 		vec3 cameraPos = vec3(0,0,-5+gZoom); */
 		View->pushMatrix();
-			View->loadIdentity();
+/* 			View->loadIdentity();
 			View->translate(cameraPos);
 			View->rotate(fmod(gTrans,3.14159*2), vec3(0,1,0));
 			if (RPress) {
 				View->rotate((sin(glfwGetTime()*3)), vec3(0,1,0)); // circle around
-			}
+			} */
 
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 /* 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())); */
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix()));
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
 
 		//set initial material and Light
 		setMaterial(4);
