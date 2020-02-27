@@ -120,6 +120,14 @@ glad/glad.h
 string
 -
 
+/home/bbdunning/Programming/471/lab06/src/WindowManager.cpp
+WindowManager.h
+/home/bbdunning/Programming/471/lab06/src/WindowManager.h
+GLSL.h
+/home/bbdunning/Programming/471/lab06/src/GLSL.h
+iostream
+-
+
 /home/bbdunning/Programming/471/lab06/src/WindowManager.h
 glad/glad.h
 -
