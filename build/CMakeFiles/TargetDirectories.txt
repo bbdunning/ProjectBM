@@ -1,3 +1,0 @@
-/home/bbdunning/Programming/471/lab06/build/CMakeFiles/rebuild_cache.dir
-/home/bbdunning/Programming/471/lab06/build/CMakeFiles/p3.dir
-/home/bbdunning/Programming/471/lab06/build/CMakeFiles/edit_cache.dir
