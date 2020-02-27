@@ -1,14 +1,12 @@
 #version 330 core 
 in vec3 fragNor;
 in vec3 lightDir;
-in vec3 viewDirection;
 
 uniform vec3 LightCol;
-
 uniform vec3 MatAmb;
 uniform mat4 V;
-/* uniform vec3 MatDif; */
 uniform vec3 MatSpec;
+uniform vec3 viewDirection;
 uniform float shine;
 
 out vec4 color;
@@ -23,7 +21,7 @@ void main()
 	vec3 normal = normalize(fragNor);
 
 	float cosAngIncidence = clamp(dot(normal, lightDir), 0, 1);
-	vec3 H = normalize(lightDir+viewDirection);
+	vec3 H = normalize(lightDir-viewDirection);
 	vec3 MatDif = vec3(1,1,1);
 
 	vec4 texColor0 = texture(Texture0, vTexCoord);

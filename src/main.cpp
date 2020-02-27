@@ -66,13 +66,15 @@ public:
 	bool Sflag = false;
 	bool Aflag = false;
 	bool Dflag = false;
+	bool Spaceflag = false;
+	bool Ctrlflag = false;
 
 	//view angles, from mouse
 	float phi = 0;
 	float theta = 0;
 
 	//movement vectors
-	vec3 eye = vec3(0,0,0);
+	vec3 eye = vec3(0,0,5);
 	vec3 lookAtPoint = vec3(
 		cos(phi)*cos(theta),
 		sin(phi),
@@ -118,8 +120,17 @@ public:
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
 			Sflag = false;
 		}
-		if (key == GLFW_KEY_S) {
-			gDolley -= 0.2;
+		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+			Spaceflag = true;
+		}
+		if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
+			Spaceflag = false;
+		}
+		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) {
+			Ctrlflag = true;
+		}
+		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) {
+			Ctrlflag = false;
 		}
 		if (key == GLFW_KEY_Q ) {
 			lightX -= 0.3;
@@ -154,7 +165,7 @@ public:
 	}
 
 	mat4 getViewMatrix(vec3 *eye, vec3 *lookAtPoint, vec3 *up) {
-		int radius = 100;
+		int radius = 50;
 		int step = .5;
 
 		vec3 u = normalize(*lookAtPoint - *eye);
@@ -164,6 +175,8 @@ public:
 		if (Sflag) {*eye -= float(.1)*u; *lookAtPoint -= float(.1)*u;}
 		if (Aflag) {*eye -= float(.1)*v; *lookAtPoint -= float(.1)*v;}
 		if (Dflag) {*eye += float(.1)*v; *lookAtPoint += float(.1)*v;}
+		if (Spaceflag) {*eye += float(.1)*(*up); *lookAtPoint += float(.1)*(*up);}
+		if (Ctrlflag) {*eye -= float(.1)*(*up); *lookAtPoint -= float(.1)*(*up);}
 		*eye += gStrafe*v;
 		gDolley=0;
 		gStrafe=0;
@@ -234,7 +247,7 @@ public:
 		// Initialize the GLSL program.
 		prog = make_shared<Program>();
 		prog->setVerbose(true);
-		prog->setShaderNames(resourceDirectory + "/simple_vert.glsl", resourceDirectory + "/blinn-phong.glsl");
+		prog->setShaderNames(resourceDirectory + "/shaders/simple_vert.glsl", resourceDirectory + "/shaders/blinn-phong.glsl");
 		prog->init();
 		prog->addUniform("P");
 		prog->addUniform("V");
@@ -243,7 +256,7 @@ public:
 		prog->addAttribute("vertNor");
 		prog->addAttribute("vertTex");
 
-		prog->addUniform("CameraPos");
+		prog->addUniform("viewDirection");
 		prog->addUniform("LightPos");
 		prog->addUniform("LightCol");
 		prog->addUniform("MatAmb");
@@ -256,18 +269,17 @@ public:
 
 	void initTex(const std::string& resourceDirectory){  
 		texture0 = make_shared<Texture>();  
-		texture0->setFilename(resourceDirectory + "/crate.jpg");  
+		texture0->setFilename(resourceDirectory + "/textures/crate.jpg");  
 		texture0->init();  texture0->setUnit(0);  
 		texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
 
 		texture1 = make_shared<Texture>();  
-		texture1->setFilename(resourceDirectory + "/world.jpg");  
+		texture1->setFilename(resourceDirectory + "/textures/world.jpg");  
 		texture1->init();  texture1->setUnit(1);  
 		texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
 
 		texture2 = make_shared<Texture>();  
-/* 		texture2->setFilename(resourceDirectory + "/melee/Charizard/charizard.png");   */
-		texture2->setFilename(resourceDirectory + "/broken_scale.jpg");  
+		texture2->setFilename(resourceDirectory + "/textures/broken_scale.jpg");  
 		texture2->init();  texture2->setUnit(2);  
 		texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
 	}
@@ -308,8 +320,7 @@ public:
 
 	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
-   }
-
+	}
 
 	void render() {
 		// Get current frame buffer size.
@@ -333,28 +344,22 @@ public:
 		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
 		// View is global translation along negative z for now
-/* 		setViewAngles(window); */
-/* 		vec3 cameraPos = vec3(0,0,-5+gZoom); */
 		View->pushMatrix();
-/* 			View->loadIdentity();
-			View->translate(cameraPos);
-			View->rotate(fmod(gTrans,3.14159*2), vec3(0,1,0));
-			if (RPress) {
-				View->rotate((sin(glfwGetTime()*3)), vec3(0,1,0)); // circle around
-			} */
 
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-/* 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix())); */
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
 
+		vec3 vd = lookAtPoint - eye;
+		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
+
 		//set initial material and Light
-		setMaterial(4);
 		setLight();
 
 		Model->pushMatrix();
  			Model->translate(vec3(-.2, -.9, 1));
 			Model->scale(vec3(1, 1, 1));
+			setMaterial(m);
 			setModel(prog, Model);
 			texture0->bind(prog->getUniform("Texture0"));
 			(*meshList)["bunny_no_normals"]->draw(prog);
@@ -375,7 +380,7 @@ public:
 			Model->rotate(.1, vec3(1,0,0));
 			Model->rotate(2*sin(.1*glfwGetTime()), vec3(0,0,1));
 			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(0);
+			setMaterial(1);
 			setModel(prog, Model);
 			(*meshList)["melee/fod/skyring1"]->draw(prog);
 		Model->popMatrix();
@@ -427,6 +432,7 @@ public:
 			Model->scale(vec3(0.08, 0.08, 0.08));
 			Model->rotate(3.14159, vec3(0,1,0));
 			setMaterial(0);
+			texture1->bind(prog->getUniform("Texture0"));
 			setModel(prog, Model);
 			(*meshList)["melee/Gamecube/gamecube"]->draw(prog);
 		Model->popMatrix();
@@ -434,8 +440,9 @@ public:
 		prog->unbind();
 /* 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-		glUniform3f(prog->getUniform("CameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		vec3 vd = lookAtPoint - eye;
+		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
 		setMaterial(4);
@@ -469,14 +476,14 @@ public:
 			(*meshList)["melee/Charizard/charizard"]->draw(prog);
 		Model->popMatrix();
 
-		prog->unbind(); */
+		prog->unbind();
 
 		//animation update example
 		sTheta = sin(glfwGetTime());
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
-		View->popMatrix();
+		View->popMatrix(); */
 	}
 };
 
