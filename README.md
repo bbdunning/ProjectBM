@@ -21,5 +21,6 @@ Program 4
 
 ## Status Report ##
 All features implemented
+Code is very messy, dont judge me. I'll refactor during the final project :)
 
 skybox downloaded from https://opengameart.org

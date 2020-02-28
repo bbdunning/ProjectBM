@@ -94,12 +94,12 @@ public:
 	//skybox
 	unsigned int skyboxTextureId = 0;
 	vector<std::string> faces {           
-		"../skybox/interstellar_rt.tga",           
-		"../skybox/interstellar_lf.tga",           
-		"../skybox/interstellar_up.tga",           
-		"../skybox/interstellar_dn.tga",           
-		"../skybox/interstellar_bk.tga",           
-		"../skybox/interstellar_ft.tga"};
+		"interstellar_rt.tga",           
+		"interstellar_lf.tga",           
+		"interstellar_up.tga",           
+		"interstellar_dn.tga",           
+		"interstellar_bk.tga",           
+		"interstellar_ft.tga"};
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -327,7 +327,7 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 
-		skyboxTextureId = createSky(resourceDirectory + "/cracks/", faces);
+		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
 	void initTex(const std::string& resourceDirectory){  
