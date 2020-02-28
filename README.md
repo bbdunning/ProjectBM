@@ -1,12 +1,25 @@
 
-Program 3
+Program 4
 =====
-Multi-shape and no normals included in default execution, multi-mesh is the human model from Captain_Falcon.obj and no normals is bunny from bunny_no_normals.obj.
 
-Point light exists in world space at (0,0,3)
-Q and E move the light left and right along the X axis.
+## CONTROLS ##
 
-A and D rotate the view.
-W and S move view in and out.
+### View: ###
+    * The view is controlled by movement of the mouse.
+    * Mouse cursor icon is disabled via glfw command (hopfully does not create any cross compatibility errors)
 
-Pressing m rotates the stage between the 4 materials.
+### Movement: ###
+    * W and S dolley the camera forward and backward
+    * A and D strafe the camera
+    * Space raised the camera
+    * LeftCtrl lowers the camera
+    * LeftShift increases movement speed
+
+### Misc: ###
+    * Q and E move the light left and right along the X axis.
+
+
+## Status Report ##
+All features implemented
+
+skybox downloaded from https://opengameart.org

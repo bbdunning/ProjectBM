@@ -5,6 +5,7 @@
  */
 
 #include <iostream>
+#include <cmath>
 #include <unordered_map>
 #include <glad/glad.h>
 
@@ -15,6 +16,7 @@
 #include "WindowManager.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "stb_image.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -26,6 +28,9 @@
 using namespace std;
 using namespace glm;
 
+#define PI 3.14159
+#define viewFactor .002
+
 class Application : public EventCallbacks
 {
 
@@ -35,6 +40,7 @@ public:
 
 	// Our shader program
 	std::shared_ptr<Program> prog;
+	std::shared_ptr<Program> cubeProg;
 
 	// Shape to be used (from  file) - modify to support multiple
 	shared_ptr<unordered_map<string, shared_ptr<Mesh>>> meshList =
@@ -52,34 +58,48 @@ public:
 	shared_ptr<Texture> texture0;
 	shared_ptr<Texture> texture1;
 	shared_ptr<Texture> texture2;
+	shared_ptr<Texture> texture3;
+	shared_ptr<Texture> texture4;
 
 
 	//animation data
+	float moveVelocity = .04;
 	float sTheta = 0;
 	int m = 1;
-	float gTrans = 0;
-	float gDolley = 0;
-	float gStrafe = 0;
-	float lightX = 0;
-	bool RPress= false;
+	float lightX = .4;
 	bool Wflag = false;
 	bool Sflag = false;
 	bool Aflag = false;
 	bool Dflag = false;
 	bool Spaceflag = false;
 	bool Ctrlflag = false;
+	bool Shiftflag = false;
 
 	//view angles, from mouse
 	float phi = 0;
-	float theta = 0;
+	float theta = PI;
+
+	float prevX = 0;
+	float prevY = 0;
 
 	//movement vectors
 	vec3 eye = vec3(0,0,5);
 	vec3 lookAtPoint = vec3(
 		cos(phi)*cos(theta),
 		sin(phi),
-		cos(phi)*cos((3.14159/2.0)-theta));
+		cos(phi)*cos((PI/2.0)-theta));
+	vec3 lookAtOffset = vec3(0,0,0);
 	vec3 up = vec3(0,1,0);
+
+	//skybox
+	unsigned int skyboxTextureId = 0;
+	vector<std::string> faces {           
+		"../skybox/interstellar_rt.tga",           
+		"../skybox/interstellar_lf.tga",           
+		"../skybox/interstellar_up.tga",           
+		"../skybox/interstellar_dn.tga",           
+		"../skybox/interstellar_bk.tga",           
+		"../skybox/interstellar_ft.tga"};
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -98,15 +118,6 @@ public:
 		}
 		if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
 			Dflag = false;
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
-			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
-			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		}
-		if (key == GLFW_KEY_R && action == GLFW_RELEASE) {
-			RPress = !RPress;
 		}
 		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 			Wflag = true;
@@ -132,6 +143,12 @@ public:
 		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) {
 			Ctrlflag = false;
 		}
+		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
+			Shiftflag = true;
+		}
+		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
+			Shiftflag = false;
+		}
 		if (key == GLFW_KEY_Q ) {
 			lightX -= 0.3;
 		}
@@ -140,6 +157,12 @@ public:
 		}
 		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
 			m = (m+1) % 5;
+		}
+		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+		}
+		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 		}
 	}
 
@@ -157,37 +180,66 @@ public:
 
 	void setViewAngles(GLFWwindow *window) {
 		double posX, posY;
-		int width, height;
-		glfwGetWindowSize(window, &width, &height);
 		glfwGetCursorPos(window, &posX, &posY);
-		theta = (posX/width * 3.14159);
-		phi = clamp(-posY/height * 3.14159, -3.14159 *.5, .5 * 3.14159);
+
+		theta += viewFactor *(posX - prevX);
+		phi -= (viewFactor * (posY - prevY));
+		phi = fmax(phi, -PI/2 + 0.2);
+		phi = fmin(phi, PI/2 - 0.2);
+
+		prevX = posX;
+		prevY = posY;
 	}
 
 	mat4 getViewMatrix(vec3 *eye, vec3 *lookAtPoint, vec3 *up) {
 		int radius = 50;
 		int step = .5;
 
-		vec3 u = normalize(*lookAtPoint - *eye);
-		vec3 v = cross(u, *up);
 
-		if (Wflag) {*eye += float(.1)*u; *lookAtPoint += float(.1)*u;}
-		if (Sflag) {*eye -= float(.1)*u; *lookAtPoint -= float(.1)*u;}
-		if (Aflag) {*eye -= float(.1)*v; *lookAtPoint -= float(.1)*v;}
-		if (Dflag) {*eye += float(.1)*v; *lookAtPoint += float(.1)*v;}
-		if (Spaceflag) {*eye += float(.1)*(*up); *lookAtPoint += float(.1)*(*up);}
-		if (Ctrlflag) {*eye -= float(.1)*(*up); *lookAtPoint -= float(.1)*(*up);}
-		*eye += gStrafe*v;
-		gDolley=0;
-		gStrafe=0;
 		*lookAtPoint = vec3(
 			radius*cos(phi)*cos(theta),
 			radius*sin(phi),
-			radius*cos(phi)*cos((3.14159/2.0)-theta));
-		*up = vec3(0,1,0);
+			radius*cos(phi)*cos((PI/2.0)-theta));
 
-		return glm::lookAt(*eye, *lookAtPoint, *up);
+		vec3 u = normalize((*lookAtPoint+lookAtOffset) - *eye);
+		vec3 v = cross(u, *up);
+
+		//move Eye + LookAtOffset
+		if (Wflag) {*eye += float(moveVelocity)*u; lookAtOffset += float(moveVelocity)*u;}
+		if (Sflag) {*eye -= float(moveVelocity)*u; lookAtOffset -= float(moveVelocity)*u;}
+		if (Aflag) {*eye -= float(moveVelocity)*v; lookAtOffset -= float(moveVelocity)*v;}
+		if (Dflag) {*eye += float(moveVelocity)*v; lookAtOffset += float(moveVelocity)*v;}
+		if (Spaceflag) {*eye += .5f*float(moveVelocity)*(*up); lookAtOffset += .5f * float(moveVelocity)*(*up);}
+		if (Ctrlflag) {*eye -= .5f*float(moveVelocity)*(*up); lookAtOffset -= .5f * float(moveVelocity)*(*up);}
+		if (Shiftflag) {moveVelocity = .09;}
+		if (!Shiftflag) {moveVelocity = .04;}
+
+		return glm::lookAt(*eye, *lookAtPoint + lookAtOffset, *up);
    }
+	unsigned int createSky(string dir, vector<string> faces) {   
+		unsigned int textureID;   
+		glGenTextures(1, &textureID);   
+		glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);   
+		int width, height, nrChannels;   
+		stbi_set_flip_vertically_on_load(false);   
+		for(GLuint i = 0; i < faces.size(); i++) {     
+			unsigned char *data =   
+			stbi_load((dir+faces[i]).c_str(), &width, &height, &nrChannels, 0);  
+			if (data) {          
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,               
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  
+			} else {    
+				cout << "failed to load: " << (dir+faces[i]).c_str() << endl;  
+			}   
+		}   
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);   
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);   
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);   
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);   
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);     
+		cout << " creating cube map any errors : " << glGetError() << endl;   
+		return textureID; 
+	}
 
 	void resizeCallback(GLFWwindow *window, int width, int height)
 	{
@@ -208,29 +260,29 @@ public:
 				glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.4);       
 				glUniform1f(prog->getUniform("shine"), 4.0);
 			break;    
-			case 2: //
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.3294, 0.2235, 0.02745);        
+			case 2: //pikachu
+			 	glUniform3f(prog->getUniform("MatAmb"), 0.1294, 0.0235, 0.02745);        
 				glUniform3f(prog->getUniform("MatDif"), 0.7804, 0.5686, 0.11373);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.9922, 0.941176, 0.80784);       
-				glUniform1f(prog->getUniform("shine"), 27.9);
+				glUniform3f(prog->getUniform("MatSpec"), 0.3922, 0.341176, 0.30784);       
+				glUniform1f(prog->getUniform("shine"), 20);
 			break;  
-			case 3:
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.1745, 0.01175, 0.01175);        
+			case 3: //stage
+			 	glUniform3f(prog->getUniform("MatAmb"), 0.00745, 0.1175, 0.3175);        
 				glUniform3f(prog->getUniform("MatDif"), 0.61424, 0.04136, 0.04136);       
 				glUniform3f(prog->getUniform("MatSpec"), 0.727811, 0.626959, 0.626959);       
-				glUniform1f(prog->getUniform("shine"), 76.8);
+				glUniform1f(prog->getUniform("shine"), 100);
 			break;
 			case 4:
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.05, 0.05, 0.05);        
+			 	glUniform3f(prog->getUniform("MatAmb"), 0.1, 0.1, 0.1);        
 				glUniform3f(prog->getUniform("MatDif"), 0.5, 0.5, 0.5);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.7, 0.7, 0.7);       
-				glUniform1f(prog->getUniform("shine"), 10);
+				glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
+				glUniform1f(prog->getUniform("shine"), 100);
 			break;
 		}
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), 0+lightX, 0, 3);
+		glUniform3f(prog->getUniform("LightPos"), 0+lightX, 1, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -265,6 +317,17 @@ public:
 		prog->addUniform("shine");
 		prog->addUniform("Texture0");
 
+		cubeProg = make_shared<Program>();
+		cubeProg->setVerbose(true);
+		cubeProg->setShaderNames(resourceDirectory + "/shaders/cube_vert.glsl", resourceDirectory + "/shaders/cube_frag.glsl");
+		cubeProg->init();
+		cubeProg->addUniform("P");
+		cubeProg->addUniform("V");
+		cubeProg->addUniform("M");
+		cubeProg->addAttribute("vertPos");
+		cubeProg->addAttribute("vertNor");
+
+		skyboxTextureId = createSky(resourceDirectory + "/cracks/", faces);
 	}
 
 	void initTex(const std::string& resourceDirectory){  
@@ -279,9 +342,19 @@ public:
 		texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
 
 		texture2 = make_shared<Texture>();  
-		texture2->setFilename(resourceDirectory + "/textures/broken_scale.jpg");  
+		texture2->setFilename(resourceDirectory + "/textures/streaks.jpg");  
 		texture2->init();  texture2->setUnit(2);  
 		texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
+
+		texture3 = make_shared<Texture>();  
+		texture3->setFilename(resourceDirectory + "/textures/glass.jpg");  
+		texture3->init();  texture2->setUnit(2);  
+		texture3->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
+
+		texture4 = make_shared<Texture>();  
+		texture4->setFilename(resourceDirectory + "/textures/yellow.jpg");  
+		texture4->init();  texture2->setUnit(2);  
+		texture4->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
 	}
 
 	void initGeom(const std::string& resourceDirectory)
@@ -292,9 +365,10 @@ public:
  		vector<tinyobj::shape_t> TOshapes;
  		vector<tinyobj::material_t> objMaterials;
  		string errStr;
-		vector<string> meshes = {"melee/fod/FoD", "melee/Captain_Falcon", "melee/Fox", 
+		vector<string> meshes = {"melee/fod/FoD2.0", "melee/Captain_Falcon", "melee/Fox", 
 			"melee/pikachu", "melee/Charizard/charizard", "melee/Gamecube/gamecube", "melee/fod/beam", "melee/fod/platform3",
-			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals", "melee/Totodile/totodile", "sphere"};
+			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals", "melee/Totodile/totodile", "sphere",
+			"cube"};
 
 		//for every mesh in the scene
 		for (int k = 0; k < meshes.size(); k++) {
@@ -345,6 +419,32 @@ public:
 
 		// View is global translation along negative z for now
 		View->pushMatrix();
+		Model->pushMatrix();
+		//to draw the sky box bind the right shader 
+		cubeProg->bind(); 
+		//set the projection matrix - can use the same one 
+		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		//set the depth function to always draw the box! 
+/* 		glDepthFunc(GL_LEQUAL); */
+		glDisable(GL_DEPTH_TEST);
+		//set up view matrix to include your view transforms  
+		//(your code likely will be different depending 
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		//set and send model transforms - likely want a bigger cube 
+		Model->translate(eye);
+		Model->scale(vec3(75,75,75));
+		Model->rotate(PI/2, vec3(0,1,0));
+		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
+		//bind the cube map texture 
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
+		(*meshList)["cube"]->draw(cubeProg); 
+		//set the depth test back to normal! 
+		glEnable(GL_DEPTH_TEST);
+/* 		glDepthFunc(GL_LESS);  */
+		Model->popMatrix();
+		cubeProg->unbind();
+
+
 
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
@@ -357,84 +457,93 @@ public:
 		setLight();
 
 		Model->pushMatrix();
- 			Model->translate(vec3(-.2, -.9, 1));
-			Model->scale(vec3(1, 1, 1));
-			setMaterial(m);
-			setModel(prog, Model);
-			texture0->bind(prog->getUniform("Texture0"));
-			(*meshList)["bunny_no_normals"]->draw(prog);
-		Model->popMatrix();
+		Model->scale(vec3(2,2,2));
 
-		//Main Stage
-		Model->pushMatrix();
-			Model->translate(vec3(0, 0, 0));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(m);
-			setModel(prog, Model);
-			(*meshList)["melee/fod/FoD"]->draw(prog);
-		Model->popMatrix();
-
-		//Skyring 1
-		Model->pushMatrix();
-			Model->translate(vec3(-2, 2, 0));
-			Model->rotate(.1, vec3(1,0,0));
-			Model->rotate(2*sin(.1*glfwGetTime()), vec3(0,0,1));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(1);
-			setModel(prog, Model);
-			(*meshList)["melee/fod/skyring1"]->draw(prog);
-		Model->popMatrix();
-		//Skyring2
-		Model->pushMatrix();
-			Model->translate(vec3(-2.4, 2.1, -.6));
-			Model->rotate(-2*sin(.1*glfwGetTime()), vec3(0,0,1));
-			Model->rotate(.3, vec3(1,0,0));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setModel(prog, Model);
-			(*meshList)["melee/fod/skyring2"]->draw(prog);
-		Model->popMatrix();
-
-
-		//draw Captain Falcon
-		Model->pushMatrix();
-			Model->translate(vec3(0, -.58, 1));
-			Model->scale(vec3(0.03, 0.03, 0.03));
-			setMaterial(3);
-			setModel(prog, Model);
-			(*meshList)["melee/Captain_Falcon"]->draw(prog);
-		Model->popMatrix();
-
-		//draw Platform
-		Model->pushMatrix();
-			Model->translate(vec3(0, -.1-sTheta*.3, 0));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(1);
-			setModel(prog, Model);
-			(*meshList)["melee/fod/platform3"]->draw(prog);
-
-
-			//draw Pikachu
+			//draw bunny
 			Model->pushMatrix();
-				Model->translate(vec3(4.68, -2.2, -.4));
-				Model->scale(vec3(0.01, 0.01, 0.01));
-				Model->rotate(3.14159/2, vec3(0,1,0));
-				Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
-				Model->translate(vec3(-6, -4, 0));
-				setMaterial(2);
+				Model->translate(vec3(-.2, -.9, 1));
+				Model->scale(vec3(1, 1, 1));
+				setMaterial(m);
 				setModel(prog, Model);
-				(*meshList)["melee/pikachu"]->draw(prog);
+				texture3->bind(prog->getUniform("Texture0"));
+				(*meshList)["bunny_no_normals"]->draw(prog);
 			Model->popMatrix();
-		Model->popMatrix();
 
-		//draw GameCube
-		Model->pushMatrix();
-			Model->translate(vec3(0, .3, 5));
-			Model->scale(vec3(0.08, 0.08, 0.08));
-			Model->rotate(3.14159, vec3(0,1,0));
-			setMaterial(0);
-			texture1->bind(prog->getUniform("Texture0"));
-			setModel(prog, Model);
-			(*meshList)["melee/Gamecube/gamecube"]->draw(prog);
+			//Main Stage
+			Model->pushMatrix();
+				Model->translate(vec3(0, 0, 0));
+				Model->scale(vec3(0.2, 0.2, 0.2));
+				setMaterial(3);
+				texture3->bind(prog->getUniform("Texture0"));
+				setModel(prog, Model);
+				(*meshList)["melee/fod/FoD2.0"]->draw(prog);
+			Model->popMatrix();
+
+			//Skyring 1
+			Model->pushMatrix();
+				Model->translate(vec3(-2.4, 2, -2));
+				Model->rotate(.1, vec3(1,0,0));
+				Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
+				Model->scale(vec3(0.2, 0.2, 0.2));
+				setMaterial(1);
+				texture2->bind(prog->getUniform("Texture0"));
+				setModel(prog, Model);
+				(*meshList)["melee/fod/skyring1"]->draw(prog);
+			Model->popMatrix();
+			//Skyring2
+			Model->pushMatrix();
+				Model->translate(vec3(-2.8, 2.1, -.26));
+				Model->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
+				Model->rotate(.3, vec3(1,0,0));
+				Model->scale(vec3(0.2, 0.2, 0.2));
+				setModel(prog, Model);
+				(*meshList)["melee/fod/skyring2"]->draw(prog);
+			Model->popMatrix();
+
+
+			//draw Captain Falcon
+			Model->pushMatrix();
+				Model->translate(vec3(0, -.67, 1));
+				Model->scale(vec3(0.02, 0.02, 0.02));
+				setMaterial(3);
+				texture0->bind(prog->getUniform("Texture0"));
+				setModel(prog, Model);
+				(*meshList)["melee/Captain_Falcon"]->draw(prog);
+			Model->popMatrix();
+
+			//draw Platform
+			Model->pushMatrix();
+				Model->translate(vec3(0, -.1-sTheta*.3, 0));
+				Model->scale(vec3(0.2, 0.2, 0.2));
+				setMaterial(3);
+				texture3->bind(prog->getUniform("Texture0"));
+				setModel(prog, Model);
+				(*meshList)["melee/fod/platform3"]->draw(prog);
+
+				//draw Pikachu
+				Model->pushMatrix();
+					Model->translate(vec3(4.68, -2.2, -.4));
+					Model->scale(vec3(0.007, 0.007, 0.007));
+					Model->rotate(PI/2, vec3(0,1,0));
+					Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
+					Model->translate(vec3(-6, -4, 0));
+					texture4->bind(prog->getUniform("Texture0"));
+					setMaterial(2);
+					setModel(prog, Model);
+					(*meshList)["melee/pikachu"]->draw(prog);
+				Model->popMatrix();
+			Model->popMatrix();
+
+			//draw GameCube
+			Model->pushMatrix();
+				Model->translate(vec3(0, .3, 5));
+				Model->scale(vec3(0.08, 0.08, 0.08));
+				Model->rotate(PI, vec3(0,1,0));
+				setMaterial(0);
+				texture1->bind(prog->getUniform("Texture0"));
+				setModel(prog, Model);
+				(*meshList)["melee/Gamecube/gamecube"]->draw(prog);
+			Model->popMatrix();
 		Model->popMatrix();
 
 		prog->unbind();
@@ -476,14 +585,14 @@ public:
 			(*meshList)["melee/Charizard/charizard"]->draw(prog);
 		Model->popMatrix();
 
-		prog->unbind();
+		prog->unbind(); */
 
 		//animation update example
 		sTheta = sin(glfwGetTime());
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
-		View->popMatrix(); */
+		View->popMatrix();
 	}
 };
 
