@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.4)
 include("${CMAKE_SOURCE_DIR}/FindGfxLibs.cmake")
 
 # Name of the project
-project(p4)
+project(Super_Trash_Bros)
 
 # Enforce use of C++14
 set(CMAKE_CXX_STANDARD_REQUIRED 14)
@@ -18,6 +18,14 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 
 include_directories("ext")
 include_directories("ext/glad/include")
+
+
+add_library(assimp_lib SHARED IMPORTED)
+set_target_properties(assimp_lib PROPERTIES
+  IMPORTED_LOCATION "/home/bbdunning/Programming/471/assimp/build/code/libassimp.so"
+  INTERFACE_INCLUDE_DIRECTORIES "/home/bbdunning/Programming/471/assimp/build/include"
+)
+
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
@@ -49,3 +57,6 @@ else()
   target_link_libraries(${CMAKE_PROJECT_NAME} opengl32.lib)
 
 endif()
+
+
+target_link_libraries(${CMAKE_PROJECT_NAME} assimp_lib)

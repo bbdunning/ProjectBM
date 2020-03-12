@@ -1,6 +1,7 @@
 #include "Shape.h"
 #include <iostream>
 #include <cassert>
+#include <assimp/types.h>
 
 #include "GLSL.h"
 #include "Program.h"
@@ -15,6 +16,48 @@ void Shape::createShape(tinyobj::shape_t & shape)
 	norBuf = shape.mesh.normals;
 	texBuf = shape.mesh.texcoords;
 	eleBuf = shape.mesh.indices;
+}
+
+void Shape::createShapeFromAssimp(aiMesh* inMesh)
+{
+	vector<float> vertVec(inMesh->mNumVertices);
+	memcpy(inMesh->mVertices, &vertVec, inMesh->mNumVertices);
+
+	vector<unsigned int> triVec(inMesh->mNumFaces*3);
+
+	//fill elebuf with triangles
+	for (int i = 0; i < inMesh->mNumFaces; i++) {
+		//maybe replace 3 with mNumIndices
+		triVec[(3*i)+0] = inMesh->mFaces[i].mIndices[0];
+		triVec[(3*i)+1] = inMesh->mFaces[i].mIndices[1];
+		triVec[(3*i)+2] = inMesh->mFaces[i].mIndices[2];
+/* 		cout << "i: " << i << endl; */
+	}
+	cout << "numFaces*3: " << inMesh->mNumFaces*3 << endl;
+	cout << "numVertices: " << inMesh->mNumVertices << endl;
+
+	//normals
+	vector<float> norVec(inMesh->mNumVertices);
+	for (int i = 0; i < inMesh->mNumVertices/3; i++) {
+		//maybe replace 3 with mNumIndices
+		norVec[(3*i)+0] = inMesh->mNormals[i][0]; 
+		norVec[(3*i)+1] = inMesh->mNormals[i][1];
+		norVec[(3*i)+2] = inMesh->mNormals[i][2];
+/* 		cout << "i: " << i << endl; */
+	}
+
+	for (int i=0; i<norVec.size(); i++) {
+		cout << i << " " << norVec[i] << endl;
+	}
+
+/* 	(inMesh->mVertices); */
+	posBuf = vertVec;
+	eleBuf = triVec;
+ 	norBuf = norVec;
+/* 	eleBuf = vector<unsigned int>(vertVec.size()); */
+/* 	norBuf = shape.mesh.normals;
+	texBuf = shape.mesh.texcoords;
+	eleBuf = shape.mesh.indices; */
 }
 
 void Shape::measure()
@@ -60,7 +103,7 @@ void Shape::init()
 	// Send the normal array to the GPU
 	if (norBuf.empty())
 	{
-		norBuf = vector<float>(posBuf.size(), 0);
+/* 		norBuf = vector<float>(posBuf.size(), 0);
 		for (int i=0; i<eleBuf.size(); i+=3) {
 			glm::vec3 u = glm::vec3(
 				posBuf[eleBuf[i+1]*3 ] - posBuf[eleBuf[i]*3 ],
@@ -92,7 +135,7 @@ void Shape::init()
 		}
 		CHECKED_GL_CALL(glGenBuffers(1, &norBufID));
 		CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, norBufID));
-		CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, norBuf.size()*sizeof(float), &norBuf[0], GL_STATIC_DRAW));
+		CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, norBuf.size()*sizeof(float), &norBuf[0], GL_STATIC_DRAW)); */
 	}
 	else
 	{
