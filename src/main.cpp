@@ -377,7 +377,7 @@ public:
 			"melee/pikachu", "melee/Gamecube/gamecube", "melee/fod/beam", "melee/fod/platform3",
 			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals",  "sphere",
 			"cube"}; */
-		vector<string> meshes = {"cube"};
+		vector<string> meshes = {};
 
 		vector<string> textures;
 
@@ -406,39 +406,30 @@ public:
 
 
 		//load assimp
-/* 		addObject */
-
-		shared_ptr<Shape> newShape = make_shared<Shape>();
-        shared_ptr<GameObject> mesh = make_shared<GameObject>();
-
-		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(
-			resourceDirectory + "/" + "totodile.obj", 
-/* 			resourceDirectory + "/" + "Feraligatr/Feraligatr.FBX",  */
-/*  			resourceDirectory + "/frog/" + "Tree_frog.fbx", */
-			aiProcess_Triangulate | aiProcess_FlipUVs);
-		cout << "toto has: " << scene->mNumMeshes << " meshes" << endl;
-		cout << "toto has: " << scene->mNumMaterials << " materials" << endl;
-		cout << "toto has: " << scene->mNumTextures << " textures" << endl;
-		for (int i = 0; i < scene->mNumMeshes; i++) {
-			aiString* texStr = new aiString();
-			scene->mMaterials[(scene->mMeshes[i]->mMaterialIndex)]->GetTexture(aiTextureType::aiTextureType_DIFFUSE, 0, texStr);
-			cout << texStr->C_Str() << endl;
-
-			cout << scene->mMeshes[i]->mVertices[0][2] << endl;
-		}
-		newShape->createShapeFromAssimp(scene->mMeshes[0]);
-		newShape->measure();
-		newShape->init();
-		mesh->shapeList.push_back(newShape);
-		(*objectList)["totodile"] = mesh;
-
-/* 		(*objectList)["NAME"] = createGameObject(string meshPath) */
-
+		createGameObject(resourceDirectory + "/cube.obj", "cube");
+		createGameObject(resourceDirectory + "/totodile.obj", "totodile");
 	}
 
-	shared_ptr<GameObject> createGameObject() {
-		return nullptr;
+	void createGameObject(string meshPath, string objName) {
+		Assimp::Importer importer;
+		shared_ptr<Shape> newShape;
+        shared_ptr<GameObject> mesh = make_shared<GameObject>();
+
+		const aiScene* scene = importer.ReadFile(
+			meshPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+		cout << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
+		cout << objName + " has: " << scene->mNumMaterials << " materials" << endl;
+		cout << objName + " has: " << scene->mNumTextures << " textures" << endl;
+
+		for (int i=0; i< scene->mNumMeshes; i++) {
+			newShape = make_shared<Shape>();
+			newShape->createShapeFromAssimp(scene->mMeshes[i]);
+			newShape->measure();
+			newShape->init();
+			mesh->shapeList.push_back(newShape);
+		}
+		(*objectList)[objName] = mesh;
 	}
 
 
@@ -515,6 +506,15 @@ public:
 				setModel(prog, Model);
 				texture3->bind(prog->getUniform("Texture0"));
 				(*objectList)["cube"]->draw(prog);
+			Model->popMatrix();
+
+			Model->pushMatrix();
+				Model->translate(vec3(-.2, -.9, 1));
+				Model->scale(vec3(.1, .1, .1));
+				setMaterial(m);
+				setModel(prog, Model);
+				texture1->bind(prog->getUniform("Texture0"));
+				(*objectList)["totodile"]->draw(prog);
 			Model->popMatrix();
 
 			//Main Stage

@@ -16,31 +16,17 @@ void Shape::createShape(tinyobj::shape_t & shape)
 	norBuf = shape.mesh.normals;
 	texBuf = shape.mesh.texcoords;
 	eleBuf = shape.mesh.indices;
-
-/* 	cout << "tiny verts: " << eleBuf.size() << endl;
-	for (int i=0; i< eleBuf.size(); i++) {
-		cout << eleBuf[i] << " ";
-		if ((i-2)%3==0)cout << "| ";
-	} */
-	cout << "posBuf size: " << posBuf.size()<< endl;
-	for (int i=0; i< posBuf.size(); i++) {
-		cout << posBuf[i] << " ";
-		if ((i-2)%3==0)cout << endl;
-	}
-	cout << endl;
 }
 
 void Shape::createShapeFromAssimp(aiMesh* inMesh)
 {
 
-	cout << "assimp verts: "<< inMesh->mNumVertices << endl;
+	//fil posBuf
 	for (int i = 0; i < inMesh->mNumVertices; i++) {
 		for (int j=0; j<3; j++) {
 			posBuf.push_back(inMesh->mVertices[i][j]);
 		}
-		cout << endl;
 	}
-	cout << endl << endl;
 
 	//fill elebuf with triangles
 	for (int i = 0; i < inMesh->mNumFaces; i++) {
@@ -49,42 +35,19 @@ void Shape::createShapeFromAssimp(aiMesh* inMesh)
 		}
 	}
 
-	//fill elebuf with triangles
+	//fill normalBuffer
 	for (int i = 0; i < inMesh->mNumVertices; i++) {
 		for (int j=0; j < 3; j++) {
 			norBuf.push_back(inMesh->mNormals[i][j]);
 		}
 	}
 
-/* 	for (int i=0; i < inMesh->mNumVertices; i++) {
-		for (int j=0; j < inMesh->mNumUVComponents; j++) {
-			inMesh->mTextureCoords[i][j]
-
+	//fill texBuf
+	for (int i=0; i < inMesh->mNumVertices; i++) {
+		for (int j=0; j < inMesh->mNumUVComponents[0]; j++) {
+			texBuf.push_back((inMesh->mTextureCoords[0])[i][j]);
 		}
-	} */
-
-	cout << "assimp num Vertices:" << inMesh->mNumVertices << endl;
-	cout << "assimp num Faces:" << inMesh->mNumFaces << endl;
-
-	//print vertices
-/* 	for (int i = 0; i < inMesh->mNumFaces; i++) {
-		for (int k=0; k < inMesh->mFaces[i].mNumIndices; k++) {
-			cout << (inMesh->mFaces[i]).mIndices[k] << " ";
-		}
-		cout << "| ";
 	}
-	cout << endl; */
-/* 	for (int i = 0; i < inMesh->mVertices[0]; i++) {
-		cout << inMesh->mVertices[i] << " ";
-		if ((i-2)%3==0)cout << "| ";
-	} */
-	cout << endl;
-/* 	posBuf = vertVec;
-	eleBuf = triVec; */
-/*  	norBuf = vector<float>(); */
-/* 	norBuf = shape.mesh.normals;
-	texBuf = shape.mesh.texcoords;
-	eleBuf = shape.mesh.indices; */
 }
 
 void Shape::measure()
