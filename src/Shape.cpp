@@ -16,45 +16,72 @@ void Shape::createShape(tinyobj::shape_t & shape)
 	norBuf = shape.mesh.normals;
 	texBuf = shape.mesh.texcoords;
 	eleBuf = shape.mesh.indices;
+
+/* 	cout << "tiny verts: " << eleBuf.size() << endl;
+	for (int i=0; i< eleBuf.size(); i++) {
+		cout << eleBuf[i] << " ";
+		if ((i-2)%3==0)cout << "| ";
+	} */
+	cout << "posBuf size: " << posBuf.size()<< endl;
+	for (int i=0; i< posBuf.size(); i++) {
+		cout << posBuf[i] << " ";
+		if ((i-2)%3==0)cout << endl;
+	}
+	cout << endl;
 }
 
 void Shape::createShapeFromAssimp(aiMesh* inMesh)
 {
-	vector<float> vertVec(inMesh->mNumVertices);
-	memcpy(inMesh->mVertices, &vertVec, inMesh->mNumVertices);
 
-	vector<unsigned int> triVec(inMesh->mNumFaces*3);
+	cout << "assimp verts: "<< inMesh->mNumVertices << endl;
+	for (int i = 0; i < inMesh->mNumVertices; i++) {
+		for (int j=0; j<3; j++) {
+			posBuf.push_back(inMesh->mVertices[i][j]);
+		}
+		cout << endl;
+	}
+	cout << endl << endl;
 
 	//fill elebuf with triangles
 	for (int i = 0; i < inMesh->mNumFaces; i++) {
-		//maybe replace 3 with mNumIndices
-		triVec[(3*i)+0] = inMesh->mFaces[i].mIndices[0];
-		triVec[(3*i)+1] = inMesh->mFaces[i].mIndices[1];
-		triVec[(3*i)+2] = inMesh->mFaces[i].mIndices[2];
-/* 		cout << "i: " << i << endl; */
-	}
-	cout << "numFaces*3: " << inMesh->mNumFaces*3 << endl;
-	cout << "numVertices: " << inMesh->mNumVertices << endl;
-
-	//normals
-	vector<float> norVec(inMesh->mNumVertices);
-	for (int i = 0; i < inMesh->mNumVertices/3; i++) {
-		//maybe replace 3 with mNumIndices
-		norVec[(3*i)+0] = inMesh->mNormals[i][0]; 
-		norVec[(3*i)+1] = inMesh->mNormals[i][1];
-		norVec[(3*i)+2] = inMesh->mNormals[i][2];
-/* 		cout << "i: " << i << endl; */
+		for (int j=0; j < inMesh->mFaces[i].mNumIndices; j++) {
+			eleBuf.push_back(inMesh->mFaces[i].mIndices[j]);
+		}
 	}
 
-	for (int i=0; i<norVec.size(); i++) {
-		cout << i << " " << norVec[i] << endl;
+	//fill elebuf with triangles
+	for (int i = 0; i < inMesh->mNumVertices; i++) {
+		for (int j=0; j < 3; j++) {
+			norBuf.push_back(inMesh->mNormals[i][j]);
+		}
 	}
 
-/* 	(inMesh->mVertices); */
-	posBuf = vertVec;
-	eleBuf = triVec;
- 	norBuf = norVec;
-/* 	eleBuf = vector<unsigned int>(vertVec.size()); */
+/* 	for (int i=0; i < inMesh->mNumVertices; i++) {
+		for (int j=0; j < inMesh->mNumUVComponents; j++) {
+			inMesh->mTextureCoords[i][j]
+
+		}
+	} */
+
+	cout << "assimp num Vertices:" << inMesh->mNumVertices << endl;
+	cout << "assimp num Faces:" << inMesh->mNumFaces << endl;
+
+	//print vertices
+/* 	for (int i = 0; i < inMesh->mNumFaces; i++) {
+		for (int k=0; k < inMesh->mFaces[i].mNumIndices; k++) {
+			cout << (inMesh->mFaces[i]).mIndices[k] << " ";
+		}
+		cout << "| ";
+	}
+	cout << endl; */
+/* 	for (int i = 0; i < inMesh->mVertices[0]; i++) {
+		cout << inMesh->mVertices[i] << " ";
+		if ((i-2)%3==0)cout << "| ";
+	} */
+	cout << endl;
+/* 	posBuf = vertVec;
+	eleBuf = triVec; */
+/*  	norBuf = vector<float>(); */
 /* 	norBuf = shape.mesh.normals;
 	texBuf = shape.mesh.texcoords;
 	eleBuf = shape.mesh.indices; */

@@ -14,9 +14,10 @@
 #include "Shape.h"
 #include "MatrixStack.h"
 #include "WindowManager.h"
-#include "Mesh.h"
+#include "GameObject.h"
 #include "Texture.h"
 #include "stb_image.h"
+#include "InputHandler.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -24,12 +25,13 @@
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/mesh.h>
 #include <assimp/types.h>
 #include <assimp/texture.h>
+#include <assimp/postprocess.h>
+
 
 using namespace std;
 using namespace glm;
@@ -49,8 +51,8 @@ public:
 	std::shared_ptr<Program> cubeProg;
 
 	// Shape to be used (from  file) - modify to support multiple
-	shared_ptr<unordered_map<string, shared_ptr<Mesh>>> meshList =
-	  make_shared<unordered_map<string, shared_ptr<Mesh>>>();
+	shared_ptr<unordered_map<string, shared_ptr<GameObject>>> objectList =
+	  make_shared<unordered_map<string, shared_ptr<GameObject>>>();
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -371,17 +373,17 @@ public:
  		vector<tinyobj::shape_t> TOshapes;
  		vector<tinyobj::material_t> objMaterials;
  		string errStr;
-		vector<string> meshes = {"melee/fod/FoD2.0", "melee/Captain_Falcon", "totodile",
+/* 		vector<string> meshes = {"melee/fod/FoD2.0", "melee/Captain_Falcon", "totodile",
 			"melee/pikachu", "melee/Gamecube/gamecube", "melee/fod/beam", "melee/fod/platform3",
 			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals",  "sphere",
-			"cube"};
+			"cube"}; */
+		vector<string> meshes = {"cube"};
 
 		vector<string> textures;
-/* 		for (int k =0; k < textures.size(); k++) */
 
 		//for every mesh in the scene
 		for (int k = 0; k < meshes.size(); k++) {
-        	shared_ptr<Mesh> mesh = make_shared<Mesh>();
+        	shared_ptr<GameObject> mesh = make_shared<GameObject>();
 			//load in the mesh and make the shape(s)
 			bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, 
 				(resourceDirectory + "/" + meshes[k] + ".obj").c_str(),
@@ -398,19 +400,23 @@ public:
 					shape->init();
 					mesh->shapeList.push_back(shape);
 				}
-			(*meshList)[meshes[k]] = mesh;
+			(*objectList)[meshes[k]] = mesh;
 			}
 		}
 
 
 		//load assimp
+/* 		addObject */
+
 		shared_ptr<Shape> newShape = make_shared<Shape>();
-        shared_ptr<Mesh> mesh = make_shared<Mesh>();
+        shared_ptr<GameObject> mesh = make_shared<GameObject>();
 
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(
-			resourceDirectory + "/" + "totodile.obj", 0);
-// 			resourceDirectory + "/frog/" + "Tree_frog.fbx", 0);
+			resourceDirectory + "/" + "totodile.obj", 
+/* 			resourceDirectory + "/" + "Feraligatr/Feraligatr.FBX",  */
+/*  			resourceDirectory + "/frog/" + "Tree_frog.fbx", */
+			aiProcess_Triangulate | aiProcess_FlipUVs);
 		cout << "toto has: " << scene->mNumMeshes << " meshes" << endl;
 		cout << "toto has: " << scene->mNumMaterials << " materials" << endl;
 		cout << "toto has: " << scene->mNumTextures << " textures" << endl;
@@ -421,13 +427,20 @@ public:
 
 			cout << scene->mMeshes[i]->mVertices[0][2] << endl;
 		}
-		newShape->createShapeFromAssimp(scene->mMeshes[6]);
+		newShape->createShapeFromAssimp(scene->mMeshes[0]);
 		newShape->measure();
 		newShape->init();
 		mesh->shapeList.push_back(newShape);
-/* 		(*meshList)["totodile"] = mesh; */
+		(*objectList)["totodile"] = mesh;
+
+/* 		(*objectList)["NAME"] = createGameObject(string meshPath) */
 
 	}
+
+	shared_ptr<GameObject> createGameObject() {
+		return nullptr;
+	}
+
 
 	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
@@ -473,7 +486,7 @@ public:
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
 		//bind the cube map texture 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
-		(*meshList)["cube"]->draw(cubeProg); 
+		(*objectList)["cube"]->draw(cubeProg); 
 		//set the depth test back to normal! 
 		glEnable(GL_DEPTH_TEST);
 		Model->popMatrix();
@@ -501,7 +514,7 @@ public:
 				setMaterial(m);
 				setModel(prog, Model);
 				texture3->bind(prog->getUniform("Texture0"));
-				(*meshList)["totodile"]->draw(prog);
+				(*objectList)["cube"]->draw(prog);
 			Model->popMatrix();
 
 			//Main Stage
@@ -511,7 +524,7 @@ public:
 				setMaterial(3);
 				texture3->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*meshList)["melee/fod/FoD2.0"]->draw(prog); */
+/* 				(*objectList)["melee/fod/FoD2.0"]->draw(prog); */
 			Model->popMatrix();
 
 			//Skyring 1
@@ -523,7 +536,7 @@ public:
 				setMaterial(1);
 				texture2->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*meshList)["melee/fod/skyring1"]->draw(prog); */
+/* 				(*objectList)["melee/fod/skyring1"]->draw(prog); */
 			Model->popMatrix();
 			//Skyring2
 			Model->pushMatrix();
@@ -532,7 +545,7 @@ public:
 				Model->rotate(.3, vec3(1,0,0));
 				Model->scale(vec3(0.2, 0.2, 0.2));
 				setModel(prog, Model);
-/* 				(*meshList)["melee/fod/skyring2"]->draw(prog); */
+/* 				(*objectList)["melee/fod/skyring2"]->draw(prog); */
 			Model->popMatrix();
 
 
@@ -543,7 +556,7 @@ public:
 				setMaterial(3);
 				texture0->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*meshList)["melee/Captain_Falcon"]->draw(prog); */
+/* 				(*objectList)["melee/Captain_Falcon"]->draw(prog); */
 			Model->popMatrix();
 
 			//draw Platform
@@ -553,7 +566,7 @@ public:
 				setMaterial(3);
 				texture3->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*meshList)["melee/fod/platform3"]->draw(prog); */
+/* 				(*objectList)["melee/fod/platform3"]->draw(prog); */
 
 				//draw Pikachu
 				Model->pushMatrix();
@@ -565,7 +578,7 @@ public:
 					texture4->bind(prog->getUniform("Texture0"));
 					setMaterial(2);
 					setModel(prog, Model);
-/* 					(*meshList)["melee/pikachu"]->draw(prog); */
+/* 					(*objectList)["melee/pikachu"]->draw(prog); */
 				Model->popMatrix();
 			Model->popMatrix();
 
@@ -577,7 +590,7 @@ public:
 				setMaterial(0);
 				texture1->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*meshList)["melee/Gamecube/gamecube"]->draw(prog); */
+/* 				(*objectList)["melee/Gamecube/gamecube"]->draw(prog); */
 			Model->popMatrix();
 		Model->popMatrix();
 

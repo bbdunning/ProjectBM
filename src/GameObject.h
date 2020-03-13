@@ -7,8 +7,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-class Mesh {
+class GameObject {
     public:
+        std::string name;
         std::vector<std::shared_ptr<Shape>> shapeList;
         void draw(std::shared_ptr<Program> prog);
 };
