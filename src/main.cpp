@@ -407,12 +407,13 @@ public:
 
 		//load assimp
 		createGameObject(resourceDirectory + "/cube.obj", "cube");
-		createGameObject(resourceDirectory + "/totodile.obj", "totodile");
+		createGameObject(resourceDirectory + "/toto.fbx", "totodile");
 	}
 
 	void createGameObject(string meshPath, string objName) {
 		Assimp::Importer importer;
 		shared_ptr<Shape> newShape;
+		aiString* texPath = new aiString;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 
 		const aiScene* scene = importer.ReadFile(
@@ -427,9 +428,20 @@ public:
 			newShape->createShapeFromAssimp(scene->mMeshes[i]);
 			newShape->measure();
 			newShape->init();
+			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
+			cout << texPath->C_Str() << endl;
+			newShape->texture = createTexture(texPath->C_Str());
 			mesh->shapeList.push_back(newShape);
 		}
 		(*objectList)[objName] = mesh;
+	}
+
+	shared_ptr<Texture> createTexture(string texturePath) {
+		shared_ptr<Texture> tex = make_shared<Texture>();  
+		tex->setFilename(texturePath);  
+		tex->init();  tex->setUnit(1);  
+		tex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
+		return tex;
 	}
 
 
@@ -504,7 +516,6 @@ public:
 				Model->scale(vec3(.1, .1, .1));
 				setMaterial(m);
 				setModel(prog, Model);
-				texture3->bind(prog->getUniform("Texture0"));
 				(*objectList)["cube"]->draw(prog);
 			Model->popMatrix();
 
@@ -513,7 +524,6 @@ public:
 				Model->scale(vec3(.1, .1, .1));
 				setMaterial(m);
 				setModel(prog, Model);
-				texture1->bind(prog->getUniform("Texture0"));
 				(*objectList)["totodile"]->draw(prog);
 			Model->popMatrix();
 

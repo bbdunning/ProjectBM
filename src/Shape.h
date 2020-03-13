@@ -11,6 +11,7 @@
 #include <tiny_obj_loader/tiny_obj_loader.h>
 #include <assimp/mesh.h>
 #include <assimp/types.h>
+#include "Texture.h"
 
 class Program;
 
@@ -28,6 +29,8 @@ public:
 
 	glm::vec3 min = glm::vec3(0);
 	glm::vec3 max = glm::vec3(0);
+	std::string texturePath;
+	std::shared_ptr<Texture> texture;
 
 private:
 

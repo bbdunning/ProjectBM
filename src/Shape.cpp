@@ -161,6 +161,8 @@ void Shape::draw(const shared_ptr<Program> prog) const
 	int h_pos, h_nor, h_tex;
 	h_pos = h_nor = h_tex = -1;
 
+	(this->texture)->bind(prog->getUniform("Texture0"));
+
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
 
 	// Bind position buffer
