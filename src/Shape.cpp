@@ -81,6 +81,8 @@ void Shape::measure()
 
 void Shape::init()
 {
+	texture = nullptr;
+
 	// Initialize the vertex array object
 	CHECKED_GL_CALL(glGenVertexArrays(1, &vaoID));
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
@@ -161,7 +163,9 @@ void Shape::draw(const shared_ptr<Program> prog) const
 	int h_pos, h_nor, h_tex;
 	h_pos = h_nor = h_tex = -1;
 
-	(this->texture)->bind(prog->getUniform("Texture0"));
+	if (texture != nullptr) {
+		(this->texture)->bind(prog->getUniform("Texture0"));
+	}
 
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
 

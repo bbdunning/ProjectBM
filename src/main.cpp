@@ -61,13 +61,8 @@ public:
 	GLuint VertexBufferID;
 
 	//example data that might be useful when trying to compute bounds on multi-shape
-	vec3 gMin;
 
-	shared_ptr<Texture> texture0;
-	shared_ptr<Texture> texture1;
-	shared_ptr<Texture> texture2;
-	shared_ptr<Texture> texture3;
-	shared_ptr<Texture> texture4;
+	shared_ptr<Texture> texture_glass;
 
 
 	//animation data
@@ -340,43 +335,21 @@ public:
 	}
 
 	void initTex(const std::string& resourceDirectory){  
-		texture0 = make_shared<Texture>();  
-		texture0->setFilename(resourceDirectory + "/textures/crate.jpg");  
-		texture0->init();  texture0->setUnit(0);  
-		texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
-
-		texture1 = make_shared<Texture>();  
-		texture1->setFilename(resourceDirectory + "/textures/world.jpg");  
-		texture1->init();  texture1->setUnit(1);  
-		texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
-
-		texture2 = make_shared<Texture>();  
-		texture2->setFilename(resourceDirectory + "/textures/streaks.jpg");  
-		texture2->init();  texture2->setUnit(2);  
-		texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
-
-		texture3 = make_shared<Texture>();  
-		texture3->setFilename(resourceDirectory + "/textures/glass.jpg");  
-		texture3->init();  texture2->setUnit(2);  
-		texture3->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
-
-		texture4 = make_shared<Texture>();  
-		texture4->setFilename(resourceDirectory + "/textures/yellow.jpg");  
-		texture4->init();  texture2->setUnit(2);  
-		texture4->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
+		texture_glass = make_shared<Texture>();  
+		texture_glass->setFilename(resourceDirectory + "/textures/glass.jpg");  
+		texture_glass->init();  
+		texture_glass->setUnit(2);  
+		texture_glass->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
 	}
 
 	void initGeom(const std::string& resourceDirectory)
 	{
+		string rDir = resourceDirectory + "/";
 		// Initialize mesh
 		// Load geometry
  		vector<tinyobj::shape_t> TOshapes;
  		vector<tinyobj::material_t> objMaterials;
  		string errStr;
-/* 		vector<string> meshes = {"melee/fod/FoD2.0", "melee/Captain_Falcon", "totodile",
-			"melee/pikachu", "melee/Gamecube/gamecube", "melee/fod/beam", "melee/fod/platform3",
-			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals",  "sphere",
-			"cube"}; */
 		vector<string> meshes = {};
 
 		vector<string> textures;
@@ -406,34 +379,51 @@ public:
 
 
 		//load assimp
-		createGameObject(resourceDirectory + "/cube.obj", "cube");
-		createGameObject(resourceDirectory + "/toto.fbx", "totodile");
+		createGameObject(rDir, "cube.obj", "cube");
+		createGameObject(rDir, "toto.fbx", "totodile");
+		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
+		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
+		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
+		createGameObject("/home/bbdunning/Desktop/PokemonXY/Absol/", "Absol_ColladaMax.DAE", "feraligatr");
+/* 		createGameObject(resourceDirectory + "melee/fod/FoD2.0.obj", "FoD"); */
+/* 			"melee/fod/FoD2.0", "melee/Captain_Falcon", "totodile",
+			"melee/pikachu", "melee/Gamecube/gamecube", "melee/fod/beam", "melee/fod/platform3",
+			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals",  "sphere",
+			"cube" */
 	}
 
-	void createGameObject(string meshPath, string objName) {
+	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
 		shared_ptr<Shape> newShape;
-		aiString* texPath = new aiString;
+		aiString* texPath;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 
 		const aiScene* scene = importer.ReadFile(
-			meshPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
 		cout << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
 		cout << objName + " has: " << scene->mNumMaterials << " materials" << endl;
 		cout << objName + " has: " << scene->mNumTextures << " textures" << endl;
+		cout << endl << endl;
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
+			texPath = new aiString;
 			newShape = make_shared<Shape>();
 			newShape->createShapeFromAssimp(scene->mMeshes[i]);
 			newShape->measure();
 			newShape->init();
-			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
-			cout << texPath->C_Str() << endl;
-			newShape->texture = createTexture(texPath->C_Str());
 			mesh->shapeList.push_back(newShape);
+
+			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
+			cout << "texture path: " << texPath->C_Str() << endl;
+			if (texPath->C_Str()[0] != '/') {
+				newShape->texture = createTexture(meshPath + texPath->C_Str());
+			} else
+				newShape->texture = createTexture(texPath->C_Str());
 		}
+
 		(*objectList)[objName] = mesh;
+		cout << "created " << objName << endl << endl;;
 	}
 
 	shared_ptr<Texture> createTexture(string texturePath) {
@@ -442,6 +432,7 @@ public:
 		tex->init();  tex->setUnit(1);  
 		tex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
 		return tex;
+
 	}
 
 
@@ -521,7 +512,7 @@ public:
 
 			Model->pushMatrix();
 				Model->translate(vec3(-.2, -.9, 1));
-				Model->scale(vec3(.1, .1, .1));
+				Model->scale(vec3(.05, .05, .05));
 				setMaterial(m);
 				setModel(prog, Model);
 				(*objectList)["totodile"]->draw(prog);
@@ -530,11 +521,10 @@ public:
 			//Main Stage
 			Model->pushMatrix();
 				Model->translate(vec3(0, 0, 0));
-				Model->scale(vec3(0.2, 0.2, 0.2));
+				Model->scale(vec3(0.02, 0.02, 0.02));
 				setMaterial(3);
-				texture3->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*objectList)["melee/fod/FoD2.0"]->draw(prog); */
+				(*objectList)["FoD"]->draw(prog);
 			Model->popMatrix();
 
 			//Skyring 1
@@ -544,9 +534,8 @@ public:
 				Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
 				Model->scale(vec3(0.2, 0.2, 0.2));
 				setMaterial(1);
-				texture2->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*objectList)["melee/fod/skyring1"]->draw(prog); */
+				(*objectList)["skyring1"]->draw(prog);
 			Model->popMatrix();
 			//Skyring2
 			Model->pushMatrix();
@@ -555,18 +544,18 @@ public:
 				Model->rotate(.3, vec3(1,0,0));
 				Model->scale(vec3(0.2, 0.2, 0.2));
 				setModel(prog, Model);
-/* 				(*objectList)["melee/fod/skyring2"]->draw(prog); */
+				(*objectList)["skyring2"]->draw(prog);
 			Model->popMatrix();
 
 
 			//draw Captain Falcon
 			Model->pushMatrix();
 				Model->translate(vec3(0, -.67, 1));
+				Model->rotate(PI, vec3(1, 0, 0));
 				Model->scale(vec3(0.02, 0.02, 0.02));
 				setMaterial(3);
-				texture0->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
-/* 				(*objectList)["melee/Captain_Falcon"]->draw(prog); */
+				(*objectList)["feraligatr"]->draw(prog);
 			Model->popMatrix();
 
 			//draw Platform
@@ -574,7 +563,7 @@ public:
 				Model->translate(vec3(0, -.1-sTheta*.3, 0));
 				Model->scale(vec3(0.2, 0.2, 0.2));
 				setMaterial(3);
-				texture3->bind(prog->getUniform("Texture0"));
+				texture_glass->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
 /* 				(*objectList)["melee/fod/platform3"]->draw(prog); */
 
@@ -585,7 +574,6 @@ public:
 					Model->rotate(PI/2, vec3(0,1,0));
 					Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
 					Model->translate(vec3(-6, -4, 0));
-					texture4->bind(prog->getUniform("Texture0"));
 					setMaterial(2);
 					setModel(prog, Model);
 /* 					(*objectList)["melee/pikachu"]->draw(prog); */
@@ -598,7 +586,6 @@ public:
 				Model->scale(vec3(0.08, 0.08, 0.08));
 				Model->rotate(PI, vec3(0,1,0));
 				setMaterial(0);
-				texture1->bind(prog->getUniform("Texture0"));
 				setModel(prog, Model);
 /* 				(*objectList)["melee/Gamecube/gamecube"]->draw(prog); */
 			Model->popMatrix();

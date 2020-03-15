@@ -31,4 +31,10 @@ void main()
 		(MatSpec * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
     	(MatDif * MatAmb), //Ambient Lighting
 		1.0);                   
+
+/* 	if (MatDif.x == 0.0 &&
+		MatDif.y == 0.0 &&
+		MatDif.z == 0.0 ) { 
+		discard;
+ 	} */
 }
