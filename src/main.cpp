@@ -96,13 +96,20 @@ public:
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
-	vector<std::string> faces {           
+/* 	vector<std::string> faces {           
 		"interstellar_rt.tga",           
 		"interstellar_lf.tga",           
 		"interstellar_up.tga",           
 		"interstellar_dn.tga",           
 		"interstellar_bk.tga",           
-		"interstellar_ft.tga"};
+		"interstellar_ft.tga"}; */
+	vector<std::string> faces {           
+		"right.jpg",           
+		"left.jpg",           
+		"top.jpg",           
+		"bottom.jpg",           
+		"front.jpg",           
+		"back.jpg"};
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -286,7 +293,7 @@ public:
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), 0+lightX, 1, 3);
+		glUniform3f(prog->getUniform("LightPos"), .3+lightX, 3, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -476,7 +483,7 @@ public:
 		//set and send model transforms - likely want a bigger cube 
 		Model->translate(eye);
 		Model->scale(vec3(75,75,75));
-		Model->rotate(PI/2, vec3(0,1,0));
+/* 		Model->rotate(PI/2, vec3(0,1,0)); */
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
 		//bind the cube map texture 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
