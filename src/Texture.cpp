@@ -25,18 +25,17 @@ void Texture::init()
 	// Load texture
 	int w, h, ncomps;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char *data = stbi_load(filename.c_str(), &w, &h, &ncomps, 0);
+	unsigned char *data = stbi_load(filename.c_str(), &w, &h, &ncomps, STBI_rgb_alpha);
 	if(!data) {
-		cerr << filename << " not found" << endl;
-	}
-	if(ncomps != 3) {
-		cerr << filename << " must have 3 components (RGB)" << endl;
+		cerr << "	" << filename << " not found" << endl;
 	}
 	if((w & (w - 1)) != 0 || (h & (h - 1)) != 0) {
-		cerr << filename << " must be a power of 2" << endl;
+		cerr << "	" << filename << " must be a power of 2" << endl;
 	}
 	width = w;
 	height = h;
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	// Generate a texture buffer object
 	glGenTextures(1, &tid);
@@ -44,7 +43,7 @@ void Texture::init()
 	glBindTexture(GL_TEXTURE_2D, tid);
 	// Load the actual texture data
 	// Base level is 0, number of channels is 3, and border is 0.
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	// Generate image pyramid
 	glGenerateMipmap(GL_TEXTURE_2D);
 	// Set texture wrap modes for the S and T directions

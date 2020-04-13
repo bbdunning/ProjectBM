@@ -14,10 +14,14 @@ InputHandler::InputHandler() {
         bool Sflag = false;
         bool Aflag = false;
         bool Dflag = false;
+        bool Cflag = false;
         bool Spaceflag = false;
         bool Ctrlflag = false;
         bool Shiftflag = false;
 	    float lightX = .4;
+	    float up_time = 0;
+	    float up_time_previous = 0;
+	    float jump = false;
 }
 
 void InputHandler::setKeyFlags(int key, int action) {
@@ -29,20 +33,59 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_W && action == GLFW_RELEASE) { Wflag = false; }
 		if (key == GLFW_KEY_S && action == GLFW_PRESS) { Sflag = true; }
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE) { Sflag = false; }
-		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { Spaceflag = true; }
-		if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) { Spaceflag = false; }
+		if (key == GLFW_KEY_C && action == GLFW_RELEASE) { Cflag = true; }
+		if (key == GLFW_KEY_C && action == GLFW_PRESS) { Cflag = false; }
+		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { 
+			Spaceflag = true; 
+			if (!jump)
+				space_start_time = glfwGetTime();
+			jump = true;
+		}
+		if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) { 
+			Spaceflag = false; 
+			space_time = 0;
+		}
 		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) { Ctrlflag = true; }
 		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) { Ctrlflag = false; }
-		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) { Shiftflag = true; }
-		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) { Shiftflag = false; }
+		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) { 
+			Shiftflag = true; 
+			shift_start_time = glfwGetTime();
+		}
+		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) { 
+			Shiftflag = false; 
+		}
 		if (key == GLFW_KEY_Q ) { lightX -= 0.3; }
 		if (key == GLFW_KEY_E ) { lightX += 0.3; }
-		if (key == GLFW_KEY_UP && action == GLFW_PRESS) { Upflag = true; }
-		if (key == GLFW_KEY_UP && action == GLFW_RELEASE) { Upflag = true; }
-		if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) { Downflag = true; }
-		if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE) { Downflag = true; }
-		if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) { Leftflag = true; }
-		if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE) { Leftflag = true; }
-		if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) { Rightflag = true; }
-		if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) { Rightflag = true; }
+		if (key == GLFW_KEY_UP && action == GLFW_PRESS) { 
+			Upflag = true; 
+			up_start_time = glfwGetTime();
+		}
+		if (key == GLFW_KEY_UP && action == GLFW_RELEASE) { 
+			Upflag = false; 
+			up_time = 0;
+		}
+		if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) { 
+			Downflag = true; 
+			down_start_time = glfwGetTime();
+		}
+		if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE) { 
+			Downflag = false; 
+			up_time = 0;
+		}
+		if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) { 
+			Leftflag = true; 
+			left_start_time = glfwGetTime();
+		}
+		if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE) { 
+			Leftflag = false; 
+			left_time = 0;
+		}
+		if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) { 
+			Rightflag = true; 
+			right_start_time = glfwGetTime();
+		}
+		if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) { 
+			Rightflag = false; 
+			right_time = 0;
+		}
 }

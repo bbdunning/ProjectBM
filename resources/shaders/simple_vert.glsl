@@ -24,5 +24,5 @@ void main()
 	dCo = 1.0; //replace with computation
 
 	/* pass through the texture coordinates to be interpolated */
-	vTexCoord = vertTex;
+	vTexCoord = vec2(vertTex.x, 1-vertTex.y);
 }

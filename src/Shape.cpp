@@ -82,6 +82,7 @@ void Shape::measure()
 void Shape::init()
 {
 	texture = nullptr;
+	material = nullptr;
 
 	// Initialize the vertex array object
 	CHECKED_GL_CALL(glGenVertexArrays(1, &vaoID));
@@ -95,39 +96,6 @@ void Shape::init()
 	// Send the normal array to the GPU
 	if (norBuf.empty())
 	{
-/* 		norBuf = vector<float>(posBuf.size(), 0);
-		for (int i=0; i<eleBuf.size(); i+=3) {
-			glm::vec3 u = glm::vec3(
-				posBuf[eleBuf[i+1]*3 ] - posBuf[eleBuf[i]*3 ],
-				posBuf[eleBuf[i+1]*3 +1] - posBuf[eleBuf[i]*3 +1],
-				posBuf[eleBuf[i+1]*3 +2] - posBuf[eleBuf[i]*3 +2]);
-			glm::vec3 v = glm::vec3(
-				posBuf[eleBuf[i+2]*3 ] - posBuf[eleBuf[i]*3 ],
-				posBuf[eleBuf[i+2]*3 +1] - posBuf[eleBuf[i]*3 +1],
-				posBuf[eleBuf[i+2]*3 +2] - posBuf[eleBuf[i]*3 +2]);
-			glm::vec3 w = cross(u,v);
-
-
-			// add to x coord of a vert's normal
-			norBuf[eleBuf[i+0]*3] += w.x;
-			norBuf[eleBuf[i+0]*3 +1] += w.y;
-			norBuf[eleBuf[i+0]*3 +2] += w.z;
-			// add to y coord of a vert's normal
-			norBuf[eleBuf[i+1]*3] += w.x;
-			norBuf[eleBuf[i+1]*3 +1] += w.y;
-			norBuf[eleBuf[i+1]*3 +2] += w.z;
-			//add to z coord of a vert's normal
-			norBuf[eleBuf[i+2]*3 ] += w.x;
-			norBuf[eleBuf[i+2]*3 +1] += w.y;
-			norBuf[eleBuf[i+2]*3 +2] += w.z;
-
-			norBuf[eleBuf[i+2]*3] += w.x;
-			norBuf[eleBuf[i+2]*3 +1] += w.y;
-			norBuf[eleBuf[i+2]*3 +2] += w.z;
-		}
-		CHECKED_GL_CALL(glGenBuffers(1, &norBufID));
-		CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, norBufID));
-		CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, norBuf.size()*sizeof(float), &norBuf[0], GL_STATIC_DRAW)); */
 	}
 	else
 	{
@@ -165,6 +133,10 @@ void Shape::draw(const shared_ptr<Program> prog) const
 
 	if (texture != nullptr) {
 		(this->texture)->bind(prog->getUniform("Texture0"));
+	}
+
+	if (material != nullptr) {
+		material->setMaterial(prog);
 	}
 
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));

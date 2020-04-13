@@ -2,6 +2,14 @@
 Program 4
 =====
 
+## Final Project Features ##
+    * Switched to Assimp
+    * can import any 3d model type
+    * textures are automatically loaded in  from model files
+    * interactive playable character
+
+    Disclaimer - you need to have the assimp library installed on your machine to run this code. As it is a large library, I did not include the source in my project.
+
 ## CONTROLS ##
 
 ### View: ###
@@ -11,16 +19,16 @@ Program 4
 ### Movement: ###
     * W and S dolley the camera forward and backward
     * A and D strafe the camera
-    * Space raised the camera
+    * Left Shift raises the camera
     * LeftCtrl lowers the camera
-    * LeftShift increases movement speed
 
 ### Misc: ###
     * Q and E move the light left and right along the X axis.
 
+## New files ##
 
-## Status Report ##
-All features implemented
-Code is very messy, dont judge me. I'll refactor during the final project :)
+### GameObject ###
+    * includes a list of meshes, materials, and textures for a specfic object
 
-skybox downloaded from https://opengameart.org
+### Input Handler ###
+    * An object for creating key press flags and storing user input

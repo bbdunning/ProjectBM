@@ -69,14 +69,6 @@ public:
 	float moveVelocity = .04;
 	float sTheta = 0;
 	int m = 1;
-	float lightX = .4;
-	bool Wflag = false;
-	bool Sflag = false;
-	bool Aflag = false;
-	bool Dflag = false;
-	bool Spaceflag = false;
-	bool Ctrlflag = false;
-	bool Shiftflag = false;
 
 	//view angles, from mouse
 	float phi = 0;
@@ -93,6 +85,9 @@ public:
 		cos(phi)*cos((PI/2.0)-theta));
 	vec3 lookAtOffset = vec3(0,0,0);
 	vec3 up = vec3(0,1,0);
+
+	vec3 playerLocation = vec3(0, -1.05, -2.1);
+	float initialPlayerLocation = -1.05;
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
@@ -111,59 +106,15 @@ public:
 		"front.jpg",           
 		"back.jpg"};
 
+	InputHandler ih;
+
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
+		ih.setKeyFlags(key, action);
+
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		}
-		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			Aflag = true;
-		}
-		if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-			Aflag = false;
-		}
-		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			Dflag = true;
-		}
-		if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-			Dflag = false;
-		}
-		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			Wflag = true;
-		}
-		if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-			Wflag = false;
-		}
-		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-			Sflag = true;
-		}
-		if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-			Sflag = false;
-		}
-		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-			Spaceflag = true;
-		}
-		if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
-			Spaceflag = false;
-		}
-		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_PRESS) {
-			Ctrlflag = true;
-		}
-		if (key == GLFW_KEY_LEFT_CONTROL && action == GLFW_RELEASE) {
-			Ctrlflag = false;
-		}
-		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS) {
-			Shiftflag = true;
-		}
-		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) {
-			Shiftflag = false;
-		}
-		if (key == GLFW_KEY_Q ) {
-			lightX -= 0.3;
-		}
-		if (key == GLFW_KEY_E ) {
-			lightX += 0.3;
 		}
 		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
 			m = (m+1) % 5;
@@ -215,14 +166,14 @@ public:
 		vec3 v = cross(u, *up);
 
 		//move Eye + LookAtOffset
-		if (Wflag) {*eye += float(moveVelocity)*u; lookAtOffset += float(moveVelocity)*u;}
-		if (Sflag) {*eye -= float(moveVelocity)*u; lookAtOffset -= float(moveVelocity)*u;}
-		if (Aflag) {*eye -= float(moveVelocity)*v; lookAtOffset -= float(moveVelocity)*v;}
-		if (Dflag) {*eye += float(moveVelocity)*v; lookAtOffset += float(moveVelocity)*v;}
-		if (Spaceflag) {*eye += .5f*float(moveVelocity)*(*up); lookAtOffset += .5f * float(moveVelocity)*(*up);}
-		if (Ctrlflag) {*eye -= .5f*float(moveVelocity)*(*up); lookAtOffset -= .5f * float(moveVelocity)*(*up);}
-		if (Shiftflag) {moveVelocity = .09;}
-		if (!Shiftflag) {moveVelocity = .04;}
+		if (ih.Wflag) {*eye += float(moveVelocity)*u; lookAtOffset += float(moveVelocity)*u;}
+		if (ih.Sflag) {*eye -= float(moveVelocity)*u; lookAtOffset -= float(moveVelocity)*u;}
+		if (ih.Aflag) {*eye -= float(moveVelocity)*v; lookAtOffset -= float(moveVelocity)*v;}
+		if (ih.Dflag) {*eye += float(moveVelocity)*v; lookAtOffset += float(moveVelocity)*v;}
+		if (ih.Shiftflag) {*eye += .5f*float(moveVelocity)*(*up); lookAtOffset += .5f * float(moveVelocity)*(*up);}
+		if (ih.Ctrlflag) {*eye -= .5f*float(moveVelocity)*(*up); lookAtOffset -= .5f * float(moveVelocity)*(*up);}
+		if (ih.Shiftflag) {moveVelocity = .09;}
+		if (!ih.Shiftflag) {moveVelocity = .04;}
 
 		return glm::lookAt(*eye, *lookAtPoint + lookAtOffset, *up);
    }
@@ -266,9 +217,9 @@ public:
 				 glUniform1f(prog->getUniform("shine"), 120.0);
 			break;    
 			case 1: // 
-				glUniform3f(prog->getUniform("MatAmb"), 0.13, 0.13, 0.14);       
+				glUniform3f(prog->getUniform("MatAmb"), 0.13, 0.13, 0.13);       
 				glUniform3f(prog->getUniform("MatDif"), 0.3, 0.3, 0.4);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.4);       
+				glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.3);       
 				glUniform1f(prog->getUniform("shine"), 4.0);
 			break;    
 			case 2: //pikachu
@@ -293,7 +244,7 @@ public:
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), .3+lightX, 3, 3);
+		glUniform3f(prog->getUniform("LightPos"), .3+ih.lightX, 3, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -354,49 +305,15 @@ public:
 		string rDir = resourceDirectory + "/";
 		// Initialize mesh
 		// Load geometry
- 		vector<tinyobj::shape_t> TOshapes;
- 		vector<tinyobj::material_t> objMaterials;
- 		string errStr;
-		vector<string> meshes = {};
 
-		vector<string> textures;
-
-		//for every mesh in the scene
-		for (int k = 0; k < meshes.size(); k++) {
-        	shared_ptr<GameObject> mesh = make_shared<GameObject>();
-			//load in the mesh and make the shape(s)
-			bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, 
-				(resourceDirectory + "/" + meshes[k] + ".obj").c_str(),
-				(resourceDirectory + "/" + meshes[k] + ".mtl").c_str());
-
-			if (!rc) {
-				cerr << errStr << endl;
-			} else {
-				//for every shape in a mesh
-				for (int i = 0; i < TOshapes.size(); i++) {
-					shared_ptr<Shape> shape = make_shared<Shape>();
-					shape->createShape(TOshapes[i]);
-					shape->measure();
-					shape->init();
-					mesh->shapeList.push_back(shape);
-				}
-			(*objectList)[meshes[k]] = mesh;
-			}
-		}
-
-
-		//load assimp
+		//create objects
 		createGameObject(rDir, "cube.obj", "cube");
 		createGameObject(rDir, "toto.fbx", "totodile");
 		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
-		createGameObject("/home/bbdunning/Desktop/PokemonXY/Absol/", "Absol_ColladaMax.DAE", "feraligatr");
-/* 		createGameObject(resourceDirectory + "melee/fod/FoD2.0.obj", "FoD"); */
-/* 			"melee/fod/FoD2.0", "melee/Captain_Falcon", "totodile",
-			"melee/pikachu", "melee/Gamecube/gamecube", "melee/fod/beam", "melee/fod/platform3",
-			"melee/fod/skyring1", "melee/fod/skyring2", "bunny_no_normals",  "sphere",
-			"cube" */
+/* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
+		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
 	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
@@ -411,22 +328,26 @@ public:
 		cout << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
 		cout << objName + " has: " << scene->mNumMaterials << " materials" << endl;
 		cout << objName + " has: " << scene->mNumTextures << " textures" << endl;
+		cout << objName + " has: " << scene->mNumAnimations << " animations" << endl;
 		cout << endl << endl;
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
-			texPath = new aiString;
+			texPath = new aiString("");
 			newShape = make_shared<Shape>();
 			newShape->createShapeFromAssimp(scene->mMeshes[i]);
 			newShape->measure();
 			newShape->init();
 			mesh->shapeList.push_back(newShape);
 
+			//load texture path into texPath
 			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
-			cout << "texture path: " << texPath->C_Str() << endl;
-			if (texPath->C_Str()[0] != '/') {
-				newShape->texture = createTexture(meshPath + texPath->C_Str());
-			} else
-				newShape->texture = createTexture(texPath->C_Str());
+			cout << "	texture path: " << texPath->C_Str() << endl;
+			if (texPath->C_Str() != "") {
+				if (texPath->C_Str()[0] != '/') {
+					newShape->texture = createTexture(meshPath + texPath->C_Str());
+				} else
+					newShape->texture = createTexture(texPath->C_Str());
+			}
 		}
 
 		(*objectList)[objName] = mesh;
@@ -445,6 +366,39 @@ public:
 
 	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
+	}
+
+	void getPlayerDisplacement() {
+		if (ih.Upflag) {
+			ih.up_time = glm::clamp(glfwGetTime() - ih.up_start_time, 0.0, .5) * 2;
+			playerLocation.z += .02 * ih.up_time;
+		}
+		if (ih.Downflag) {
+			ih.down_time = glm::clamp(glfwGetTime() - ih.down_start_time, 0.0, .5) * 2;
+			playerLocation.z -= .02 * ih.down_time;
+		}
+		if (ih.Leftflag) {
+			ih.left_time = glm::clamp(glfwGetTime() - ih.left_start_time, 0.0, .8) * 2;
+			playerLocation.x -= .02 * ih.left_time;
+		}
+		if (ih.Rightflag) {
+			ih.right_time = glm::clamp(glfwGetTime() - ih.right_start_time, 0.0, .8) * 2;
+			playerLocation.x += .02 * ih.right_time;
+		}
+		if (ih.jump) {
+			float airtime = glfwGetTime() - ih.space_start_time;
+			if (airtime < 1.333 or playerLocation.x > 2 or playerLocation.x < -2)
+				playerLocation.y = initialPlayerLocation - pow(1.5*airtime - 1, 2) + 1;
+			else 
+				ih.jump = false;
+/* 			if (airtime < .5) {
+				playerLocation.y += airtime * .1;
+			} else if (playerLocation.y > -1) {
+				playerLocation.y -= .1 * pow(airtime, 10);
+			} else {
+				ih.jump = false;
+			} */
+		}
 	}
 
 	void render() {
@@ -493,8 +447,6 @@ public:
 		Model->popMatrix();
 		cubeProg->unbind();
 
-
-
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
@@ -508,18 +460,30 @@ public:
 		Model->pushMatrix();
 		Model->scale(vec3(2,2,2));
 
-			//draw totodile
+			//draw player
+/* 			Model->pushMatrix();
+				Model->translate(vec3(0,0,5));
+				Model->scale(vec3(1,2,1));
+				setMaterial(m);
+				(*objectList)["cube"]->draw(prog);
+			Model->popMatrix(); */
+
+			//draw player
 			Model->pushMatrix();
-				Model->translate(vec3(-.2, -.9, 1));
-				Model->scale(vec3(.1, .1, .1));
+				Model->translate(vec3(-.2, -.55, -2));
+				Model->scale(vec3(.5, 1, .5));
 				setMaterial(m);
 				setModel(prog, Model);
-				(*objectList)["cube"]->draw(prog);
+/* 				(*objectList)["cube"]->draw(prog); */
 			Model->popMatrix();
 
 			Model->pushMatrix();
-				Model->translate(vec3(-.2, -.9, 1));
-				Model->scale(vec3(.05, .05, .05));
+				getPlayerDisplacement();
+				Model->translate(vec3(1.1, -.39, -2.1));
+				Model->scale(vec3(.02, .02, .02));
+/* 				Model->rotate(PI/2,vec3(0, 1, 0));
+				Model->rotate(-PI/2,vec3(1, 0, 0));
+				Model->rotate(-PI/2,vec3(0, 0, 1)); */
 				setMaterial(m);
 				setModel(prog, Model);
 				(*objectList)["totodile"]->draw(prog);
@@ -527,8 +491,8 @@ public:
 
 			//Main Stage
 			Model->pushMatrix();
-				Model->translate(vec3(0, 0, 0));
-				Model->scale(vec3(0.02, 0.02, 0.02));
+				Model->translate(vec3(0, -1, -2));
+				Model->scale(vec3(0.03, 0.03, 0.03));
 				setMaterial(3);
 				setModel(prog, Model);
 				(*objectList)["FoD"]->draw(prog);
@@ -557,12 +521,21 @@ public:
 
 			//draw Captain Falcon
 			Model->pushMatrix();
-				Model->translate(vec3(0, -.67, 1));
-				Model->rotate(PI, vec3(1, 0, 0));
-				Model->scale(vec3(0.02, 0.02, 0.02));
-				setMaterial(3);
+				Model->translate(playerLocation);
+				Model->rotate(-PI/2, vec3(1, 0, 0));
+				Model->rotate(-PI/2, vec3(0, 0, 1));
+				Model->scale(vec3(0.03, 0.03, 0.03));
+				setMaterial(1);
 				setModel(prog, Model);
-				(*objectList)["feraligatr"]->draw(prog);
+				if (playerLocation.x > -5 and playerLocation.x < 5
+					and playerLocation.y > -5 and playerLocation.y < 5)
+				(*objectList)["falcon"]->draw(prog);
+				if (ih.Cflag) {
+					playerLocation.x = 0;
+					playerLocation.y = -1.05;
+					playerLocation.z = -2.1;
+					ih.jump = false;
+				}
 			Model->popMatrix();
 
 			//draw Platform
@@ -583,7 +556,7 @@ public:
 					Model->translate(vec3(-6, -4, 0));
 					setMaterial(2);
 					setModel(prog, Model);
-/* 					(*objectList)["melee/pikachu"]->draw(prog); */
+/* 					(*objectList)["pikachu"]->draw(prog); */
 				Model->popMatrix();
 			Model->popMatrix();
 

@@ -12,6 +12,7 @@
 #include <assimp/mesh.h>
 #include <assimp/types.h>
 #include "Texture.h"
+#include "Material.h"
 
 class Program;
 
@@ -31,6 +32,7 @@ public:
 	glm::vec3 max = glm::vec3(0);
 	std::string texturePath;
 	std::shared_ptr<Texture> texture;
+	std::shared_ptr<Material> material;
 
 private:
 
