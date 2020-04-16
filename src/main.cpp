@@ -393,6 +393,21 @@ public:
 			} */
 		}
 	}
+	void drawSkybox(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> Projection) {
+		cubeProg->bind(); 
+		glDisable(GL_DEPTH_TEST);
+		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		Model->pushMatrix();
+		Model->translate(eye); //move to center around eye
+		Model->scale(vec3(75,75,75));
+		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
+		(*objectList)["cube"]->draw(cubeProg); 
+		glEnable(GL_DEPTH_TEST);
+		Model->popMatrix();
+		cubeProg->unbind();
+	}
 
 	void render() {
 		// Get current frame buffer size.
@@ -414,21 +429,7 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
-
-		/* draw skybox */
-		cubeProg->bind(); 
-		glDisable(GL_DEPTH_TEST);
-		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
-		Model->pushMatrix();
-		Model->translate(eye); //move to center around eye
-		Model->scale(vec3(75,75,75));
-		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
-		(*objectList)["cube"]->draw(cubeProg); 
-		glEnable(GL_DEPTH_TEST);
-		Model->popMatrix();
-		cubeProg->unbind();
+		drawSkybox(Model, Projection);
 
 		/* bind standard program */
 		prog->bind();
@@ -441,108 +442,114 @@ public:
 		//set initial material and Light
 		setLight();
 
+
+		//draw player
 		Model->pushMatrix();
-		Model->scale(vec3(2,2,2));
+			getPlayerDisplacement();
+			Model->translate(vec3(-.2, -.55, -2));
+			Model->scale(vec3(.5, 1, .5));
+			setMaterial(m);
+			setModel(prog, Model);
+			if (playerLocation.x > -5 and playerLocation.x < 5
+				and playerLocation.y > -5 and playerLocation.y < 5)
+				(*objectList)["cube"]->draw(prog); 
+			if (ih.Cflag) {
+				playerLocation.x = 0;
+				playerLocation.y = -1.05;
+				playerLocation.z = -2.1;
+				ih.jump = false;
+			}
+		Model->popMatrix();
+
+		//draw totodile
+		Model->pushMatrix();
+			Model->translate(vec3(1.1, -.39, -2.1));
+			Model->scale(vec3(.02, .02, .02));
+			setMaterial(m);
+			setModel(prog, Model);
+			(*objectList)["totodile"]->draw(prog);
+		Model->popMatrix();
+
+		//Main Stage
+		Model->pushMatrix();
+			Model->translate(vec3(0, -1, -2));
+			Model->scale(vec3(0.03, 0.03, 0.03));
+			setMaterial(3);
+			setModel(prog, Model);
+			(*objectList)["FoD"]->draw(prog);
+		Model->popMatrix();
+
+		//Skyring 1
+		Model->pushMatrix();
+			Model->translate(vec3(-2.4, 2, -2));
+			Model->rotate(.1, vec3(1,0,0));
+			Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
+			Model->scale(vec3(0.2, 0.2, 0.2));
+			setMaterial(1);
+			setModel(prog, Model);
+			(*objectList)["skyring1"]->draw(prog);
+		Model->popMatrix();
+		//Skyring2
+		Model->pushMatrix();
+			Model->translate(vec3(-2.8, 2.1, -.26));
+			Model->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
+			Model->rotate(.3, vec3(1,0,0));
+			Model->scale(vec3(0.2, 0.2, 0.2));
+			setModel(prog, Model);
+			(*objectList)["skyring2"]->draw(prog);
+		Model->popMatrix();
 
 
-			//draw player
-			Model->pushMatrix();
-				Model->translate(vec3(-.2, -.55, -2));
-				Model->scale(vec3(.5, 1, .5));
-				setMaterial(m);
-				setModel(prog, Model);
- 				(*objectList)["cube"]->draw(prog); 
-			Model->popMatrix();
-
-			Model->pushMatrix();
-				getPlayerDisplacement();
-				Model->translate(vec3(1.1, -.39, -2.1));
-				Model->scale(vec3(.02, .02, .02));
-				setMaterial(m);
-				setModel(prog, Model);
-				(*objectList)["totodile"]->draw(prog);
-			Model->popMatrix();
-
-			//Main Stage
-			Model->pushMatrix();
-				Model->translate(vec3(0, -1, -2));
-				Model->scale(vec3(0.03, 0.03, 0.03));
-				setMaterial(3);
-				setModel(prog, Model);
-				(*objectList)["FoD"]->draw(prog);
-			Model->popMatrix();
-
-			//Skyring 1
-			Model->pushMatrix();
-				Model->translate(vec3(-2.4, 2, -2));
-				Model->rotate(.1, vec3(1,0,0));
-				Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
-				Model->scale(vec3(0.2, 0.2, 0.2));
-				setMaterial(1);
-				setModel(prog, Model);
-				(*objectList)["skyring1"]->draw(prog);
-			Model->popMatrix();
-			//Skyring2
-			Model->pushMatrix();
-				Model->translate(vec3(-2.8, 2.1, -.26));
-				Model->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
-				Model->rotate(.3, vec3(1,0,0));
-				Model->scale(vec3(0.2, 0.2, 0.2));
-				setModel(prog, Model);
-				(*objectList)["skyring2"]->draw(prog);
-			Model->popMatrix();
-
-
-			//draw Captain Falcon
-			Model->pushMatrix();
-				Model->translate(playerLocation);
-				Model->rotate(-PI/2, vec3(1, 0, 0));
-				Model->rotate(-PI/2, vec3(0, 0, 1));
-				Model->scale(vec3(0.03, 0.03, 0.03));
-				setMaterial(1);
-				setModel(prog, Model);
-				if (playerLocation.x > -5 and playerLocation.x < 5
-					and playerLocation.y > -5 and playerLocation.y < 5)
+		//draw Captain Falcon
+		Model->pushMatrix();
+			// getPlayerDisplacement();
+			Model->translate(playerLocation);
+			Model->rotate(-PI/2, vec3(1, 0, 0));
+			Model->rotate(-PI/2, vec3(0, 0, 1));
+			Model->scale(vec3(0.03, 0.03, 0.03));
+			setMaterial(1);
+			setModel(prog, Model);
+			if (playerLocation.x > -5 and playerLocation.x < 5
+				and playerLocation.y > -5 and playerLocation.y < 5)
 //				(*objectList)["falcon"]->draw(prog);
-				if (ih.Cflag) {
-					playerLocation.x = 0;
-					playerLocation.y = -1.05;
-					playerLocation.z = -2.1;
-					ih.jump = false;
-				}
-			Model->popMatrix();
+			if (ih.Cflag) {
+				playerLocation.x = 0;
+				playerLocation.y = -1.05;
+				playerLocation.z = -2.1;
+				ih.jump = false;
+			}
+		Model->popMatrix();
 
-			//draw Platform
-			Model->pushMatrix();
-				Model->translate(vec3(0, -.1-sTheta*.3, 0));
-				Model->scale(vec3(0.2, 0.2, 0.2));
-				setMaterial(3);
-				texture_glass->bind(prog->getUniform("Texture0"));
-				setModel(prog, Model);
+		//draw Platform
+		Model->pushMatrix();
+			Model->translate(vec3(0, -.1-sTheta*.3, 0));
+			Model->scale(vec3(0.2, 0.2, 0.2));
+			setMaterial(3);
+			texture_glass->bind(prog->getUniform("Texture0"));
+			setModel(prog, Model);
 /* 				(*objectList)["melee/fod/platform3"]->draw(prog); */
 
-				//draw Pikachu
-				Model->pushMatrix();
-					Model->translate(vec3(4.68, -2.2, -.4));
-					Model->scale(vec3(0.007, 0.007, 0.007));
-					Model->rotate(PI/2, vec3(0,1,0));
-					Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
-					Model->translate(vec3(-6, -4, 0));
-					setMaterial(2);
-					setModel(prog, Model);
-/* 					(*objectList)["pikachu"]->draw(prog); */
-				Model->popMatrix();
-			Model->popMatrix();
-
-			//draw GameCube
+			//draw Pikachu
 			Model->pushMatrix();
-				Model->translate(vec3(0, .3, 5));
-				Model->scale(vec3(0.08, 0.08, 0.08));
-				Model->rotate(PI, vec3(0,1,0));
-				setMaterial(0);
+				Model->translate(vec3(4.68, -2.2, -.4));
+				Model->scale(vec3(0.007, 0.007, 0.007));
+				Model->rotate(PI/2, vec3(0,1,0));
+				Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
+				Model->translate(vec3(-6, -4, 0));
+				setMaterial(2);
 				setModel(prog, Model);
-/* 				(*objectList)["melee/Gamecube/gamecube"]->draw(prog); */
+/* 					(*objectList)["pikachu"]->draw(prog); */
 			Model->popMatrix();
+		Model->popMatrix();
+
+		//draw GameCube
+		Model->pushMatrix();
+			Model->translate(vec3(0, .3, 5));
+			Model->scale(vec3(0.08, 0.08, 0.08));
+			Model->rotate(PI, vec3(0,1,0));
+			setMaterial(0);
+			setModel(prog, Model);
+/* 				(*objectList)["melee/Gamecube/gamecube"]->draw(prog); */
 		Model->popMatrix();
 
 		prog->unbind();
@@ -561,9 +568,7 @@ int main(int argc, char *argv[])
 	std::string resourceDir = "../resources";
 
 	if (argc >= 2)
-	{
 		resourceDir = argv[1];
-	}
 
 	Application *application = new Application();
 
