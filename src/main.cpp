@@ -445,20 +445,11 @@ public:
 
 		//draw player
 		Model->pushMatrix();
-			getPlayerDisplacement();
 			Model->translate(vec3(-.2, -.55, -2));
 			Model->scale(vec3(.5, 1, .5));
 			setMaterial(m);
 			setModel(prog, Model);
-			if (playerLocation.x > -5 and playerLocation.x < 5
-				and playerLocation.y > -5 and playerLocation.y < 5)
-				(*objectList)["cube"]->draw(prog); 
-			if (ih.Cflag) {
-				playerLocation.x = 0;
-				playerLocation.y = -1.05;
-				playerLocation.z = -2.1;
-				ih.jump = false;
-			}
+			(*objectList)["cube"]->draw(prog); 
 		Model->popMatrix();
 
 		//draw totodile
