@@ -558,7 +558,7 @@ public:
 int main(int argc, char *argv[])
 {
 	// Where the resources are loaded from
-	std::string resourceDir = "D:/source/ProjectBM/resources/";
+	std::string resourceDir = "../resources";
 
 	if (argc >= 2)
 	{
