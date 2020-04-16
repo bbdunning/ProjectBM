@@ -93,7 +93,7 @@ public:
 	unsigned int skyboxTextureId = 0;
 	vector<std::string> faces {           
 		"right.jpg",           
-		"urmmom.jpg",           
+		"left.jpg",           
 		"top.jpg",           
 		"bottom.jpg",           
 		"front.jpg",           
@@ -408,37 +408,29 @@ public:
 
 		// Create the matrix stacks
 		auto Projection = make_shared<MatrixStack>();
-		auto View = make_shared<MatrixStack>();
 		auto Model = make_shared<MatrixStack>();
 
 		// Apply perspective projection.
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
-		// View is global translation along negative z for now
-		View->pushMatrix();
-		Model->pushMatrix();
 
-		//to draw the sky box bind the right shader 
+		/* draw skybox */
 		cubeProg->bind(); 
-		//set the projection matrix - can use the same one 
-		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		//set the depth function to always draw the box! 
 		glDisable(GL_DEPTH_TEST);
-		//set up view matrix to include your view transforms  
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
-		//set and send model transforms
+		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		Model->pushMatrix();
 		Model->translate(eye); //move to center around eye
 		Model->scale(vec3(75,75,75));
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
-		//bind the cube map texture 
-		 glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
 		(*objectList)["cube"]->draw(cubeProg); 
-		//set the depth test back to normal! 
 		glEnable(GL_DEPTH_TEST);
 		Model->popMatrix();
 		cubeProg->unbind();
 
+		/* bind standard program */
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
@@ -560,7 +552,6 @@ public:
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
-		View->popMatrix();
 	}
 };
 
@@ -573,7 +564,6 @@ int main(int argc, char *argv[])
 	{
 		resourceDir = argv[1];
 	}
-
 
 	Application *application = new Application();
 
