@@ -18,6 +18,7 @@
 #include "Texture.h"
 #include "stb_image.h"
 #include "InputHandler.h"
+#include "Player.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -64,6 +65,9 @@ public:
 
 	shared_ptr<Texture> texture_glass;
 
+	InputHandler ih;
+	shared_ptr<Player> player1 = make_shared<Player>();
+	
 
 	//animation data
 	float moveVelocity = .04;
@@ -99,7 +103,6 @@ public:
 		"front.jpg",           
 		"back.jpg"};
 
-	InputHandler ih;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -442,10 +445,10 @@ public:
 		//set initial material and Light
 		setLight();
 
-
 		//draw player
 		Model->pushMatrix();
-			Model->translate(vec3(-.2, -.55, -2));
+			player1->update();
+			Model->translate(player1->location);
 			Model->scale(vec3(.5, 1, .5));
 			setMaterial(m);
 			setModel(prog, Model);

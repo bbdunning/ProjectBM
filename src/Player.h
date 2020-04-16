@@ -1,13 +1,17 @@
+#include <memory>
+#include <string>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-using namespace glm;
+#include "InputHandler.h"
 
 class Player {
 public:
-    vec3 velocity;
-    vec3 location;
+    glm::vec3 velocity;
+    glm::vec3 location;
+    std::shared_ptr<InputHandler> ih;
 
     Player();
+    // int init(std::shared_ptr<InputHandler> ih);
     int update();
 };
