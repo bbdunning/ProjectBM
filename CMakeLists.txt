@@ -20,43 +20,23 @@ include_directories("ext")
 include_directories("ext/glad/include")
 
 
-add_library(assimp_lib SHARED IMPORTED)
-set_target_properties(assimp_lib PROPERTIES
-  IMPORTED_LOCATION "/home/bbdunning/Programming/471/assimp/build/code/libassimp.so"
-  INTERFACE_INCLUDE_DIRECTORIES "/home/bbdunning/Programming/471/assimp/build/include"
-)
-
-
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
 
 # Helper function included from FindGfxLibs.cmake
 findGLFW3(${CMAKE_PROJECT_NAME})
 findGLM(${CMAKE_PROJECT_NAME})
+findAssimp(${CMAKE_PROJECT_NAME})
 
 # OS specific options and libraries
 if(NOT WIN32)
-
   message(STATUS "Adding GCC style compiler flags")
   add_compile_options("-Wall")
   add_compile_options("-pedantic")
   add_compile_options("-Werror=return-type")
- 
-  # TODO: The following links may be uneeded. 
-  if(APPLE)
-    # Add required frameworks for GLFW.
-    target_link_libraries(${CMAKE_PROJECT_NAME} "-framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo")
-  else()
-    #Link the Linux OpenGL library
-    target_link_libraries(${CMAKE_PROJECT_NAME} "GL" "dl")
-  endif()
-
 else()
-
   # Link OpenGL on Windows
   target_link_libraries(${CMAKE_PROJECT_NAME} opengl32.lib)
-
 endif()
 
-
-target_link_libraries(${CMAKE_PROJECT_NAME} assimp_lib)
+add_compile_options("-ggdb")

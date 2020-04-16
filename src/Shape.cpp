@@ -20,34 +20,25 @@ void Shape::createShape(tinyobj::shape_t & shape)
 
 void Shape::createShapeFromAssimp(aiMesh* inMesh)
 {
-
 	//fil posBuf
-	for (int i = 0; i < inMesh->mNumVertices; i++) {
-		for (int j=0; j<3; j++) {
+	for (int i = 0; i < inMesh->mNumVertices; i++)
+		for (int j=0; j<3; j++)
 			posBuf.push_back(inMesh->mVertices[i][j]);
-		}
-	}
 
 	//fill elebuf with triangles
-	for (int i = 0; i < inMesh->mNumFaces; i++) {
-		for (int j=0; j < inMesh->mFaces[i].mNumIndices; j++) {
+	for (int i = 0; i < inMesh->mNumFaces; i++)
+		for (int j=0; j < inMesh->mFaces[i].mNumIndices; j++)
 			eleBuf.push_back(inMesh->mFaces[i].mIndices[j]);
-		}
-	}
 
 	//fill normalBuffer
-	for (int i = 0; i < inMesh->mNumVertices; i++) {
-		for (int j=0; j < 3; j++) {
+	for (int i = 0; i < inMesh->mNumVertices; i++) 
+		for (int j=0; j < 3; j++)
 			norBuf.push_back(inMesh->mNormals[i][j]);
-		}
-	}
 
 	//fill texBuf
-	for (int i=0; i < inMesh->mNumVertices; i++) {
-		for (int j=0; j < inMesh->mNumUVComponents[0]; j++) {
+	for (int i=0; i < inMesh->mNumVertices; i++)
+		for (int j=0; j < inMesh->mNumUVComponents[0]; j++)
 			texBuf.push_back((inMesh->mTextureCoords[0])[i][j]);
-		}
-	}
 }
 
 void Shape::measure()
@@ -94,9 +85,7 @@ void Shape::init()
 	CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, posBuf.size()*sizeof(float), &posBuf[0], GL_STATIC_DRAW));
 
 	// Send the normal array to the GPU
-	if (norBuf.empty())
-	{
-	}
+	if (norBuf.empty()) {}
 	else
 	{
 		CHECKED_GL_CALL(glGenBuffers(1, &norBufID));
@@ -131,13 +120,11 @@ void Shape::draw(const shared_ptr<Program> prog) const
 	int h_pos, h_nor, h_tex;
 	h_pos = h_nor = h_tex = -1;
 
-	if (texture != nullptr) {
+	if (texture != nullptr)
 		(this->texture)->bind(prog->getUniform("Texture0"));
-	}
 
-	if (material != nullptr) {
+	if (material != nullptr)
 		material->setMaterial(prog);
-	}
 
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
 

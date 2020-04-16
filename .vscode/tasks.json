@@ -4,9 +4,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build && run",
+            "label": "build & run",
             "type": "shell",
-            "command": "cd build && make && ./Super_Trash_Bros",
+            "command": "cd build ; if ($?) { mingw32-make -j }",
+            
             "group": {
                 "kind": "build",
                 "isDefault": true

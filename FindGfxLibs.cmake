@@ -104,3 +104,57 @@ function(findGLM target)
     
 endfunction(findGLM)
 
+
+# findAssimp helper function
+function(_findAssimp_sourcepkg target)
+
+    if(CMAKE_BUILD_TYPE MATCHES Release)
+        add_subdirectory(${ASSIMP_DIR} ${ASSIMP_DIR}/build/include/assimp)
+    else()
+        add_subdirectory(${ASSIMP_DIR} ${ASSIMP_DIR}/debug)
+    endif()
+
+    set(ASSIMP_LIBRARIES assimp PARENT_SCOPE)
+
+endfunction(_findAssimp_sourcepkg)
+
+function(_findAssimp_vsbinary target)
+    set(ASSIMP_INCLUDE_DIRS "${ASSIMP_DIR}/include/")
+    if(NOT EXISTS "${ASSIMP_DIR}/build/code/Debug/assimp-vc140-mt.lib")
+#        message(FATAL_ERROR "Missing required visual studio pre-compiled library!")
+    endif()
+    set(ASSIMP_LIBRARIES "${ASSIMP_DIR}/build/code/Debug/assimp-vc140-mt.lib" PARENT_SCOPE)
+    message(STATUS "Set ASSIMP_LIBRARIES: ${ASSIMP_LIBRARIES}")
+endfunction(_findAssimp_vsbinary)
+
+#find and add assimp dir using environment variable
+function(findAssimp target)
+
+    find_package(assimp QUIET)
+
+    if(DEFINED ENV{ASSIMP_DIR})
+
+        set(ASSIMP_DIR "$ENV{ASSIMP_DIR}")
+        message(STATUS "Assimp environment variable found. Attempting use...")
+
+        if(WIN32)
+            _findAssimp_vsbinary(target) 
+        else()
+            message(FATAL_ERROR "Assimp environment variable 'ASSIMP_DIR' found, but points to a directory which is not a source package containing 'CMakeLists.txt'.")
+        endif()
+
+        if(ASSIMP_LIBRARIES)
+            target_include_directories(${target} PUBLIC "${ASSIMP_DIR}/include")
+            target_include_directories(${target} PUBLIC "${ASSIMP_DIR}/build/include")
+#            target_link_libraries(${target} "${ASSIMP_LIBRARIES}")
+            target_link_libraries(${target} "C:/bins/assimp-4.1.0/build/code/libassimp.dll")
+            message(STATUS "${ASSIMP_LIBRARIES}")
+        else()
+            message(FATAL_ERROR "Internal Error! ASSIMP_LIBRARIES variable did not get set!")
+        endif()
+
+    else()
+        message(FATAL_ERROR "Assimp could not be found through find_package or environment varaible 'ASSIMP_DIR'! Assimp must be installed!")
+    endif()
+
+endfunction(findAssimp)

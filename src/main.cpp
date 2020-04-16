@@ -91,16 +91,9 @@ public:
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
-/* 	vector<std::string> faces {           
-		"interstellar_rt.tga",           
-		"interstellar_lf.tga",           
-		"interstellar_up.tga",           
-		"interstellar_dn.tga",           
-		"interstellar_bk.tga",           
-		"interstellar_ft.tga"}; */
 	vector<std::string> faces {           
 		"right.jpg",           
-		"left.jpg",           
+		"urmmom.jpg",           
 		"top.jpg",           
 		"bottom.jpg",           
 		"front.jpg",           
@@ -185,11 +178,10 @@ public:
 		int width, height, nrChannels;   
 		stbi_set_flip_vertically_on_load(false);   
 		for(GLuint i = 0; i < faces.size(); i++) {     
-			unsigned char *data =   
-			stbi_load((dir+faces[i]).c_str(), &width, &height, &nrChannels, 0);  
+			unsigned char *data = stbi_load((dir+faces[i]).c_str(), &width, &height, &nrChannels, 0);  
 			if (data) {          
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,               
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  
+					0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  
 			} else {    
 				cout << "failed to load: " << (dir+faces[i]).c_str() << endl;  
 			}   
@@ -281,7 +273,7 @@ public:
 
 		cubeProg = make_shared<Program>();
 		cubeProg->setVerbose(true);
-		cubeProg->setShaderNames(resourceDirectory + "/shaders/cube_vert.glsl", resourceDirectory + "/shaders/cube_frag.glsl");
+		cubeProg->setShaderNames( resourceDirectory + "/shaders/cube_vert.glsl", resourceDirectory + "/shaders/cube_frag.glsl");
 		cubeProg->init();
 		cubeProg->addUniform("P");
 		cubeProg->addUniform("V");
@@ -308,12 +300,12 @@ public:
 
 		//create objects
 		createGameObject(rDir, "cube.obj", "cube");
-		createGameObject(rDir, "toto.fbx", "totodile");
+		createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
 		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
 /* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
-		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
+//		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
 	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
@@ -321,18 +313,19 @@ public:
 		shared_ptr<Shape> newShape;
 		aiString* texPath;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
+		mesh->name = objName;
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
-		cout << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
-		cout << objName + " has: " << scene->mNumMaterials << " materials" << endl;
-		cout << objName + " has: " << scene->mNumTextures << " textures" << endl;
-		cout << objName + " has: " << scene->mNumAnimations << " animations" << endl;
-		cout << endl << endl;
+		cout << "creating " << objName << endl;
+		cout << "   " << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
+		cout << "   " << objName + " has: " << scene->mNumMaterials << " materials" << endl;
+		cout << "   " << objName + " has: " << scene->mNumTextures << " textures" << endl;
+		cout << "   " << objName + " has: " << scene->mNumAnimations << " animations" << endl;
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
-			texPath = new aiString("");
+			texPath = new aiString();
 			newShape = make_shared<Shape>();
 			newShape->createShapeFromAssimp(scene->mMeshes[i]);
 			newShape->measure();
@@ -341,8 +334,10 @@ public:
 
 			//load texture path into texPath
 			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
-			cout << "	texture path: " << texPath->C_Str() << endl;
-			if (texPath->C_Str() != "") {
+
+			//if mesh has texture, create a texture from it
+			if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0) {
+				cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
 				if (texPath->C_Str()[0] != '/') {
 					newShape->texture = createTexture(meshPath + texPath->C_Str());
 				} else
@@ -360,9 +355,7 @@ public:
 		tex->init();  tex->setUnit(1);  
 		tex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
 		return tex;
-
 	}
-
 
 	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
@@ -404,16 +397,16 @@ public:
 	void render() {
 		// Get current frame buffer size.
 		int width, height;
+
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
 
 		// Clear framebuffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//Use the matrix stack for Lab 6
 		float aspect = width/(float)height;
 
-		// Create the matrix stacks - please leave these alone for now
+		// Create the matrix stacks
 		auto Projection = make_shared<MatrixStack>();
 		auto View = make_shared<MatrixStack>();
 		auto Model = make_shared<MatrixStack>();
@@ -425,6 +418,7 @@ public:
 		// View is global translation along negative z for now
 		View->pushMatrix();
 		Model->pushMatrix();
+
 		//to draw the sky box bind the right shader 
 		cubeProg->bind(); 
 		//set the projection matrix - can use the same one 
@@ -432,15 +426,13 @@ public:
 		//set the depth function to always draw the box! 
 		glDisable(GL_DEPTH_TEST);
 		//set up view matrix to include your view transforms  
-		//(your code likely will be different depending 
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
-		//set and send model transforms - likely want a bigger cube 
-		Model->translate(eye);
+		//set and send model transforms
+		Model->translate(eye); //move to center around eye
 		Model->scale(vec3(75,75,75));
-/* 		Model->rotate(PI/2, vec3(0,1,0)); */
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
 		//bind the cube map texture 
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
+		 glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
 		(*objectList)["cube"]->draw(cubeProg); 
 		//set the depth test back to normal! 
 		glEnable(GL_DEPTH_TEST);
@@ -460,13 +452,6 @@ public:
 		Model->pushMatrix();
 		Model->scale(vec3(2,2,2));
 
-			//draw player
-/* 			Model->pushMatrix();
-				Model->translate(vec3(0,0,5));
-				Model->scale(vec3(1,2,1));
-				setMaterial(m);
-				(*objectList)["cube"]->draw(prog);
-			Model->popMatrix(); */
 
 			//draw player
 			Model->pushMatrix();
@@ -474,16 +459,13 @@ public:
 				Model->scale(vec3(.5, 1, .5));
 				setMaterial(m);
 				setModel(prog, Model);
-/* 				(*objectList)["cube"]->draw(prog); */
+ 				(*objectList)["cube"]->draw(prog); 
 			Model->popMatrix();
 
 			Model->pushMatrix();
 				getPlayerDisplacement();
 				Model->translate(vec3(1.1, -.39, -2.1));
 				Model->scale(vec3(.02, .02, .02));
-/* 				Model->rotate(PI/2,vec3(0, 1, 0));
-				Model->rotate(-PI/2,vec3(1, 0, 0));
-				Model->rotate(-PI/2,vec3(0, 0, 1)); */
 				setMaterial(m);
 				setModel(prog, Model);
 				(*objectList)["totodile"]->draw(prog);
@@ -529,7 +511,7 @@ public:
 				setModel(prog, Model);
 				if (playerLocation.x > -5 and playerLocation.x < 5
 					and playerLocation.y > -5 and playerLocation.y < 5)
-				(*objectList)["falcon"]->draw(prog);
+//				(*objectList)["falcon"]->draw(prog);
 				if (ih.Cflag) {
 					playerLocation.x = 0;
 					playerLocation.y = -1.05;
@@ -585,7 +567,7 @@ public:
 int main(int argc, char *argv[])
 {
 	// Where the resources are loaded from
-	std::string resourceDir = "../resources";
+	std::string resourceDir = "D:/source/ProjectBM/resources/";
 
 	if (argc >= 2)
 	{
@@ -599,7 +581,8 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	windowManager->init(640, 480);
+//	windowManager->init(640, 480);
+	windowManager->init(1280, 960);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
