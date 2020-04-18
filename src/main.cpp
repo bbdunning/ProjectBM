@@ -311,6 +311,7 @@ public:
 /* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
 //		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
 		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
@@ -419,6 +420,15 @@ public:
 		setLight();
 
 		//draw player
+		Model->pushMatrix();
+			player1->update();
+			Model->translate(player1->location);
+			Model->rotate(-PI/2, vec3(1,0,0));
+			setMaterial(m);
+			setModel(prog, Model);
+			(*objectList)["animModel"]->draw(prog); 
+		Model->popMatrix();
+
 		Model->pushMatrix();
 			player1->update();
 			Model->translate(player1->location);
