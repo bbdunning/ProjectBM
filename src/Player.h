@@ -10,8 +10,10 @@ public:
     glm::vec3 velocity;
     glm::vec3 location;
     std::shared_ptr<InputHandler> ih;
+    bool isGrounded;
+    bool hasDoubleJump;
 
     Player();
-    // int init(std::shared_ptr<InputHandler> ih);
+    int init(std::shared_ptr<InputHandler> ih);
     int update();
 };

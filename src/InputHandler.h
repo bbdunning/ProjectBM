@@ -5,6 +5,7 @@
 class InputHandler {
     public:
         InputHandler();
+        void init();
         void setKeyFlags(int key, int action);
         bool Wflag;
         bool Sflag;
@@ -31,6 +32,8 @@ class InputHandler {
         float space_start_time;
         float shift_start_time;
         bool jump;
+
+        bool controllerPresent;
 };
 
 #endif

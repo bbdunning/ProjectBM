@@ -39,6 +39,8 @@ void Shape::createShapeFromAssimp(aiMesh* inMesh)
 	for (int i=0; i < inMesh->mNumVertices; i++)
 		for (int j=0; j < inMesh->mNumUVComponents[0]; j++)
 			texBuf.push_back((inMesh->mTextureCoords[0])[i][j]);
+			if (inMesh->mTextureCoords[1] != nullptr)
+				cout << "HLIEJFPIOSJAPOIFJ SIOJ :LISKD" << endl;
 }
 
 void Shape::measure()

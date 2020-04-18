@@ -32,3 +32,23 @@ Program 4
 
 ### Input Handler ###
     * An object for creating key press flags and storing user input
+
+
+## progress made in 476 ##
+* fully crossplatform
+    - migrated from linux laptop to windows 10 pc
+
+* implemented player class
+    - much better movement and physics now
+    - double jump
+
+## TO DO ##
+* player action states 25%
+* action hitboxes - 25% 
+* gamepad support
+* 2nd player
+* animations
+* ledge detection
+* ledge grab
+* camera tracking characters
+* camera shake effect
