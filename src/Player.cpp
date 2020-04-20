@@ -64,8 +64,6 @@ int Player::update() {
     if ((!ih->Rightflag  or !isGrounded) && velocity.x > 0)
         velocity.x -= .002;
     
-    cout << velocity.x << endl;
-
     //controller
     // if (axes[0]==-1 && velocity.x > -MAX_SPEED)
     //     velocity.x -= .001;

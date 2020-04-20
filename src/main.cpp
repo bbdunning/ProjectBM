@@ -1,9 +1,3 @@
-/*
- * Program 2 base code - includes modifications to shape and initGeom in preparation to load
- * multi shape objects 
- * CPE 471 Cal Poly Z. Wood + S. Sueda + I. Dunn
- */
-
 #include <iostream>
 #include <cmath>
 #include <unordered_map>
@@ -19,6 +13,7 @@
 #include "stb_image.h"
 #include "InputHandler.h"
 #include "Player.h"
+#include "Animation/AnimatedShape.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -316,7 +311,7 @@ public:
 
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
-		shared_ptr<Shape> newShape;
+		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 		mesh->name = objName;
@@ -332,7 +327,7 @@ public:
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			texPath = new aiString();
-			newShape = make_shared<Shape>();
+			newShape = make_shared<AnimatedShape>();
 			newShape->createShapeFromAssimp(scene->mMeshes[i]);
 			newShape->measure();
 			newShape->init();

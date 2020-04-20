@@ -46,6 +46,8 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "xlocale": "cpp",
+        "xmemory0": "cpp"
     }
 }
