@@ -166,10 +166,10 @@ public:
 				glUniform1f(prog->getUniform("shine"), 100);
 			break;
 			case 4:
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.15, 0.15, 0.15);        
+			 	glUniform3f(prog->getUniform("MatAmb"), 0.2, 0.2, 0.2);        
 				glUniform3f(prog->getUniform("MatDif"), 0.5, 0.5, 0.5);       
-				glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
-				glUniform1f(prog->getUniform("shine"), 80);
+				glUniform3f(prog->getUniform("MatSpec"), .3, 0.3, 0.3);       
+				glUniform1f(prog->getUniform("shine"), 100);
 			break;
 		}
 	}
@@ -384,53 +384,6 @@ public:
 
 		//draw totodile
 		player1->update(&camera);
-		Model->pushMatrix();
-			Model->translate(player1->location);
-			// Model->scale(vec3(.35, .75, .35));
-			if (!player1->isGrounded)
-			{
-				if (!player1->facingRight) {
-					Model->rotate(-PI/2, vec3(0,1,0));
-					Model->rotate(PI/8, vec3(1,0,0));
-				}
-				else {
-					Model->rotate(PI/2, vec3(0,1,0));
-					Model->rotate(PI/8, vec3(1,0,0));
-				}
-			}
-			//facing left
-			else if (!player1->facingRight) {
-				if (abs(player1->velocity.x <= -.04f) || inputHandler->Downflag){
-					Model->rotate(PI/4, vec3(0,0,1));
-					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
-				}
-				else if (abs(player1->velocity.x <= -.01f)) {
-					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
-				}
-				Model->rotate(-PI/2, vec3(0,1,0));
-			}
-			//facing right
-			else {
-				if (abs(player1->velocity.x >= .04f) || inputHandler->Downflag) {
-					Model->rotate(-PI/4, vec3(0,0,1));
-					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
-				}
-				else if (abs(player1->velocity.x >= .01f)) {
-					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
-				}
-				Model->rotate(PI/2, vec3(0,1,0));
-			}
-			if (player1->standing)
-				setMaterial(0);
-			else if (player1->isGrounded)
-				setMaterial(1);
-			else if (!player1->isGrounded)
-				setMaterial(3);
-
-			Model->scale(vec3(.025, .025, .025));
-			setModel(prog, Model);
-			objL["totodile"]->draw(prog); 
-		Model->popMatrix();
 
 		// if (fmod(glfwGetTime(), 2.0) == 0.0) {
 		setMaterial(4);
@@ -444,7 +397,7 @@ public:
 		while (it != collectables.end()) {
 			(*it)->update();
 			(*it)->draw(prog);
-			if (1.5 > distance((*it)->location, camera.eye)) {
+			if ((1.5 *(*it)->scale) > distance((*it)->location, camera.eye)) {
 				catchCount++;
 				cout << "Catch count: " << catchCount << endl;
 				it = collectables.erase(it);
@@ -456,7 +409,7 @@ public:
 			else {
 				auto it2 = collectables.begin();
 				while (it2 != collectables.end()) {
-					if ((it != it2) && (.7 > distance((*it)->location, (*it2)->location)))
+					if ((it != it2) && (.7f * (*it)->scale > distance((*it)->location, (*it2)->location)))
 						// (*it)->velocity = -(*it)->velocity;
 						// (*it)->velocity = .05f * normalize(vec3(rand()%5, 0, rand()%5));
 						(*it)->velocity = .05f * normalize((*it)->location - (*it2)->location);

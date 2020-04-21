@@ -28,12 +28,13 @@ void Totodile::init(std::vector<std::shared_ptr<Shape>> totoMesh) {
     vec3 velocityDir = normalize(lookAtPoint-location);
     velocity = velocityDir * .05f;
     randSeed = rand();
+    scale = ((float) (rand()%20))/30.0f + 1;
 }
 
 void Totodile::draw(shared_ptr<Program> prog) {
     auto Model = make_shared<MatrixStack>();
     Model->translate(this->location);
-    Model->scale(vec3(.025,.025, .025));
+    Model->scale(vec3(.025,.025, .025)*scale);
 
     vec3 d = normalize(vec3(velocity.x, 0, velocity.z));
     float omega = glm::acos(glm::dot(vec3(0,0,1), d));

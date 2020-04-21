@@ -14,6 +14,7 @@ class Totodile : public GameObject {
         glm::vec3 lookAtPoint;
         glm::vec3 velocity;
         int randSeed;
+        float scale;
         void init(std::vector<std::shared_ptr<Shape>>);
         void draw(std::shared_ptr<Program> prog);
         void update();
