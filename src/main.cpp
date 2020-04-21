@@ -67,6 +67,8 @@ public:
 	float sTheta = 0;
 	int m = 1;
 	float c = 0;
+	int catchCount = 0;
+	float secondCount = 2;
 
 	//movement vectors
 	Camera camera;
@@ -164,16 +166,16 @@ public:
 				glUniform1f(prog->getUniform("shine"), 100);
 			break;
 			case 4:
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.1, 0.1, 0.1);        
+			 	glUniform3f(prog->getUniform("MatAmb"), 0.15, 0.15, 0.15);        
 				glUniform3f(prog->getUniform("MatDif"), 0.5, 0.5, 0.5);       
 				glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
-				glUniform1f(prog->getUniform("shine"), 100);
+				glUniform1f(prog->getUniform("shine"), 80);
 			break;
 		}
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), .3, 3, 3);
+		glUniform3f(prog->getUniform("LightPos"), 50, 10, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -375,7 +377,7 @@ public:
 			Model->translate(vec3(0,-1.11,0));
 			Model->scale(vec3(50,50,50));
 			Model->rotate(-PI/2, vec3(1,0,0));
-			setMaterial(4);
+			setMaterial(1);
 			setModel(prog, Model);
 			objL["moon"]->draw(prog); 
 		Model->popMatrix();
@@ -430,36 +432,29 @@ public:
 			objL["totodile"]->draw(prog); 
 		Model->popMatrix();
 
-		//draw totodile
-		// Model->pushMatrix();
-			// objL["arms"]->location = vec3(1.1, -.39, -2.1);
-			// Model->translate(vec3(camera.eye.x-.3, camera.eye.y-.15, camera.eye.z-.2));
-			// Model->scale(vec3(.02, .02, .02));
-			// Model->multMatrix(glm::lookAt(camera.eye, camera.lookAtPoint+camera.lookAtOffset, camera.up));
-			// setMaterial(m);
-			// setModel(prog, Model);
-			// objL["arms"]->draw(prog);
-		// Model->popMatrix();
-
-
 		// if (fmod(glfwGetTime(), 2.0) == 0.0) {
 		setMaterial(4);
-		if (inputHandler->Ctrlflag) {
-			cout << "creating totodile" << endl;
+		if (glfwGetTime() > secondCount) {
+		// if (inputHandler->Ctrlflag) {
 			collectables.push_back(createTotodile());
+			secondCount += 3;
 		}
 
 		auto it = collectables.begin();
 		while (it != collectables.end()) {
 			(*it)->update();
 			(*it)->draw(prog);
-			if ((abs((*it)->location.x) > 50) || (abs((*it)->location.z) > 50)) {
+			if (1.5 > distance((*it)->location, camera.eye)) {
+				catchCount++;
+				cout << "Catch count: " << catchCount << endl;
+				it = collectables.erase(it);
+			}
+			else if ((abs((*it)->location.x) > 50) || (abs((*it)->location.z) > 50)) {
 				it = collectables.erase(it);
 			}
 			else {
 				++it;
 			}
-			cout << endl;
 		}
 
 		prog->unbind();

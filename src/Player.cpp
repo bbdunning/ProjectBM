@@ -28,7 +28,7 @@ int Player::init(shared_ptr<InputHandler> ih) {
     this->standing = true; //change to true
     this->hasDoubleJump = true;
     this->facingRight = true;
-    this->moveVelocity = .4;
+    this->moveVelocity = .5;
     return 0;
 }
 
@@ -142,8 +142,8 @@ int Player::update(Camera *camera) {
         // camera->eye -= .5f*float(moveVelocity)*(camera->up); 
         // camera->lookAtOffset -= .5f * float(moveVelocity)*(camera->up);
     }
-    if (ih->Shiftflag) {moveVelocity = .09;}
-    if (!ih->Shiftflag) {moveVelocity = .04;}
+    if (ih->Shiftflag) {moveVelocity = .11;}
+    if (!ih->Shiftflag) {moveVelocity = .05;}
 
     // location = camera->eye;
 

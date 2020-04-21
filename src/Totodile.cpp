@@ -40,10 +40,9 @@ void Totodile::draw(shared_ptr<Program> prog) {
     if (velocity.x < 0) {
         omega = -omega;
     }
-    cout << "omega " << omega << endl;
 
     // vec3 a = glm::cross(vec3(0,1,0));
-    Model->rotate(.5*sin(glfwGetTime()*12+randSeed), d);
+    Model->rotate(.5*sin(glfwGetTime()*17+randSeed), d);
     Model->rotate(omega, vec3(0, 1, 0));
     // Model->rotate(90, vec3(0, 1, 0));
 

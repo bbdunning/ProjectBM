@@ -28,7 +28,7 @@ void main()
   	MatDif = texColor0.xyz;
 
 	color = vec4((MatDif * cosAngIncidence) +  //Diffuse Lighting
-		(MatSpec * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
+		(MatDif * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
     	(MatDif * MatAmb), //Ambient Lighting
 		1.0);                   
 

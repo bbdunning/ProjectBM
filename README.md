@@ -5,6 +5,8 @@ https://github.com/assimp/assimp
 
 
 
+* change shader to use spec image tex
+* move light
 
 Ignore this
 =====
