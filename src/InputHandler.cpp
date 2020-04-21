@@ -5,23 +5,32 @@
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 using namespace std;
 using namespace glm;
 
 InputHandler::InputHandler() {
-        bool Wflag = false;
-        bool Sflag = false;
-        bool Aflag = false;
-        bool Dflag = false;
-        bool Cflag = false;
-        bool Spaceflag = false;
-        bool Ctrlflag = false;
-        bool Shiftflag = false;
-	    float lightX = .4;
-	    float up_time = 0;
-	    float up_time_previous = 0;
-	    float jump = false;
+}
+
+void InputHandler::init() {
+        this->Wflag = false;
+        this->Sflag = false;
+        this->Aflag = false;
+        this->Dflag = false;
+        this->Cflag = false;
+        this->Spaceflag = false;
+        this->Ctrlflag = false;
+        this->Shiftflag = false;
+	    this->lightX = .4;
+	    this->up_time = 0;
+        this->Leftflag = false;
+        this->Rightflag = false;
+		this->Downflag = false;
+
+		// controllerPresent = glfwJoystickIsGamepad(GLFW_JOYSTICK_1);
+		// if (controllerPresent)
+		// 	std::cout << "controller is connected!" << std::endl;
 }
 
 void InputHandler::setKeyFlags(int key, int action) {
@@ -58,7 +67,6 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_E ) { lightX += 0.3; }
 		if (key == GLFW_KEY_UP && action == GLFW_PRESS) { 
 			Upflag = true; 
-			up_start_time = glfwGetTime();
 		}
 		if (key == GLFW_KEY_UP && action == GLFW_RELEASE) { 
 			Upflag = false; 

@@ -1,9 +1,3 @@
-/*
- * Program 2 base code - includes modifications to shape and initGeom in preparation to load
- * multi shape objects 
- * CPE 471 Cal Poly Z. Wood + S. Sueda + I. Dunn
- */
-
 #include <iostream>
 #include <cmath>
 #include <unordered_map>
@@ -18,6 +12,10 @@
 #include "Texture.h"
 #include "stb_image.h"
 #include "InputHandler.h"
+#include "Player.h"
+#include "Animation/AnimatedShape.h"
+#include "Camera.h"
+#include "Totodile.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -37,7 +35,6 @@ using namespace std;
 using namespace glm;
 
 #define PI 3.14159
-#define viewFactor .002
 
 class Application : public EventCallbacks
 {
@@ -51,8 +48,7 @@ public:
 	std::shared_ptr<Program> cubeProg;
 
 	// Shape to be used (from  file) - modify to support multiple
-	shared_ptr<unordered_map<string, shared_ptr<GameObject>>> objectList =
-	  make_shared<unordered_map<string, shared_ptr<GameObject>>>();
+	unordered_map<string, shared_ptr<GameObject>> objL;
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -60,34 +56,22 @@ public:
 	// Data necessary to give our triangle to OpenGL
 	GLuint VertexBufferID;
 
-	//example data that might be useful when trying to compute bounds on multi-shape
-
 	shared_ptr<Texture> texture_glass;
 
-
+	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
+	shared_ptr<Player> player1 = make_shared<Player>();
+	std::vector<std::shared_ptr<Shape>> totoMesh;
+	vector<shared_ptr<Totodile>> collectables;
+	
 	//animation data
-	float moveVelocity = .04;
 	float sTheta = 0;
 	int m = 1;
-
-	//view angles, from mouse
-	float phi = 0;
-	float theta = PI;
-
-	float prevX = 0;
-	float prevY = 0;
+	float c = 0;
+	int catchCount = 0;
+	float secondCount = 2;
 
 	//movement vectors
-	vec3 eye = vec3(0,0,5);
-	vec3 lookAtPoint = vec3(
-		cos(phi)*cos(theta),
-		sin(phi),
-		cos(phi)*cos((PI/2.0)-theta));
-	vec3 lookAtOffset = vec3(0,0,0);
-	vec3 up = vec3(0,1,0);
-
-	vec3 playerLocation = vec3(0, -1.05, -2.1);
-	float initialPlayerLocation = -1.05;
+	Camera camera;
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
@@ -99,25 +83,19 @@ public:
 		"front.jpg",           
 		"back.jpg"};
 
-	InputHandler ih;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
-		ih.setKeyFlags(key, action);
+		inputHandler->setKeyFlags(key, action);
 
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		}
-		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+		if (key == GLFW_KEY_M && action == GLFW_PRESS)
 			m = (m+1) % 5;
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+		if (key == GLFW_KEY_Z && action == GLFW_PRESS)
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+		if (key == GLFW_KEY_Z && action == GLFW_RELEASE)
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		}
 	}
 
 	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
@@ -131,45 +109,6 @@ public:
 			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
 		}
 	}
-
-	void setViewAngles(GLFWwindow *window) {
-		double posX, posY;
-		glfwGetCursorPos(window, &posX, &posY);
-
-		theta += viewFactor *(posX - prevX);
-		phi -= (viewFactor * (posY - prevY));
-		phi = fmax(phi, -PI/2 + 0.2);
-		phi = fmin(phi, PI/2 - 0.2);
-
-		prevX = posX;
-		prevY = posY;
-	}
-
-	mat4 getViewMatrix(vec3 *eye, vec3 *lookAtPoint, vec3 *up) {
-		int radius = 50;
-		int step = .5;
-
-
-		*lookAtPoint = vec3(
-			radius*cos(phi)*cos(theta),
-			radius*sin(phi),
-			radius*cos(phi)*cos((PI/2.0)-theta));
-
-		vec3 u = normalize((*lookAtPoint+lookAtOffset) - *eye);
-		vec3 v = cross(u, *up);
-
-		//move Eye + LookAtOffset
-		if (ih.Wflag) {*eye += float(moveVelocity)*u; lookAtOffset += float(moveVelocity)*u;}
-		if (ih.Sflag) {*eye -= float(moveVelocity)*u; lookAtOffset -= float(moveVelocity)*u;}
-		if (ih.Aflag) {*eye -= float(moveVelocity)*v; lookAtOffset -= float(moveVelocity)*v;}
-		if (ih.Dflag) {*eye += float(moveVelocity)*v; lookAtOffset += float(moveVelocity)*v;}
-		if (ih.Shiftflag) {*eye += .5f*float(moveVelocity)*(*up); lookAtOffset += .5f * float(moveVelocity)*(*up);}
-		if (ih.Ctrlflag) {*eye -= .5f*float(moveVelocity)*(*up); lookAtOffset -= .5f * float(moveVelocity)*(*up);}
-		if (ih.Shiftflag) {moveVelocity = .09;}
-		if (!ih.Shiftflag) {moveVelocity = .04;}
-
-		return glm::lookAt(*eye, *lookAtPoint + lookAtOffset, *up);
-   }
 
 	unsigned int createSky(string dir, vector<string> faces) {   
 		unsigned int textureID;   
@@ -227,16 +166,16 @@ public:
 				glUniform1f(prog->getUniform("shine"), 100);
 			break;
 			case 4:
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.1, 0.1, 0.1);        
+			 	glUniform3f(prog->getUniform("MatAmb"), 0.15, 0.15, 0.15);        
 				glUniform3f(prog->getUniform("MatDif"), 0.5, 0.5, 0.5);       
 				glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
-				glUniform1f(prog->getUniform("shine"), 100);
+				glUniform1f(prog->getUniform("shine"), 80);
 			break;
 		}
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), .3+ih.lightX, 3, 3);
+		glUniform3f(prog->getUniform("LightPos"), 50, 10, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -281,6 +220,10 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 
+		inputHandler->init();
+		camera.init();
+		camera.setInputHandler(inputHandler);
+		player1->init(inputHandler);
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
@@ -300,17 +243,19 @@ public:
 
 		//create objects
 		createGameObject(rDir, "cube.obj", "cube");
-		createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
+		totoMesh = createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
 		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
-/* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
-//		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
+		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
+		createGameObject(rDir + "arms/source/", "arms1.fbx", "arms");
+		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		// createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 
-	void createGameObject(string meshPath, string fileName, string objName) {
+	std::vector<std::shared_ptr<Shape>> createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
-		shared_ptr<Shape> newShape;
+		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 		mesh->name = objName;
@@ -326,17 +271,20 @@ public:
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			texPath = new aiString();
-			newShape = make_shared<Shape>();
+			newShape = make_shared<AnimatedShape>();
 			newShape->createShapeFromAssimp(scene->mMeshes[i]);
 			newShape->measure();
 			newShape->init();
 			mesh->shapeList.push_back(newShape);
+			string temp;
 
 			//load texture path into texPath
 			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
+			temp = texPath->C_Str();
 
 			//if mesh has texture, create a texture from it
-			if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0) {
+			if (texPath->C_Str() != "" and (texPath->C_Str() != "/" or texPath->C_Str() != "\\") and texPath->length != 0 and 
+				((texPath->length > 5) and (temp != "none"))) {
 				cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
 				if (texPath->C_Str()[0] != '/') {
 					newShape->texture = createTexture(meshPath + texPath->C_Str());
@@ -345,15 +293,16 @@ public:
 			}
 		}
 
-		(*objectList)[objName] = mesh;
+		objL[objName] = mesh;
 		cout << "created " << objName << endl << endl;;
+		return mesh->shapeList;
 	}
 
 	shared_ptr<Texture> createTexture(string texturePath) {
 		shared_ptr<Texture> tex = make_shared<Texture>();  
 		tex->setFilename(texturePath);  
 		tex->init();  tex->setUnit(1);  
-		tex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
+		tex->setWrapModes(GL_REPEAT, GL_REPEAT);  
 		return tex;
 	}
 
@@ -361,38 +310,31 @@ public:
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
 	}
 
-	void getPlayerDisplacement() {
-		if (ih.Upflag) {
-			ih.up_time = glm::clamp(glfwGetTime() - ih.up_start_time, 0.0, .5) * 2;
-			playerLocation.z += .02 * ih.up_time;
-		}
-		if (ih.Downflag) {
-			ih.down_time = glm::clamp(glfwGetTime() - ih.down_start_time, 0.0, .5) * 2;
-			playerLocation.z -= .02 * ih.down_time;
-		}
-		if (ih.Leftflag) {
-			ih.left_time = glm::clamp(glfwGetTime() - ih.left_start_time, 0.0, .8) * 2;
-			playerLocation.x -= .02 * ih.left_time;
-		}
-		if (ih.Rightflag) {
-			ih.right_time = glm::clamp(glfwGetTime() - ih.right_start_time, 0.0, .8) * 2;
-			playerLocation.x += .02 * ih.right_time;
-		}
-		if (ih.jump) {
-			float airtime = glfwGetTime() - ih.space_start_time;
-			if (airtime < 1.333 or playerLocation.x > 2 or playerLocation.x < -2)
-				playerLocation.y = initialPlayerLocation - pow(1.5*airtime - 1, 2) + 1;
-			else 
-				ih.jump = false;
-/* 			if (airtime < .5) {
-				playerLocation.y += airtime * .1;
-			} else if (playerLocation.y > -1) {
-				playerLocation.y -= .1 * pow(airtime, 10);
-			} else {
-				ih.jump = false;
-			} */
-		}
+	void drawSkybox(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> Projection) {
+		cubeProg->bind(); 
+		glDisable(GL_DEPTH_TEST);
+		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
+		Model->pushMatrix();
+		Model->translate(camera.eye); //move to center around eye
+		Model->scale(vec3(75,75,75));
+		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
+		objL["cube"]->draw(cubeProg); 
+		glEnable(GL_DEPTH_TEST);
+		Model->popMatrix();
+		cubeProg->unbind();
 	}
+
+	// bool hitSpherePlane(float c, float r, float A, float B, float C, float D) {
+	// 	return 0 < A*v.x + B*v.y + C*v.z + D;
+	// }
+
+	/*
+	/ m - P*V (perspective matrix * view matrix)
+	/ v - position of model to be checked against the frustum
+	*/
+
 
 	void render() {
 		// Get current frame buffer size.
@@ -414,138 +356,109 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
-
-		/* draw skybox */
-		cubeProg->bind(); 
-		glDisable(GL_DEPTH_TEST);
-		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
-		Model->pushMatrix();
-		Model->translate(eye); //move to center around eye
-		Model->scale(vec3(75,75,75));
-		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
-		(*objectList)["cube"]->draw(cubeProg); 
-		glEnable(GL_DEPTH_TEST);
-		Model->popMatrix();
-		cubeProg->unbind();
+		drawSkybox(Model, Projection);
 
 		/* bind standard program */
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 
-		vec3 vd = lookAtPoint - eye;
+		vec3 vd = camera.lookAtPoint - camera.eye;
 		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
 		setLight();
 
+		// camera.eye = vec3(player1->location.x, player1->location.y + .5, player1->location.z);
+
+
+		//draw terrain
 		Model->pushMatrix();
-		Model->scale(vec3(2,2,2));
-
-
-			//draw player
-			Model->pushMatrix();
-				Model->translate(vec3(-.2, -.55, -2));
-				Model->scale(vec3(.5, 1, .5));
-				setMaterial(m);
-				setModel(prog, Model);
- 				(*objectList)["cube"]->draw(prog); 
-			Model->popMatrix();
-
-			Model->pushMatrix();
-				getPlayerDisplacement();
-				Model->translate(vec3(1.1, -.39, -2.1));
-				Model->scale(vec3(.02, .02, .02));
-				setMaterial(m);
-				setModel(prog, Model);
-				(*objectList)["totodile"]->draw(prog);
-			Model->popMatrix();
-
-			//Main Stage
-			Model->pushMatrix();
-				Model->translate(vec3(0, -1, -2));
-				Model->scale(vec3(0.03, 0.03, 0.03));
-				setMaterial(3);
-				setModel(prog, Model);
-				(*objectList)["FoD"]->draw(prog);
-			Model->popMatrix();
-
-			//Skyring 1
-			Model->pushMatrix();
-				Model->translate(vec3(-2.4, 2, -2));
-				Model->rotate(.1, vec3(1,0,0));
-				Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
-				Model->scale(vec3(0.2, 0.2, 0.2));
-				setMaterial(1);
-				setModel(prog, Model);
-				(*objectList)["skyring1"]->draw(prog);
-			Model->popMatrix();
-			//Skyring2
-			Model->pushMatrix();
-				Model->translate(vec3(-2.8, 2.1, -.26));
-				Model->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
-				Model->rotate(.3, vec3(1,0,0));
-				Model->scale(vec3(0.2, 0.2, 0.2));
-				setModel(prog, Model);
-				(*objectList)["skyring2"]->draw(prog);
-			Model->popMatrix();
-
-
-			//draw Captain Falcon
-			Model->pushMatrix();
-				Model->translate(playerLocation);
-				Model->rotate(-PI/2, vec3(1, 0, 0));
-				Model->rotate(-PI/2, vec3(0, 0, 1));
-				Model->scale(vec3(0.03, 0.03, 0.03));
-				setMaterial(1);
-				setModel(prog, Model);
-				if (playerLocation.x > -5 and playerLocation.x < 5
-					and playerLocation.y > -5 and playerLocation.y < 5)
-//				(*objectList)["falcon"]->draw(prog);
-				if (ih.Cflag) {
-					playerLocation.x = 0;
-					playerLocation.y = -1.05;
-					playerLocation.z = -2.1;
-					ih.jump = false;
-				}
-			Model->popMatrix();
-
-			//draw Platform
-			Model->pushMatrix();
-				Model->translate(vec3(0, -.1-sTheta*.3, 0));
-				Model->scale(vec3(0.2, 0.2, 0.2));
-				setMaterial(3);
-				texture_glass->bind(prog->getUniform("Texture0"));
-				setModel(prog, Model);
-/* 				(*objectList)["melee/fod/platform3"]->draw(prog); */
-
-				//draw Pikachu
-				Model->pushMatrix();
-					Model->translate(vec3(4.68, -2.2, -.4));
-					Model->scale(vec3(0.007, 0.007, 0.007));
-					Model->rotate(PI/2, vec3(0,1,0));
-					Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
-					Model->translate(vec3(-6, -4, 0));
-					setMaterial(2);
-					setModel(prog, Model);
-/* 					(*objectList)["pikachu"]->draw(prog); */
-				Model->popMatrix();
-			Model->popMatrix();
-
-			//draw GameCube
-			Model->pushMatrix();
-				Model->translate(vec3(0, .3, 5));
-				Model->scale(vec3(0.08, 0.08, 0.08));
-				Model->rotate(PI, vec3(0,1,0));
-				setMaterial(0);
-				setModel(prog, Model);
-/* 				(*objectList)["melee/Gamecube/gamecube"]->draw(prog); */
-			Model->popMatrix();
+			Model->translate(vec3(0,-1.11,0));
+			Model->scale(vec3(50,50,50));
+			Model->rotate(-PI/2, vec3(1,0,0));
+			setMaterial(1);
+			setModel(prog, Model);
+			objL["moon"]->draw(prog); 
 		Model->popMatrix();
 
+		//draw totodile
+		Model->pushMatrix();
+			player1->update(&camera);
+			Model->translate(player1->location);
+			// Model->scale(vec3(.35, .75, .35));
+			if (!player1->isGrounded)
+			{
+				if (!player1->facingRight) {
+					Model->rotate(-PI/2, vec3(0,1,0));
+					Model->rotate(PI/8, vec3(1,0,0));
+				}
+				else {
+					Model->rotate(PI/2, vec3(0,1,0));
+					Model->rotate(PI/8, vec3(1,0,0));
+				}
+			}
+			//facing left
+			else if (!player1->facingRight) {
+				if (abs(player1->velocity.x <= -.04f) || inputHandler->Downflag){
+					Model->rotate(PI/4, vec3(0,0,1));
+					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
+				}
+				else if (abs(player1->velocity.x <= -.01f)) {
+					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
+				}
+				Model->rotate(-PI/2, vec3(0,1,0));
+			}
+			//facing right
+			else {
+				if (abs(player1->velocity.x >= .04f) || inputHandler->Downflag) {
+					Model->rotate(-PI/4, vec3(0,0,1));
+					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
+				}
+				else if (abs(player1->velocity.x >= .01f)) {
+					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
+				}
+				Model->rotate(PI/2, vec3(0,1,0));
+			}
+			if (player1->standing)
+				setMaterial(0);
+			else if (player1->isGrounded)
+				setMaterial(1);
+			else if (!player1->isGrounded)
+				setMaterial(3);
+
+			Model->scale(vec3(.025, .025, .025));
+			setModel(prog, Model);
+			objL["totodile"]->draw(prog); 
+		Model->popMatrix();
+
+		// if (fmod(glfwGetTime(), 2.0) == 0.0) {
+		setMaterial(4);
+		if (glfwGetTime() > secondCount) {
+		// if (inputHandler->Ctrlflag) {
+			collectables.push_back(createTotodile());
+			secondCount += 3;
+		}
+
+		auto it = collectables.begin();
+		while (it != collectables.end()) {
+			(*it)->update();
+			(*it)->draw(prog);
+			if (1.5 > distance((*it)->location, camera.eye)) {
+				catchCount++;
+				cout << "Catch count: " << catchCount << endl;
+				it = collectables.erase(it);
+			}
+			else if ((abs((*it)->location.x) > 50) || (abs((*it)->location.z) > 50)) {
+				it = collectables.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
+
 		prog->unbind();
+		// cout << glfwGetTime() << endl;
 
 		//animation update example
 		sTheta = sin(glfwGetTime());
@@ -553,7 +466,16 @@ public:
 		// Pop matrix stacks.
 		Projection->popMatrix();
 	}
+
+	shared_ptr<Totodile> createTotodile() {
+		shared_ptr<Totodile> t = make_shared<Totodile>();
+		t->init(totoMesh);
+		t->location = vec3(((rand()%40)-20),-1,((rand()%40)-20));
+		c += 1;
+		return t;
+	}
 };
+
 
 int main(int argc, char *argv[])
 {
@@ -561,9 +483,7 @@ int main(int argc, char *argv[])
 	std::string resourceDir = "../resources";
 
 	if (argc >= 2)
-	{
 		resourceDir = argv[1];
-	}
 
 	Application *application = new Application();
 
@@ -571,8 +491,7 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-//	windowManager->init(640, 480);
-	windowManager->init(1280, 960);
+	windowManager->init(1280, 900);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
@@ -588,7 +507,7 @@ int main(int argc, char *argv[])
 	{
 		// Render scene.
 		glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		application->setViewAngles(windowManager->getHandle());
+		application->camera.setViewAngles(windowManager->getHandle());
 		application->render();
 
 		// Swap front and back buffers.
