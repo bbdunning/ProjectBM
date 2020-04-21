@@ -53,6 +53,7 @@ Program 4
 * camera tracking characters
 * camera shake effect
 * airdodge
+* PARTICLES
 
 ## advanced stuff ##
 * moonwalking

@@ -241,10 +241,11 @@ public:
 		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
+		createGameObject(rDir + "terrain/", "sand.fbx", "sand");
 /* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
 //		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
-		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		createGameObject(rDir + "anim/", "model.dae", "animModel");
+		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		// createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
@@ -295,7 +296,7 @@ public:
 		shared_ptr<Texture> tex = make_shared<Texture>();  
 		tex->setFilename(texturePath);  
 		tex->init();  tex->setUnit(1);  
-		tex->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);  
+		tex->setWrapModes(GL_REPEAT, GL_REPEAT);  
 		return tex;
 	}
 
@@ -365,14 +366,15 @@ public:
 
 		//draw player
 		Model->pushMatrix();
-			Model->translate(player1->location);
+			Model->translate(vec3(0,-1,0));
+			Model->scale(vec3(.01,.01,.01));
 			Model->rotate(-PI/2, vec3(1,0,0));
-			camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1));
 			setMaterial(m);
 			setModel(prog, Model);
-			// ol["animModel"]->draw(prog); 
+			objL["sand"]->draw(prog); 
 		Model->popMatrix();
 
+		//draw totodile player
 		Model->pushMatrix();
 			player1->update();
 			Model->translate(player1->location);
@@ -389,15 +391,25 @@ public:
 					Model->rotate(PI/8, vec3(1,0,0));
 				}
 			}
+			//facing left
 			else if (!player1->facingRight) {
-				if (abs(player1->velocity.x <= -.04f)){
-					Model->rotate(PI/2, vec3(0,0,1));
+				if (abs(player1->velocity.x <= -.04f) || inputHandler->Downflag){
+					Model->rotate(PI/4, vec3(0,0,1));
+					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
+				}
+				else if (abs(player1->velocity.x <= -.01f)) {
+					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
 				}
 				Model->rotate(-PI/2, vec3(0,1,0));
 			}
+			//facing right
 			else {
-				if (abs(player1->velocity.x >= .04f)) {
-					Model->rotate(-PI/2, vec3(0,0,1));
+				if (abs(player1->velocity.x >= .04f) || inputHandler->Downflag) {
+					Model->rotate(-PI/4, vec3(0,0,1));
+					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
+				}
+				else if (abs(player1->velocity.x >= .01f)) {
+					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
 				}
 				Model->rotate(PI/2, vec3(0,1,0));
 			}
@@ -462,39 +474,7 @@ public:
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1);
 			setModel(prog, Model);
-			objL["falcon"]->draw(prog);
-		Model->popMatrix();
-
-		//draw Platform
-		Model->pushMatrix();
-			Model->translate(vec3(0, -.1-sTheta*.3, 0));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(3);
-			texture_glass->bind(prog->getUniform("Texture0"));
-			setModel(prog, Model);
-/* 				objL["melee/fod/platform3"]->draw(prog); */
-
-			//draw Pikachu
-			Model->pushMatrix();
-				Model->translate(vec3(4.68, -2.2, -.4));
-				Model->scale(vec3(0.007, 0.007, 0.007));
-				Model->rotate(PI/2, vec3(0,1,0));
-				Model->rotate(sin(glfwGetTime()*2), vec3(1,0,0));
-				Model->translate(vec3(-6, -4, 0));
-				setMaterial(2);
-				setModel(prog, Model);
-/* 					objL["pikachu"]->draw(prog); */
-			Model->popMatrix();
-		Model->popMatrix();
-
-		//draw GameCube
-		Model->pushMatrix();
-			Model->translate(vec3(0, .3, 5));
-			Model->scale(vec3(0.08, 0.08, 0.08));
-			Model->rotate(PI, vec3(0,1,0));
-			setMaterial(0);
-			setModel(prog, Model);
-/* 				objL)["melee/Gamecube/gamecube"]->draw(prog); */
+			// objL["falcon"]->draw(prog);
 		Model->popMatrix();
 
 		prog->unbind();
@@ -521,8 +501,7 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-//	windowManager->init(640, 480);
-	windowManager->init(1280, 960);
+	windowManager->init(1280, 900);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 

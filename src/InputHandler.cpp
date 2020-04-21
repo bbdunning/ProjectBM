@@ -26,6 +26,7 @@ void InputHandler::init() {
 	    this->up_time = 0;
         this->Leftflag = false;
         this->Rightflag = false;
+		this->Downflag = false;
 
 		// controllerPresent = glfwJoystickIsGamepad(GLFW_JOYSTICK_1);
 		// if (controllerPresent)

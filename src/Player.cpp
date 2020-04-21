@@ -37,6 +37,7 @@ int Player::update() {
     if (location.y <= -1) {
         if (!isGrounded) {
             //landing lag
+            location.y = -1;
             standing = true;
         }
         isGrounded = true;
@@ -63,20 +64,20 @@ int Player::update() {
     //grounded movement
     if (ih->Leftflag && velocity.x > -MAX_SPEED && isGrounded) {
         if (standing) {
-            velocity.x = -.01;
+            velocity.x = -.02;
             facingRight = false;
         }
-        else
+        else if (!facingRight)
             velocity.x -= .002;
         standing = false;
     }
     if (ih->Rightflag && velocity.x < MAX_SPEED && isGrounded)
     {
         if (standing) {
-            velocity.x = .01;
+            velocity.x = .02;
             facingRight = true;
         }
-        else
+        else if (facingRight)
             velocity.x += .002;
         standing = false;
     }
@@ -90,17 +91,17 @@ int Player::update() {
     //grounded friction
     if (isGrounded && velocity.x < 0.0f && !ih->Leftflag && !standing)
     {
-        if (velocity.x > -.006)
+        if (velocity.x > -.009)
             standing = true;
         else
             velocity.x += .003f;
     }
     if (isGrounded && velocity.x > 0.0f && !ih->Rightflag && !standing)
     {
-        if (velocity.x < -.006)
+        if (velocity.x < .009)
             standing = true;
         else
-        velocity.x -= .003;
+            velocity.x -= .003;
     }
 
     if ((velocity.x > -.0005 && velocity.x < .0005) && isGrounded)
@@ -119,8 +120,8 @@ int Player::update() {
     //     velocity.x -= .001;
 
     if (standing) cout << "standing ";
-    if (isGrounded) cout << "isGrounded";
-    cout << endl;
+    if (isGrounded) cout << "isGrounded ";
+    cout << location.y << endl;
     location += velocity;
     return 0;
 }
