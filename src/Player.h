@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "InputHandler.h"
+#include "Camera.h"
 
 class Player {
 public:
@@ -14,8 +15,9 @@ public:
     bool standing;
     bool hasDoubleJump;
     bool facingRight;
+    float moveVelocity;
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);
-    int update();
+    int update(Camera *camera);
 };

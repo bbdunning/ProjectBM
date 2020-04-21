@@ -15,6 +15,7 @@
 #include "Player.h"
 #include "Animation/AnimatedShape.h"
 #include "Camera.h"
+#include "Totodile.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -59,10 +60,13 @@ public:
 
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
 	shared_ptr<Player> player1 = make_shared<Player>();
+	std::vector<std::shared_ptr<Shape>> totoMesh;
+	vector<shared_ptr<Totodile>> collectables;
 	
 	//animation data
 	float sTheta = 0;
 	int m = 1;
+	float c = 0;
 
 	//movement vectors
 	Camera camera;
@@ -237,18 +241,17 @@ public:
 
 		//create objects
 		createGameObject(rDir, "cube.obj", "cube");
-		createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
+		totoMesh = createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
 		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
 		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
-/* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
-//		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
+		createGameObject(rDir + "arms/source/", "arms1.fbx", "arms");
 		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 
-	void createGameObject(string meshPath, string fileName, string objName) {
+	std::vector<std::shared_ptr<Shape>> createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
 		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
@@ -278,7 +281,7 @@ public:
 			temp = texPath->C_Str();
 
 			//if mesh has texture, create a texture from it
-			if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
+			if (texPath->C_Str() != "" and (texPath->C_Str() != "/" or texPath->C_Str() != "\\") and texPath->length != 0 and 
 				((texPath->length > 5) and (temp != "none"))) {
 				cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
 				if (texPath->C_Str()[0] != '/') {
@@ -290,6 +293,7 @@ public:
 
 		objL[objName] = mesh;
 		cout << "created " << objName << endl << endl;;
+		return mesh->shapeList;
 	}
 
 	shared_ptr<Texture> createTexture(string texturePath) {
@@ -363,23 +367,24 @@ public:
 		//set initial material and Light
 		setLight();
 
+		// camera.eye = vec3(player1->location.x, player1->location.y + .5, player1->location.z);
 
-		//draw player
+
+		//draw terrain
 		Model->pushMatrix();
-			Model->translate(vec3(0,-2,0));
+			Model->translate(vec3(0,-1.11,0));
 			Model->scale(vec3(50,50,50));
 			Model->rotate(-PI/2, vec3(1,0,0));
-			setMaterial(m);
+			setMaterial(4);
 			setModel(prog, Model);
 			objL["moon"]->draw(prog); 
 		Model->popMatrix();
 
-		//draw totodile player
+		//draw totodile
 		Model->pushMatrix();
-			player1->update();
+			player1->update(&camera);
 			Model->translate(player1->location);
 			// Model->scale(vec3(.35, .75, .35));
-			cout << player1->facingRight << endl;
 			if (!player1->isGrounded)
 			{
 				if (!player1->facingRight) {
@@ -421,63 +426,44 @@ public:
 				setMaterial(3);
 
 			Model->scale(vec3(.025, .025, .025));
-			cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
 			setModel(prog, Model);
 			objL["totodile"]->draw(prog); 
 		Model->popMatrix();
 
 		//draw totodile
-		Model->pushMatrix();
-			objL["totodile"]->location = vec3(1.1, -.39, -2.1);
-			Model->translate(objL["totodile"]->location);
-			Model->scale(vec3(.02, .02, .02));
-			setMaterial(m);
-			setModel(prog, Model);
-			objL["totodile"]->draw(prog);
-		Model->popMatrix();
-
-		//Main Stage
-		Model->pushMatrix();
-			Model->translate(vec3(0, -1, -2));
-			Model->scale(vec3(0.03, 0.03, 0.03));
-			setMaterial(3);
-			setModel(prog, Model);
-			objL["FoD"]->draw(prog);
-		Model->popMatrix();
-
-		//Skyring 1
-		Model->pushMatrix();
-			Model->translate(vec3(-2.4, 2, -2));
-			Model->rotate(.1, vec3(1,0,0));
-			Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(1);
-			setModel(prog, Model);
-			objL["skyring1"]->draw(prog);
-		Model->popMatrix();
-		//Skyring2
-		Model->pushMatrix();
-			Model->translate(vec3(-2.8, 2.1, -.26));
-			Model->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
-			Model->rotate(.3, vec3(1,0,0));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setModel(prog, Model);
-			objL["skyring2"]->draw(prog);
-		Model->popMatrix();
+		// Model->pushMatrix();
+			// objL["arms"]->location = vec3(1.1, -.39, -2.1);
+			// Model->translate(vec3(camera.eye.x-.3, camera.eye.y-.15, camera.eye.z-.2));
+			// Model->scale(vec3(.02, .02, .02));
+			// Model->multMatrix(glm::lookAt(camera.eye, camera.lookAtPoint+camera.lookAtOffset, camera.up));
+			// setMaterial(m);
+			// setModel(prog, Model);
+			// objL["arms"]->draw(prog);
+		// Model->popMatrix();
 
 
-		//draw Captain Falcon
-		Model->pushMatrix();
-			// getPlayerDisplacement();
-			Model->rotate(-PI/2, vec3(1, 0, 0));
-			Model->rotate(-PI/2, vec3(0, 0, 1));
-			Model->scale(vec3(0.035, 0.035, 0.035));
-			setMaterial(1);
-			setModel(prog, Model);
-			objL["falcon"]->draw(prog);
-		Model->popMatrix();
+		// if (fmod(glfwGetTime(), 2.0) == 0.0) {
+		setMaterial(4);
+		if (inputHandler->Ctrlflag) {
+			cout << "creating totodile" << endl;
+			collectables.push_back(createTotodile());
+		}
+
+		auto it = collectables.begin();
+		while (it != collectables.end()) {
+			(*it)->update();
+			(*it)->draw(prog);
+			if ((abs((*it)->location.x) > 50) || (abs((*it)->location.z) > 50)) {
+				it = collectables.erase(it);
+			}
+			else {
+				++it;
+			}
+			cout << endl;
+		}
 
 		prog->unbind();
+		// cout << glfwGetTime() << endl;
 
 		//animation update example
 		sTheta = sin(glfwGetTime());
@@ -485,7 +471,16 @@ public:
 		// Pop matrix stacks.
 		Projection->popMatrix();
 	}
+
+	shared_ptr<Totodile> createTotodile() {
+		shared_ptr<Totodile> t = make_shared<Totodile>();
+		t->init(totoMesh);
+		t->location = vec3(((rand()%40)-20),-1,((rand()%40)-20));
+		c += 1;
+		return t;
+	}
 };
+
 
 int main(int argc, char *argv[])
 {

@@ -1,5 +1,12 @@
+Lab 1
 
-Program 4
+https://github.com/assimp/assimp
+
+
+
+
+
+Ignore this
 =====
 
 ## Final Project Features ##
