@@ -11,7 +11,9 @@ public:
     glm::vec3 location;
     std::shared_ptr<InputHandler> ih;
     bool isGrounded;
+    bool standing;
     bool hasDoubleJump;
+    bool facingRight;
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);

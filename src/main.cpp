@@ -14,6 +14,7 @@
 #include "InputHandler.h"
 #include "Player.h"
 #include "Animation/AnimatedShape.h"
+#include "Camera.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader/tiny_obj_loader.h>
@@ -47,16 +48,13 @@ public:
 	std::shared_ptr<Program> cubeProg;
 
 	// Shape to be used (from  file) - modify to support multiple
-	shared_ptr<unordered_map<string, shared_ptr<GameObject>>> objectList =
-	  make_shared<unordered_map<string, shared_ptr<GameObject>>>();
+	unordered_map<string, shared_ptr<GameObject>> objL;
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
 
 	// Data necessary to give our triangle to OpenGL
 	GLuint VertexBufferID;
-
-	//example data that might be useful when trying to compute bounds on multi-shape
 
 	shared_ptr<Texture> texture_glass;
 
@@ -76,13 +74,8 @@ public:
 	float prevY = 0;
 
 	//movement vectors
-	vec3 eye = vec3(0,0,5);
-	vec3 lookAtPoint = vec3(
-		cos(phi)*cos(theta),
-		sin(phi),
-		cos(phi)*cos((PI/2.0)-theta));
-	vec3 lookAtOffset = vec3(0,0,0);
-	vec3 up = vec3(0,1,0);
+	Camera camera;
+	camera.init();
 
 	vec3 playerLocation = vec3(0, -1.05, -2.1);
 	float initialPlayerLocation = -1.05;
@@ -349,7 +342,7 @@ public:
 			}
 		}
 
-		(*objectList)[objName] = mesh;
+		objL[objName] = mesh;
 		cout << "created " << objName << endl << endl;;
 	}
 
@@ -375,15 +368,15 @@ public:
 		Model->scale(vec3(75,75,75));
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
-		(*objectList)["cube"]->draw(cubeProg); 
+		objL["cube"]->draw(cubeProg); 
 		glEnable(GL_DEPTH_TEST);
 		Model->popMatrix();
 		cubeProg->unbind();
 	}
 
-	bool hitSpherePlane(float c, float r, float A, float B, float C, float D) {
-		return 0 < A*v.x + B*v.y + C*v.z + D;
-	}
+	// bool hitSpherePlane(float c, float r, float A, float B, float C, float D) {
+	// 	return 0 < A*v.x + B*v.y + C*v.z + D;
+	// }
 
 	/*
 	/ m - P*V (perspective matrix * view matrix)
@@ -475,32 +468,63 @@ public:
 
 		//draw player
 		Model->pushMatrix();
-			player1->update();
 			Model->translate(player1->location);
 			Model->rotate(-PI/2, vec3(1,0,0));
 			checkInFrustum(Projection->topMatrix()*getViewMatrix(&eye, &lookAtPoint, &up), vec4(player1->location, 1));
-			// checkInFrustum(Projection->topMatrix(), vec4(player1->location, 1));
 			setMaterial(m);
 			setModel(prog, Model);
-			(*objectList)["animModel"]->draw(prog); 
+			// ol["animModel"]->draw(prog); 
 		Model->popMatrix();
 
 		Model->pushMatrix();
 			player1->update();
 			Model->translate(player1->location);
-			Model->scale(vec3(.35, .75, .35));
-			setMaterial(m);
+			// Model->scale(vec3(.35, .75, .35));
+			cout << player1->facingRight << endl;
+			if (!player1->isGrounded)
+			{
+				if (!player1->facingRight) {
+					Model->rotate(-PI/2, vec3(0,1,0));
+					Model->rotate(PI/8, vec3(1,0,0));
+				}
+				else {
+					Model->rotate(PI/2, vec3(0,1,0));
+					Model->rotate(PI/8, vec3(1,0,0));
+				}
+			}
+			else if (!player1->facingRight) {
+				if (abs(player1->velocity.x <= -.04f)){
+					Model->rotate(PI/2, vec3(0,0,1));
+				}
+				Model->rotate(-PI/2, vec3(0,1,0));
+			}
+			else {
+				if (abs(player1->velocity.x >= .04f)) {
+					Model->rotate(-PI/2, vec3(0,0,1));
+				}
+				Model->rotate(PI/2, vec3(0,1,0));
+			}
+			if (player1->standing)
+				setMaterial(0);
+			else if (player1->isGrounded)
+				setMaterial(1);
+			else if (!player1->isGrounded)
+				setMaterial(3);
+
+			Model->scale(vec3(.025, .025, .025));
+			checkInFrustum(Projection->topMatrix()*getViewMatrix(&eye, &lookAtPoint, &up), vec4(player1->location, 1));
 			setModel(prog, Model);
-			(*objectList)["cube"]->draw(prog); 
+			objL["totodile"]->draw(prog); 
 		Model->popMatrix();
 
 		//draw totodile
 		Model->pushMatrix();
-			Model->translate(vec3(1.1, -.39, -2.1));
+			objL["totodile"]->location = vec3(1.1, -.39, -2.1);
+			Model->translate(objL["totodile"]->location);
 			Model->scale(vec3(.02, .02, .02));
 			setMaterial(m);
 			setModel(prog, Model);
-			(*objectList)["totodile"]->draw(prog);
+			objL["totodile"]->draw(prog);
 		Model->popMatrix();
 
 		//Main Stage
@@ -509,7 +533,7 @@ public:
 			Model->scale(vec3(0.03, 0.03, 0.03));
 			setMaterial(3);
 			setModel(prog, Model);
-			(*objectList)["FoD"]->draw(prog);
+			objL["FoD"]->draw(prog);
 		Model->popMatrix();
 
 		//Skyring 1
@@ -520,7 +544,7 @@ public:
 			Model->scale(vec3(0.2, 0.2, 0.2));
 			setMaterial(1);
 			setModel(prog, Model);
-			(*objectList)["skyring1"]->draw(prog);
+			objL["skyring1"]->draw(prog);
 		Model->popMatrix();
 		//Skyring2
 		Model->pushMatrix();
@@ -529,7 +553,7 @@ public:
 			Model->rotate(.3, vec3(1,0,0));
 			Model->scale(vec3(0.2, 0.2, 0.2));
 			setModel(prog, Model);
-			(*objectList)["skyring2"]->draw(prog);
+			objL["skyring2"]->draw(prog);
 		Model->popMatrix();
 
 
@@ -542,7 +566,7 @@ public:
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1);
 			setModel(prog, Model);
-				(*objectList)["falcon"]->draw(prog);
+				objL["falcon"]->draw(prog);
 		Model->popMatrix();
 
 		//draw Platform
@@ -552,7 +576,7 @@ public:
 			setMaterial(3);
 			texture_glass->bind(prog->getUniform("Texture0"));
 			setModel(prog, Model);
-/* 				(*objectList)["melee/fod/platform3"]->draw(prog); */
+/* 				objL["melee/fod/platform3"]->draw(prog); */
 
 			//draw Pikachu
 			Model->pushMatrix();
@@ -563,7 +587,7 @@ public:
 				Model->translate(vec3(-6, -4, 0));
 				setMaterial(2);
 				setModel(prog, Model);
-/* 					(*objectList)["pikachu"]->draw(prog); */
+/* 					objL["pikachu"]->draw(prog); */
 			Model->popMatrix();
 		Model->popMatrix();
 
@@ -574,7 +598,7 @@ public:
 			Model->rotate(PI, vec3(0,1,0));
 			setMaterial(0);
 			setModel(prog, Model);
-/* 				(*objectList)["melee/Gamecube/gamecube"]->draw(prog); */
+/* 				objL)["melee/Gamecube/gamecube"]->draw(prog); */
 		Model->popMatrix();
 
 		prog->unbind();

@@ -52,3 +52,8 @@ Program 4
 * ledge grab
 * camera tracking characters
 * camera shake effect
+* airdodge
+
+## advanced stuff ##
+* moonwalking
+* wavedashing

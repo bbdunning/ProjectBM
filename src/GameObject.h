@@ -11,7 +11,10 @@ class GameObject {
     public:
         std::string name;
         std::vector<std::shared_ptr<Shape>> shapeList;
+        glm::vec3 location;
+        
         void draw(std::shared_ptr<Program> prog);
+        void init();
 };
 
 #endif
