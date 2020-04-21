@@ -175,7 +175,7 @@ public:
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), 50, 10, 3);
+		glUniform3f(prog->getUniform("LightPos"), 50, 20, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -456,9 +456,10 @@ public:
 			else {
 				auto it2 = collectables.begin();
 				while (it2 != collectables.end()) {
-					if ((it != it2) && (1 > distance((*it)->location, (*it2)->location)))
+					if ((it != it2) && (.7 > distance((*it)->location, (*it2)->location)))
 						// (*it)->velocity = -(*it)->velocity;
-						(*it)->velocity = .05f * normalize(vec3(rand()%5, 0, rand()%5));
+						// (*it)->velocity = .05f * normalize(vec3(rand()%5, 0, rand()%5));
+						(*it)->velocity = .05f * normalize((*it)->location - (*it2)->location);
 					it2++;
 				}
 				++it;
