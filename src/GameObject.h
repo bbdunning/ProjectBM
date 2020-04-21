@@ -15,6 +15,7 @@ class GameObject {
         
         void draw(std::shared_ptr<Program> prog);
         void init();
+        // static void createGameObject();
 };
 
 #endif

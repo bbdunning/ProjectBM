@@ -64,13 +64,8 @@ public:
 	float sTheta = 0;
 	int m = 1;
 
-	//view angles, from mouse
-
 	//movement vectors
 	Camera camera;
-
-	vec3 playerLocation = vec3(0, -1.05, -2.1);
-	float initialPlayerLocation = -1.05;
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
@@ -88,18 +83,13 @@ public:
 		inputHandler->setKeyFlags(key, action);
 
 		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		{
 			glfwSetWindowShouldClose(window, GL_TRUE);
-		}
-		if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+		if (key == GLFW_KEY_M && action == GLFW_PRESS)
 			m = (m+1) % 5;
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+		if (key == GLFW_KEY_Z && action == GLFW_PRESS)
 			glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-		}
-		if (key == GLFW_KEY_Z && action == GLFW_RELEASE) {
+		if (key == GLFW_KEY_Z && action == GLFW_RELEASE)
 			glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-		}
 	}
 
 	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
@@ -113,7 +103,6 @@ public:
 			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
 		}
 	}
-
 
 	unsigned int createSky(string dir, vector<string> faces) {   
 		unsigned int textureID;   
@@ -338,54 +327,6 @@ public:
 	/ m - P*V (perspective matrix * view matrix)
 	/ v - position of model to be checked against the frustum
 	*/
-	bool checkInFrustum(const mat4 m, vec4 v) {
-		vec4 v2 = m*v; 
-		bool l, r, b, t, n = 1, f = 1;
-
-		//check against left plane
-		float A = m[0][3] + m[0][0];
-		float B = m[1][3] + m[1][0];
-		float C = m[2][3] + m[2][0];
-		float D = m[3][3] + m[3][0];
-		l = (0 < A*v.x + B*v.y + C*v.z + D);
-
-		//check against right plane
-		A = m[0][3] - m[0][0];
-		B = m[1][3] - m[1][0];
-		C = m[2][3] - m[2][0];
-		D = m[3][3] - m[3][0];
-		r = (0 < A*v.x + B*v.y + C*v.z + D);
-
-		//bottom
-		A = m[0][3] + m[0][1];
-		B = m[1][3] + m[1][1];
-		C = m[2][3] + m[2][1];
-		D = m[3][3] + m[3][1];
-		b = (0 < A*v.x + B*v.y + C*v.z + D);
-
-		//top
-		A = m[0][3] - m[0][1];
-		B = m[1][3] - m[1][1];
-		C = m[2][3] - m[2][1];
-		D = m[3][3] - m[3][1];
-		t = (0 < A*v.x + B*v.y + C*v.z + D);
-
-		//near
-		A = m[0][3] + m[0][2];
-		B = m[1][3] + m[1][2];
-		C = m[2][3] + m[2][2];
-		D = m[3][3] + m[3][2];
-		n = (0 < A*v.x + B*v.y + C*v.z + D);
-
-		//far
-		A = m[0][3] - m[0][2];
-		B = m[1][3] - m[1][2];
-		C = m[2][3] - m[2][2];
-		D = m[3][3] - m[3][2];
-		f = (0 < A*v.x + B*v.y + C*v.z + D);
-
-		return l && r && b && t && n && f;
-	}
 
 
 	void render() {
@@ -426,7 +367,7 @@ public:
 		Model->pushMatrix();
 			Model->translate(player1->location);
 			Model->rotate(-PI/2, vec3(1,0,0));
-			checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1));
+			camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1));
 			setMaterial(m);
 			setModel(prog, Model);
 			// ol["animModel"]->draw(prog); 
@@ -468,7 +409,7 @@ public:
 				setMaterial(3);
 
 			Model->scale(vec3(.025, .025, .025));
-			checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1));
+			cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
 			setModel(prog, Model);
 			objL["totodile"]->draw(prog); 
 		Model->popMatrix();
@@ -516,13 +457,12 @@ public:
 		//draw Captain Falcon
 		Model->pushMatrix();
 			// getPlayerDisplacement();
-			Model->translate(playerLocation);
 			Model->rotate(-PI/2, vec3(1, 0, 0));
 			Model->rotate(-PI/2, vec3(0, 0, 1));
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1);
 			setModel(prog, Model);
-				objL["falcon"]->draw(prog);
+			objL["falcon"]->draw(prog);
 		Model->popMatrix();
 
 		//draw Platform

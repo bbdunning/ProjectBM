@@ -25,6 +25,7 @@ public:
     glm::mat4 getViewMatrix();
     void setInputHandler(std::shared_ptr<InputHandler> ih);
     void setViewAngles(GLFWwindow *window);
+	bool checkInFrustum(const glm::mat4 m, glm::vec4 v);
 };
 
 
