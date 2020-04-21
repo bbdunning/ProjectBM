@@ -241,10 +241,10 @@ public:
 		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
-		createGameObject(rDir + "terrain/", "sand.fbx", "sand");
+		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
 /* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
 //		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
-		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 
@@ -366,12 +366,12 @@ public:
 
 		//draw player
 		Model->pushMatrix();
-			Model->translate(vec3(0,-1,0));
-			Model->scale(vec3(.01,.01,.01));
+			Model->translate(vec3(0,-2,0));
+			Model->scale(vec3(50,50,50));
 			Model->rotate(-PI/2, vec3(1,0,0));
 			setMaterial(m);
 			setModel(prog, Model);
-			objL["sand"]->draw(prog); 
+			objL["moon"]->draw(prog); 
 		Model->popMatrix();
 
 		//draw totodile player
@@ -474,7 +474,7 @@ public:
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1);
 			setModel(prog, Model);
-			// objL["falcon"]->draw(prog);
+			objL["falcon"]->draw(prog);
 		Model->popMatrix();
 
 		prog->unbind();
