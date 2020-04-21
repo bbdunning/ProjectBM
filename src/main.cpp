@@ -34,7 +34,6 @@ using namespace std;
 using namespace glm;
 
 #define PI 3.14159
-#define viewFactor .002
 
 class Application : public EventCallbacks
 {
@@ -62,20 +61,13 @@ public:
 	shared_ptr<Player> player1 = make_shared<Player>();
 	
 	//animation data
-	float moveVelocity = .04;
 	float sTheta = 0;
 	int m = 1;
 
 	//view angles, from mouse
-	float phi = 0;
-	float theta = PI;
-
-	float prevX = 0;
-	float prevY = 0;
 
 	//movement vectors
 	Camera camera;
-	camera.init();
 
 	vec3 playerLocation = vec3(0, -1.05, -2.1);
 	float initialPlayerLocation = -1.05;
@@ -122,44 +114,6 @@ public:
 		}
 	}
 
-	void setViewAngles(GLFWwindow *window) {
-		double posX, posY;
-		glfwGetCursorPos(window, &posX, &posY);
-
-		theta += viewFactor *(posX - prevX);
-		phi -= (viewFactor * (posY - prevY));
-		phi = fmax(phi, -PI/2 + 0.2);
-		phi = fmin(phi, PI/2 - 0.2);
-
-		prevX = posX;
-		prevY = posY;
-	}
-
-	mat4 getViewMatrix(vec3 *eye, vec3 *lookAtPoint, vec3 *up) {
-		int radius = 50;
-		int step = .5;
-
-
-		*lookAtPoint = vec3(
-			radius*cos(phi)*cos(theta),
-			radius*sin(phi),
-			radius*cos(phi)*cos((PI/2.0)-theta));
-
-		vec3 u = normalize((*lookAtPoint+lookAtOffset) - *eye);
-		vec3 v = cross(u, *up);
-
-		//move Eye + LookAtOffset
-		if (inputHandler->Wflag) {*eye += float(moveVelocity)*u; lookAtOffset += float(moveVelocity)*u;}
-		if (inputHandler->Sflag) {*eye -= float(moveVelocity)*u; lookAtOffset -= float(moveVelocity)*u;}
-		if (inputHandler->Aflag) {*eye -= float(moveVelocity)*v; lookAtOffset -= float(moveVelocity)*v;}
-		if (inputHandler->Dflag) {*eye += float(moveVelocity)*v; lookAtOffset += float(moveVelocity)*v;}
-		if (inputHandler->Shiftflag) {*eye += .5f*float(moveVelocity)*(*up); lookAtOffset += .5f * float(moveVelocity)*(*up);}
-		if (inputHandler->Ctrlflag) {*eye -= .5f*float(moveVelocity)*(*up); lookAtOffset -= .5f * float(moveVelocity)*(*up);}
-		if (inputHandler->Shiftflag) {moveVelocity = .09;}
-		if (!inputHandler->Shiftflag) {moveVelocity = .04;}
-
-		return glm::lookAt(*eye, *lookAtPoint + lookAtOffset, *up);
-   }
 
 	unsigned int createSky(string dir, vector<string> faces) {   
 		unsigned int textureID;   
@@ -272,6 +226,8 @@ public:
 		cubeProg->addAttribute("vertNor");
 
 		inputHandler->init();
+		camera.init();
+		camera.setInputHandler(inputHandler);
 		player1->init(inputHandler);
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
@@ -362,9 +318,9 @@ public:
 		cubeProg->bind(); 
 		glDisable(GL_DEPTH_TEST);
 		glUniformMatrix4fv(cubeProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 		Model->pushMatrix();
-		Model->translate(eye); //move to center around eye
+		Model->translate(camera.eye); //move to center around eye
 		Model->scale(vec3(75,75,75));
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
@@ -457,9 +413,9 @@ public:
 		/* bind standard program */
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(getViewMatrix(&eye, &lookAtPoint, &up)));
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 
-		vec3 vd = lookAtPoint - eye;
+		vec3 vd = camera.lookAtPoint - camera.eye;
 		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
@@ -470,7 +426,7 @@ public:
 		Model->pushMatrix();
 			Model->translate(player1->location);
 			Model->rotate(-PI/2, vec3(1,0,0));
-			checkInFrustum(Projection->topMatrix()*getViewMatrix(&eye, &lookAtPoint, &up), vec4(player1->location, 1));
+			checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1));
 			setMaterial(m);
 			setModel(prog, Model);
 			// ol["animModel"]->draw(prog); 
@@ -512,7 +468,7 @@ public:
 				setMaterial(3);
 
 			Model->scale(vec3(.025, .025, .025));
-			checkInFrustum(Projection->topMatrix()*getViewMatrix(&eye, &lookAtPoint, &up), vec4(player1->location, 1));
+			checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1));
 			setModel(prog, Model);
 			objL["totodile"]->draw(prog); 
 		Model->popMatrix();
@@ -642,7 +598,7 @@ int main(int argc, char *argv[])
 	{
 		// Render scene.
 		glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		application->setViewAngles(windowManager->getHandle());
+		application->camera.setViewAngles(windowManager->getHandle());
 		application->render();
 
 		// Swap front and back buffers.
