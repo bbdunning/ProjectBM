@@ -16,6 +16,7 @@ public:
     bool hasDoubleJump;
     bool facingRight;
     float moveVelocity;
+    float boost;
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);

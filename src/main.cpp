@@ -403,6 +403,8 @@ public:
 					cout << "Catch count: " << catchCount << endl;
 					// (*it)->velocity += vec3(0,.05,0);
 					(*it)->velocity += vec3(0,(((float) (rand()%5))/80.0f) + .05,0);
+					if (catchCount%3 == 0)
+						player1->boost +=.05;
 				}
 				(*it)->isCaught = true;
 				// it = collectables.erase(it);
