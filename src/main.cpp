@@ -363,17 +363,6 @@ public:
 		//set initial material and Light
 		setLight();
 
-
-		//draw player
-		Model->pushMatrix();
-			Model->translate(vec3(0,-2,0));
-			Model->scale(vec3(50,50,50));
-			Model->rotate(-PI/2, vec3(1,0,0));
-			setMaterial(m);
-			setModel(prog, Model);
-			objL["moon"]->draw(prog); 
-		Model->popMatrix();
-
 		//draw totodile player
 		Model->pushMatrix();
 			player1->update();
