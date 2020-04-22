@@ -29,7 +29,7 @@ public:
     unsigned int m_NumBones;
 
     void init() override;
-	void createShapeFromAssimp(aiMesh* inMesh) override;
+	void createShape(aiMesh* inMesh) override;
 	void draw(const std::shared_ptr<Program> prog) const override;
     void LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones);
     

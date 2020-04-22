@@ -16,9 +16,6 @@
 #include "Animation/AnimatedShape.h"
 #include "Camera.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader/tiny_obj_loader.h>
-
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -40,9 +37,10 @@ class Application : public EventCallbacks
 
 public:
 
+	//create GLFW Window
 	WindowManager * windowManager = nullptr;
 
-	// Our shader program
+	// create shaders
 	std::shared_ptr<Program> prog;
 	std::shared_ptr<Program> cubeProg;
 
@@ -64,7 +62,7 @@ public:
 	float sTheta = 0;
 	int m = 1;
 
-	//movement vectors
+	//Camera
 	Camera camera;
 
 	//skybox
@@ -267,7 +265,7 @@ public:
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			texPath = new aiString();
 			newShape = make_shared<AnimatedShape>();
-			newShape->createShapeFromAssimp(scene->mMeshes[i]);
+			newShape->createShape(scene->mMeshes[i]);
 			newShape->measure();
 			newShape->init();
 			mesh->shapeList.push_back(newShape);
@@ -350,13 +348,13 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
 
+		//draw SKybox
 		drawSkybox(Model, Projection);
 
 		/* bind standard program */
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
-
 		vec3 vd = camera.lookAtPoint - camera.eye;
 		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
@@ -413,16 +411,6 @@ public:
 			cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
 			setModel(prog, Model);
 			objL["totodile"]->draw(prog); 
-		Model->popMatrix();
-
-		//draw totodile
-		Model->pushMatrix();
-			objL["totodile"]->location = vec3(1.1, -.39, -2.1);
-			Model->translate(objL["totodile"]->location);
-			Model->scale(vec3(.02, .02, .02));
-			setMaterial(m);
-			setModel(prog, Model);
-			objL["totodile"]->draw(prog);
 		Model->popMatrix();
 
 		//Main Stage

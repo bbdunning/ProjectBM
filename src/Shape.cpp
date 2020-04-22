@@ -10,15 +10,7 @@ using namespace std;
 
 
 // copy the data from the shape to this object
-void Shape::createShape(tinyobj::shape_t & shape)
-{
-	posBuf = shape.mesh.positions;
-	norBuf = shape.mesh.normals;
-	texBuf = shape.mesh.texcoords;
-	eleBuf = shape.mesh.indices;
-}
-
-void Shape::createShapeFromAssimp(aiMesh* inMesh)
+void Shape::createShape(aiMesh* inMesh)
 {
 	//fil posBuf
 	for (int i = 0; i < inMesh->mNumVertices; i++)

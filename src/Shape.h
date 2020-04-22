@@ -8,7 +8,6 @@
 #include <vector>
 #include <memory>
 #include <glm/gtc/type_ptr.hpp>
-#include <tiny_obj_loader/tiny_obj_loader.h>
 #include <assimp/mesh.h>
 #include <assimp/types.h>
 #include "Texture.h"
@@ -22,8 +21,7 @@ class Shape
 
 public:
 
-	void createShape(tinyobj::shape_t & shape);
-	virtual void createShapeFromAssimp(aiMesh* inMesh);
+	virtual void createShape(aiMesh* inMesh);
 	virtual void init();
 	void measure();
 	virtual void draw(const std::shared_ptr<Program> prog) const;

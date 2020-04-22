@@ -58,7 +58,7 @@ using namespace std;
 //     }
 // }
 
-void AnimatedShape::createShapeFromAssimp(aiMesh* inMesh)
+void AnimatedShape::createShape(aiMesh* inMesh)
 {
 	//fil posBuf
 	for (int i = 0; i < inMesh->mNumVertices; i++)
