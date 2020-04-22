@@ -175,7 +175,7 @@ public:
 	}
 
 	void setLight() {
-		glUniform3f(prog->getUniform("LightPos"), 50, 10, 3);
+		glUniform3f(prog->getUniform("LightPos"), 50, 20, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
 
@@ -383,8 +383,8 @@ public:
 		Model->popMatrix();
 
 		//draw totodile
+		player1->update(&camera);
 		Model->pushMatrix();
-			player1->update(&camera);
 			Model->translate(player1->location);
 			// Model->scale(vec3(.35, .75, .35));
 			if (!player1->isGrounded)
@@ -434,7 +434,7 @@ public:
 
 		// if (fmod(glfwGetTime(), 2.0) == 0.0) {
 		setMaterial(4);
-		if (glfwGetTime() > secondCount) {
+		if (glfwGetTime() > secondCount || inputHandler->Ctrlflag) {
 		// if (inputHandler->Ctrlflag) {
 			collectables.push_back(createTotodile());
 			secondCount += 3;
@@ -450,9 +450,18 @@ public:
 				it = collectables.erase(it);
 			}
 			else if ((abs((*it)->location.x) > 50) || (abs((*it)->location.z) > 50)) {
-				it = collectables.erase(it);
+				(*it)->velocity = -(*it)->velocity;
+				it++;
 			}
 			else {
+				auto it2 = collectables.begin();
+				while (it2 != collectables.end()) {
+					if ((it != it2) && (.7 > distance((*it)->location, (*it2)->location)))
+						// (*it)->velocity = -(*it)->velocity;
+						// (*it)->velocity = .05f * normalize(vec3(rand()%5, 0, rand()%5));
+						(*it)->velocity = .05f * normalize((*it)->location - (*it2)->location);
+					it2++;
+				}
 				++it;
 			}
 		}
