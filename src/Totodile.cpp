@@ -29,6 +29,7 @@ void Totodile::init(std::vector<std::shared_ptr<Shape>> totoMesh) {
     velocity = velocityDir * .05f;
     randSeed = rand();
     scale = ((float) (rand()%20))/30.0f + 1;
+    isCaught = false;
 }
 
 void Totodile::draw(shared_ptr<Program> prog) {

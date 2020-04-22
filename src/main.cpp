@@ -398,9 +398,13 @@ public:
 			(*it)->update();
 			(*it)->draw(prog);
 			if ((1.5 *(*it)->scale) > distance((*it)->location, camera.eye)) {
-				catchCount++;
-				cout << "Catch count: " << catchCount << endl;
-				(*it)->velocity += vec3(0,.001,0);
+				if ((*it)->isCaught == false) {
+					catchCount++;
+					cout << "Catch count: " << catchCount << endl;
+					// (*it)->velocity += vec3(0,.05,0);
+					(*it)->velocity += vec3(0,(((float) (rand()%5))/80.0f) + .05,0);
+				}
+				(*it)->isCaught = true;
 				// it = collectables.erase(it);
 				it++;
 			}
@@ -432,6 +436,7 @@ public:
 	}
 
 	shared_ptr<Totodile> createTotodile() {
+		cout << "There are " << c + 1 << " totodiles" << endl;
 		shared_ptr<Totodile> t = make_shared<Totodile>();
 		t->init(totoMesh);
 		t->location = vec3(((rand()%40)-20),-1,((rand()%40)-20));
