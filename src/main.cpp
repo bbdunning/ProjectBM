@@ -400,7 +400,9 @@ public:
 			if ((1.5 *(*it)->scale) > distance((*it)->location, camera.eye)) {
 				catchCount++;
 				cout << "Catch count: " << catchCount << endl;
-				it = collectables.erase(it);
+				(*it)->velocity += vec3(0,.001,0);
+				// it = collectables.erase(it);
+				it++;
 			}
 			else if ((abs((*it)->location.x) > 50) || (abs((*it)->location.z) > 50)) {
 				(*it)->velocity = -(*it)->velocity;

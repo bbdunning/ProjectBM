@@ -42,11 +42,8 @@ void Totodile::draw(shared_ptr<Program> prog) {
         omega = -omega;
     }
 
-    // vec3 a = glm::cross(vec3(0,1,0));
     Model->rotate(.5*sin(glfwGetTime()*17+randSeed), d);
     Model->rotate(omega, vec3(0, 1, 0));
-    // Model->rotate(90, vec3(0, 1, 0));
-
 
     glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
     for (int i = 0; i < this->shapeList.size(); i++) {
