@@ -103,7 +103,7 @@ public:
 		double posX, posY;
 		bool lbutton_down;
 
-		if (action == GLFW_PRESS or action == GLFW_REPEAT)
+		if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		{
 			 glfwGetCursorPos(window, &posX, &posY);
 			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;
@@ -283,8 +283,8 @@ public:
 			temp = texPath->C_Str();
 
 			//if mesh has texture, create a texture from it
-			if (texPath->C_Str() != "" and (texPath->C_Str() != "/" or texPath->C_Str() != "\\") and texPath->length != 0 and 
-				((texPath->length > 5) and (temp != "none"))) {
+			if (texPath->C_Str() != "" && (texPath->C_Str() != "/" || texPath->C_Str() != "\\") && texPath->length != 0 && 
+				((texPath->length > 5) && (temp != "none"))) {
 				cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
 				if (texPath->C_Str()[0] != '/') {
 					newShape->texture = createTexture(meshPath + texPath->C_Str());
@@ -294,7 +294,7 @@ public:
 		}
 
 		objL[objName] = mesh;
-		cout << "created " << objName << endl << endl;;
+		cout << "created " << objName << endl << endl;
 		return mesh->shapeList;
 	}
 
