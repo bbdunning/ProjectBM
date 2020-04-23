@@ -15,48 +15,11 @@
 
 
 using namespace std;
+using namespace glm;
 
-// void AnimatedShape::VertexBoneData::AddBoneData(unsigned int BoneID, float Weight)
-// {
-//     for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(IDs) ; i++) {
-//         if (Weights[i] == 0.0) {
-//             IDs[i] = BoneID;
-//             Weights[i] = Weight;
-//             return;
-//         }
-//     }
-
-//     // should never get here - more bones than we have space for
-//     cout << "BAD" << endl;
-//     assert(0);
-// } 
-
-// void AnimatedShape::LoadBones(unsigned int MeshIndex, const aiMesh* pMesh, std::vector<VertexBoneData>& Bones)
-// {
-//     for (unsigned int i = 0 ; i < pMesh->mNumBones ; i++) {
-//         unsigned int BoneIndex = 0;
-//         string BoneName(pMesh->mBones[i]->mName.data);
-
-//         if (m_BoneMapping->find(BoneName) == m_BoneMapping->end()) {
-//             BoneIndex = m_NumBones;
-//             m_NumBones++;
-//             BoneInfo bi;
-//             m_BoneInfo.push_back(bi);
-//         }
-//         else {
-//             BoneIndex = m_BoneMapping[BoneName];
-//         }
-
-//         m_BoneMapping[BoneName] = BoneIndex;
-//         m_BoneInfo[BoneIndex].BoneOffset = pMesh->mBones[i]->mOffsetMatrix;
-
-//         for (unsigned int j = 0 ; j < pMesh->mBones[i]->mNumWeights ; j++) {
-//             unsigned int VertexID = m_Entries[MeshIndex].BaseVertex + pMesh->mBones[i]->mWeights[j].mVertexId;
-//             float Weight = pMesh->mBones[i]->mWeights[j].mWeight;
-//             Bones[VertexID].AddBoneData(BoneIndex, Weight);
-//         }
-//     }
-// }
+void AnimatedShape::update() {
+	this->animator.update();
+}
 
 void AnimatedShape::createShape(aiMesh* inMesh)
 {
@@ -80,28 +43,34 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 		for (int j=0; j < inMesh->mNumUVComponents[0]; j++)
 			texBuf.push_back((inMesh->mTextureCoords[0])[i][j]);
 
-
-
-	m_BoneMapping = std::make_shared<unordered_map<string, unsigned int>>();
-
-    //fill boneBuf
-    Bones.resize(inMesh->mNumVertices);
-
-	for (int i=0; i < inMesh->mNumBones; i++) {
-        unsigned int BoneIndex = 0;
-        string BoneName = (inMesh->mBones[i]->mName.data);
-    }
-
-    // this->LoadBones();
-
-    // m_GlobalInverseTransform = inMesh->mRootNode->mTransformation;
-    m_GlobalInverseTransform = glm::mat4(0);
-    m_NumBones = 0;
+	this->jointCount = inMesh->mNumBones;
+	// for (int i=0; i < inMesh->mNumBones; i++) {
+	// 	inMesh->mBones[i];
+	// }
 
 }
 
-void AnimatedShape::init()
+//should make sure these are working correctly; make sure vector is changing
+//gets an array of joint model transforms
+vector<mat4> AnimatedShape::getJointTransforms() {
+	vector<mat4> jointMatrices;
+	jointMatrices.resize(jointCount);
+	addJointsToArray(rootJoint, jointMatrices);
+	return jointMatrices;
+}
+
+//adds current model-space transform (to parents?)
+void AnimatedShape::addJointsToArray(Joint *headJoint, vector<mat4> jointMatrices) {
+	jointMatrices[headJoint->index] = headJoint->animatedTransform;
+	for (int i=0; i<headJoint->children.size(); i++) {
+		addJointsToArray(&headJoint->children[i], jointMatrices);
+	}
+}
+
+void AnimatedShape::init(Joint *rootJoint)
 {
+	if (rootJoint != nullptr)
+		rootJoint->calcInverseBindTransform(new mat4(1));
 	texture = nullptr;
 	material = nullptr;
 
@@ -142,13 +111,13 @@ void AnimatedShape::init()
 
 
     //send JOINT and WEIGHT buf to GPU
-    glGenBuffers(1, &boneBufId);
-    glBindBuffer(GL_ARRAY_BUFFER, boneBufId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Bones[0]) * Bones.size(), &Bones[0], GL_STATIC_DRAW);
-    glEnableVertexAttribArray(BONE_ID_LOCATION);
-    glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*) 0);
-    glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
-    glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
+    // glGenBuffers(1, &boneBufId);
+    // glBindBuffer(GL_ARRAY_BUFFER, boneBufId);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(Bones[0]) * Bones.size(), &Bones[0], GL_STATIC_DRAW);
+    // glEnableVertexAttribArray(BONE_ID_LOCATION);
+    // glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*) 0);
+    // glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+    // glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
 
 	// Unbind the arrays
 	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -215,3 +184,16 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
+
+// inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from)
+// {
+//     glm::mat4 to;
+
+
+//     to[0][0] = (GLfloat)from->a1; to[0][1] = (GLfloat)from->b1;  to[0][2] = (GLfloat)from->c1; to[0][3] = (GLfloat)from->d1;
+//     to[1][0] = (GLfloat)from->a2; to[1][1] = (GLfloat)from->b2;  to[1][2] = (GLfloat)from->c2; to[1][3] = (GLfloat)from->d2;
+//     to[2][0] = (GLfloat)from->a3; to[2][1] = (GLfloat)from->b3;  to[2][2] = (GLfloat)from->c3; to[2][3] = (GLfloat)from->d3;
+//     to[3][0] = (GLfloat)from->a4; to[3][1] = (GLfloat)from->b4;  to[3][2] = (GLfloat)from->c4; to[3][3] = (GLfloat)from->d4;
+
+//     return to;
+// }

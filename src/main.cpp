@@ -14,6 +14,7 @@
 #include "InputHandler.h"
 #include "Player.h"
 #include "Animation/AnimatedShape.h"
+#include "Animation/Animator.h"
 #include "Camera.h"
 
 // value_ptr for glm
@@ -43,6 +44,7 @@ public:
 	// create shaders
 	std::shared_ptr<Program> prog;
 	std::shared_ptr<Program> cubeProg;
+	std::shared_ptr<Program> animProg;
 
 	// Shape to be used (from  file) - modify to support multiple
 	unordered_map<string, shared_ptr<GameObject>> objL;
@@ -131,7 +133,7 @@ public:
 		glViewport(0, 0, width, height);
 	}
 
-	void setMaterial(int i) {  
+	void setMaterial(int i, shared_ptr<Program> prog) {  
 		switch (i) {    
 			case 0:
 				 glUniform3f(prog->getUniform("MatAmb"), 0.02, 0.04, 0.2);        
@@ -166,7 +168,7 @@ public:
 		}
 	}
 
-	void setLight() {
+	void setLight(shared_ptr<Program> prog) {
 		glUniform3f(prog->getUniform("LightPos"), .3, 3, 3);
 		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
 	}
@@ -252,6 +254,7 @@ public:
 		aiString* texPath;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 		mesh->name = objName;
+		Joint *rootJoint;
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -263,11 +266,16 @@ public:
 		cout << "   " << objName + " has: " << scene->mNumAnimations << " animations" << endl;
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
+			if (scene->mMeshes[i]->mNumBones > 0) {
+				aiBone* j = scene->mMeshes[i]->mBones[0];
+				rootJoint = new Joint(0, j->mName.C_Str(), mat4(0));
+			}
 			texPath = new aiString();
 			newShape = make_shared<AnimatedShape>();
+			newShape->scene = scene;
 			newShape->createShape(scene->mMeshes[i]);
 			newShape->measure();
-			newShape->init();
+			newShape->init(rootJoint);
 			mesh->shapeList.push_back(newShape);
 			string temp;
 
@@ -359,7 +367,7 @@ public:
 		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
-		setLight();
+		setLight(prog);
 
 		//draw totodile player
 		Model->pushMatrix();
@@ -401,11 +409,11 @@ public:
 				Model->rotate(PI/2, vec3(0,1,0));
 			}
 			if (player1->standing)
-				setMaterial(0);
+				setMaterial(0, prog);
 			else if (player1->isGrounded)
-				setMaterial(1);
+				setMaterial(1, prog);
 			else if (!player1->isGrounded)
-				setMaterial(3);
+				setMaterial(3, prog);
 
 			Model->scale(vec3(.025, .025, .025));
 			cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
@@ -417,7 +425,7 @@ public:
 		Model->pushMatrix();
 			Model->translate(vec3(0, -1, -2));
 			Model->scale(vec3(0.03, 0.03, 0.03));
-			setMaterial(3);
+			setMaterial(3, prog);
 			setModel(prog, Model);
 			objL["FoD"]->draw(prog);
 		Model->popMatrix();
@@ -428,7 +436,7 @@ public:
 			Model->rotate(.1, vec3(1,0,0));
 			Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
 			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(1);
+			setMaterial(1, prog);
 			setModel(prog, Model);
 			objL["skyring1"]->draw(prog);
 		Model->popMatrix();
@@ -449,7 +457,7 @@ public:
 			Model->rotate(-PI/2, vec3(1, 0, 0));
 			Model->rotate(-PI/2, vec3(0, 0, 1));
 			Model->scale(vec3(0.035, 0.035, 0.035));
-			setMaterial(1);
+			setMaterial(1, prog);
 			setModel(prog, Model);
 			objL["falcon"]->draw(prog);
 		Model->popMatrix();
