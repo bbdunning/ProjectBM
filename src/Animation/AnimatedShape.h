@@ -3,7 +3,6 @@
 #define ANIMATEDSHAPE_H
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <unordered_map>
 #include <string>
 #include <memory>
 #include <assimp/scene.h>

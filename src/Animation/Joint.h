@@ -35,6 +35,7 @@ public:
     glm::mat4 localBindTransform;
     glm::mat4 inverseBindTransform;
 
+    Joint() {};
     Joint(int index, std::string name, glm::mat4 localBindTransform);
     void calcInverseBindTransform(glm::mat4 *parentBindTransform);
 };

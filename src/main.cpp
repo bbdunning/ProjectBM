@@ -248,10 +248,33 @@ public:
 		// createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 	
-	// void readJoints() {
+	unsigned int jointCount=0;
 
-	// }
-	void traverseNode(aiNode *node, const aiScene* scene) {
+	//builds map of all joints & creates a heirarchy
+	shared_ptr<Joint> buildJointHeirarchy(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
+		shared_ptr<Joint> j = nullptr;
+		if (node->mName.length > 0) {
+			// cout << "name: " << node->mName.C_Str() << endl;
+		}
+		for (int i=0; i< node->mNumMeshes; i++) {
+			aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+			for (int j=0; j<mesh->mNumBones;j++) {
+				aiBone *bone = mesh->mBones[j];
+				string boneName = bone->mName.C_Str();
+				if (jointMap->find(mesh->mBones[j]->mName.C_Str()) == jointMap->end()) {
+					(*jointMap)[boneName] = Joint(jointCount++, boneName, mat4_cast(bone->mOffsetMatrix));
+					cout << "bone name: " << boneName << endl;
+				}
+				// cout << "   " << mesh->mBones[j]->mName.C_Str() << endl;
+				// Joint(0, mesh->mBones[j]->mName.C_Str(), mat4_cast(mesh->mBones[j]->mOffsetMatrix));
+			}
+			// cout << "   mesh bones: " << scene->mMeshes[node->mMeshes[i]]->mNumBones << endl;
+		}
+		for (int i=0; i<node->mNumChildren;i++) {
+			buildJointHeirarchy(jointMap, node->mChildren[i], scene);
+			// if (node->mChildren[i])
+		}
+		return j;
 	}
 
 
@@ -288,18 +311,20 @@ public:
 			} else
 				newShape->texture = createTexture(texPath->C_Str());
 		}
+		// mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i));
 		return newShape;
 	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
+		shared_ptr<map<string, Joint>> jointMap = make_shared<map<string, Joint>>();
 		mesh->name = objName;
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
-		traverseNode(scene->mRootNode, scene);
+		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
 
 		cout << "creating " << objName << endl;
 

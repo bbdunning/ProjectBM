@@ -1,6 +1,5 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <unordered_map>
 #include <iostream>
 #include <cassert>
 #include <assimp/types.h>
