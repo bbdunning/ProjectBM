@@ -62,7 +62,7 @@ vector<mat4> AnimatedShape::getJointTransforms() {
 void AnimatedShape::addJointsToArray(Joint *headJoint, vector<mat4> jointMatrices) {
 	jointMatrices[headJoint->index] = headJoint->animatedTransform;
 	for (int i=0; i<headJoint->children.size(); i++) {
-		addJointsToArray(&headJoint->children[i], jointMatrices);
+		addJointsToArray(headJoint->children[i], jointMatrices);
 	}
 }
 

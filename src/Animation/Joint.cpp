@@ -18,7 +18,7 @@ void Joint::calcInverseBindTransform(mat4 *parentBindTransform)
     mat4 bindTransform = *parentBindTransform * localBindTransform;
     inverse(bindTransform);
     for (int i=0; i<this->children.size(); i++) {
-        this->children[i].calcInverseBindTransform(&bindTransform);
+        this->children[i]->calcInverseBindTransform(&bindTransform);
     }
 }
 

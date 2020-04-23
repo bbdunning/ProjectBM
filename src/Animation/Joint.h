@@ -25,7 +25,7 @@ class Joint {
 public:
     int index;
     std::string name;
-    std::vector<Joint> children;
+    std::vector<Joint*> children;
 
     //transform from position in model to position in animation (MODEL SPACE)
     //used in shader

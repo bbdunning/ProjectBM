@@ -251,11 +251,9 @@ public:
 	unsigned int jointCount=0;
 
 	//builds map of all joints & creates a heirarchy
-	shared_ptr<Joint> buildJointHeirarchy(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
-		shared_ptr<Joint> j = nullptr;
-		if (node->mName.length > 0) {
-			// cout << "name: " << node->mName.C_Str() << endl;
-		}
+	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
+		if (node == nullptr)
+			return;
 		for (int i=0; i< node->mNumMeshes; i++) {
 			aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
 			for (int j=0; j<mesh->mNumBones;j++) {
@@ -263,20 +261,63 @@ public:
 				string boneName = bone->mName.C_Str();
 				if (jointMap->find(mesh->mBones[j]->mName.C_Str()) == jointMap->end()) {
 					(*jointMap)[boneName] = Joint(jointCount++, boneName, mat4_cast(bone->mOffsetMatrix));
-					cout << "bone name: " << boneName << endl;
+					// cout << "joint: " << boneName << " id: " << (*jointMap)[boneName].index << endl;
 				}
-				// cout << "   " << mesh->mBones[j]->mName.C_Str() << endl;
-				// Joint(0, mesh->mBones[j]->mName.C_Str(), mat4_cast(mesh->mBones[j]->mOffsetMatrix));
 			}
-			// cout << "   mesh bones: " << scene->mMeshes[node->mMeshes[i]]->mNumBones << endl;
 		}
-		for (int i=0; i<node->mNumChildren;i++) {
-			buildJointHeirarchy(jointMap, node->mChildren[i], scene);
-			// if (node->mChildren[i])
-		}
-		return j;
+		for (int i=0; i<node->mNumChildren;i++)
+			populateJointMap(jointMap, node->mChildren[i], scene);
 	}
 
+	Joint* buildJointHeirarchy(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
+		Joint* jp = nullptr;
+
+		for (int i=0; i< node->mNumChildren; i++) {
+			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
+				(*jointMap)[node->mChildren[i]->mName.C_Str()].children.push_back(&(*jointMap)[node->mChildren[i]->mName.C_Str()]);
+				&(*jointMap)[node->mChildren[i]->mName.C_Str()];
+			}
+			buildJointHeirarchy(jointMap, node->mChildren[i], scene);
+		}
+
+		if (jointMap->find(node->mName.C_Str()) != jointMap->end())
+			jp = &(*jointMap)[node->mName.C_Str()];
+		// cout << "jp: " << jp << endl;
+
+		return jp;
+	}
+
+	Joint* getRootJoint(shared_ptr<map<string, Joint>> jointMap, aiNode *node) {
+		if (node == nullptr || jointMap == nullptr) {
+			return nullptr;
+		}
+		if (jointMap->find(node->mName.C_Str()) != jointMap->end()) {
+			return &(*jointMap)[node->mName.C_Str()];
+		}
+		for (int i=0; i< node->mNumChildren; i++) {
+			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
+			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
+				cout << i << endl;
+				return &(*jointMap)[node->mChildren[i]->mName.C_Str()];
+			}
+		}
+		if (node != nullptr && node->mNumChildren > 0) {
+			return getRootJoint(jointMap, node->mChildren[0]);
+		}
+		return nullptr;
+	}
+
+	void printJoints(Joint *j)
+	{
+		if (j == nullptr) {
+			cout << "nothing" << endl;
+			return;
+		}
+		cout << "joint name: " << j->name << endl;
+		for (int i=0;i<j->children.size();i++) {
+			printJoints((j->children[i]));
+		}
+	}
 
 	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, string fileName, string objName, shared_ptr<GameObject> obj, int i) {
 		shared_ptr<AnimatedShape> newShape;
@@ -324,9 +365,16 @@ public:
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
-		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
-
 		cout << "creating " << objName << endl;
+		populateJointMap(jointMap, scene->mRootNode, scene);
+		cout << "jointMap size: " << jointMap->size() << endl;
+		for (map<string, Joint>::iterator it = jointMap->begin(); it != jointMap->end(); ++it) {
+			cout << "map: " << it->first << endl;
+		}
+		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
+		if (jointMap->size() > 0)
+			printJoints(getRootJoint(jointMap, scene->mRootNode));
+
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i));

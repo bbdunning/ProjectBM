@@ -43,7 +43,7 @@ void Animator::applyPoseToJoints(shared_ptr<map<string, mat4>> currentPose, Join
     mat4 currentLocalTransform = (*currentPose)[joint->name];
     mat4 currentTransform = parentTransform * currentLocalTransform;
     for (int i=0; i<joint->children.size();i++) {
-        applyPoseToJoints(currentPose,&joint->children[i], currentTransform);
+        applyPoseToJoints(currentPose,joint->children[i], currentTransform);
     }
     //MAY NEED TO SWAP ORDER OF MULTIPLICATION
     // currentTransform = joint->inverseBindTransform * currentTransform;
