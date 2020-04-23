@@ -4,7 +4,7 @@
 using namespace glm;
 using namespace std;
 
-Joint::Joint(int index, std::string name, glm::mat4 localBindTransform)
+Joint::Joint(int index, std::string name, shared_ptr<glm::mat4> localBindTransform)
 {
     this->index = index;
     this->name = name;
@@ -15,7 +15,7 @@ Joint::Joint(int index, std::string name, glm::mat4 localBindTransform)
 //call during setup, after join heirarchy has been formed
 void Joint::calcInverseBindTransform(mat4 *parentBindTransform) 
 {
-    mat4 bindTransform = *parentBindTransform * localBindTransform;
+    mat4 bindTransform = *parentBindTransform * *localBindTransform;
     inverse(bindTransform);
     for (int i=0; i<this->children.size(); i++) {
         this->children[i]->calcInverseBindTransform(&bindTransform);

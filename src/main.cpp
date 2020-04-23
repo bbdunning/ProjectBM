@@ -20,6 +20,7 @@
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/mesh.h>
@@ -244,47 +245,35 @@ public:
 		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
 /* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
 //		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
-		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		// createGameObject(rDir + "anim/", "model.dae", "animModel");
+		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
 	
 	unsigned int jointCount=0;
 
-	//builds map of all joints & creates a heirarchy
+	//creates joings and builds map of all joints
 	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
-		if (node == nullptr)
-			return;
-		for (int i=0; i< node->mNumMeshes; i++) {
-			aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+		for (int i=0; i<scene->mNumMeshes; i++) {
+			aiMesh *mesh = scene->mMeshes[i];
 			for (int j=0; j<mesh->mNumBones;j++) {
 				aiBone *bone = mesh->mBones[j];
 				string boneName = bone->mName.C_Str();
-				if (jointMap->find(mesh->mBones[j]->mName.C_Str()) == jointMap->end()) {
-					(*jointMap)[boneName] = Joint(jointCount++, boneName, mat4_cast(bone->mOffsetMatrix));
-					// cout << "joint: " << boneName << " id: " << (*jointMap)[boneName].index << endl;
+				if (jointMap->find(boneName) == jointMap->end()) {
+					(*jointMap)[boneName] = Joint(jointCount++, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix)));
 				}
 			}
 		}
-		for (int i=0; i<node->mNumChildren;i++)
-			populateJointMap(jointMap, node->mChildren[i], scene);
 	}
 
-	Joint* buildJointHeirarchy(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
-		Joint* jp = nullptr;
-
+	//adds children to Joints
+	void buildJointHeirarchy(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
 		for (int i=0; i< node->mNumChildren; i++) {
 			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-				(*jointMap)[node->mChildren[i]->mName.C_Str()].children.push_back(&(*jointMap)[node->mChildren[i]->mName.C_Str()]);
+				(*jointMap)[node->mName.C_Str()].children.push_back(&(*jointMap)[node->mChildren[i]->mName.C_Str()]);
 				&(*jointMap)[node->mChildren[i]->mName.C_Str()];
 			}
 			buildJointHeirarchy(jointMap, node->mChildren[i], scene);
 		}
-
-		if (jointMap->find(node->mName.C_Str()) != jointMap->end())
-			jp = &(*jointMap)[node->mName.C_Str()];
-		// cout << "jp: " << jp << endl;
-
-		return jp;
 	}
 
 	Joint* getRootJoint(shared_ptr<map<string, Joint>> jointMap, aiNode *node) {
@@ -295,14 +284,16 @@ public:
 			return &(*jointMap)[node->mName.C_Str()];
 		}
 		for (int i=0; i< node->mNumChildren; i++) {
-			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
 			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-				cout << i << endl;
 				return &(*jointMap)[node->mChildren[i]->mName.C_Str()];
 			}
 		}
-		if (node != nullptr && node->mNumChildren > 0) {
-			return getRootJoint(jointMap, node->mChildren[0]);
+		for (int i=0; i<node->mNumChildren; i++) {
+			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
+			string childname = node->mChildren[i]->mName.C_Str();
+			if (childname == "Armature"){
+				return getRootJoint(jointMap, node->mChildren[i]);
+			}
 		}
 		return nullptr;
 	}
@@ -315,7 +306,18 @@ public:
 		}
 		cout << "joint name: " << j->name << endl;
 		for (int i=0;i<j->children.size();i++) {
+			cout << to_string(*(j->localBindTransform)) << endl;
 			printJoints((j->children[i]));
+		}
+	}
+
+	void printAllJoints(shared_ptr<map<string, Joint>> jointMap) {
+		for (map<string,Joint>::iterator it=jointMap->begin(); it != jointMap->end(); ++it) {
+			Joint *j = &it->second;
+			cout << it->first << " has children: " << j->children.size() << endl;
+			for (int q=0; q<j->children.size();q++) {
+				cout << "   child: " << j->children[q]->name.c_str() << endl;
+			}
 		}
 	}
 
@@ -324,10 +326,11 @@ public:
 		aiString* texPath;
 		Joint *rootJoint = nullptr;
 
+
 		newShape = make_shared<AnimatedShape>();
 		if (scene->mMeshes[i]->mNumBones > 0) {
 			aiBone* j = scene->mMeshes[i]->mBones[0];
-			rootJoint = new Joint(0, j->mName.C_Str(), mat4(0));
+			rootJoint = new Joint(0, j->mName.C_Str(), make_shared<mat4>());
 			newShape->isAnimated = true;
 		} else {
 			newShape->isAnimated = false;
@@ -336,6 +339,7 @@ public:
 		newShape->scene = scene;
 		newShape->createShape(scene->mMeshes[i]);
 		newShape->measure();
+		//fix rootJoint
 		newShape->init(rootJoint);
 		string temp;
 
@@ -368,10 +372,8 @@ public:
 		cout << "creating " << objName << endl;
 		populateJointMap(jointMap, scene->mRootNode, scene);
 		cout << "jointMap size: " << jointMap->size() << endl;
-		for (map<string, Joint>::iterator it = jointMap->begin(); it != jointMap->end(); ++it) {
-			cout << "map: " << it->first << endl;
-		}
 		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
+		printAllJoints(jointMap);
 		if (jointMap->size() > 0)
 			printJoints(getRootJoint(jointMap, scene->mRootNode));
 
@@ -543,8 +545,19 @@ public:
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, prog);
 			setModel(prog, Model);
-			objL["falcon"]->draw(prog);
+			// objL["falcon"]->draw(prog);
 		Model->popMatrix();
+
+		Model->pushMatrix();
+			// getPlayerDisplacement();
+			Model->rotate(-PI/2, vec3(1, 0, 0));
+			Model->rotate(-PI/2, vec3(0, 0, 1));
+			Model->scale(vec3(0.035, 0.035, 0.035));
+			setMaterial(1, prog);
+			setModel(prog, Model);
+			objL["animModel"]->draw(prog);
+		Model->popMatrix();
+
 
 		prog->unbind();
 

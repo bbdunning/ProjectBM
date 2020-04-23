@@ -32,11 +32,11 @@ public:
     glm::mat4 animatedTransform;
 
     //transform relative to parent
-    glm::mat4 localBindTransform;
+    std::shared_ptr<glm::mat4> localBindTransform;
     glm::mat4 inverseBindTransform;
 
     Joint() {};
-    Joint(int index, std::string name, glm::mat4 localBindTransform);
+    Joint(int index, std::string name, std::shared_ptr<glm::mat4> localBindTransform);
     void calcInverseBindTransform(glm::mat4 *parentBindTransform);
 };
 
