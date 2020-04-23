@@ -252,24 +252,49 @@ public:
 
 	// }
 	void traverseNode(aiNode *node, const aiScene* scene) {
-		if (node->mName.length != 0)
-			cout << "node name: " << node->mName.C_Str() << endl;
-		for (int i=0; i< node->mNumMeshes; i++) {
-			aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-			// cout << "   mesh bones: " << scene->mMeshes[node->mMeshes[i]]->mNumBones << endl;
+	}
+
+
+	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, string fileName, string objName, shared_ptr<GameObject> obj, int i) {
+		shared_ptr<AnimatedShape> newShape;
+		aiString* texPath;
+		Joint *rootJoint = nullptr;
+
+		newShape = make_shared<AnimatedShape>();
+		if (scene->mMeshes[i]->mNumBones > 0) {
+			aiBone* j = scene->mMeshes[i]->mBones[0];
+			rootJoint = new Joint(0, j->mName.C_Str(), mat4(0));
+			newShape->isAnimated = true;
+		} else {
+			newShape->isAnimated = false;
 		}
-		for (int i=0; i<node->mNumChildren;i++) {
-			traverseNode(node->mChildren[i], scene);
+		texPath = new aiString();
+		newShape->scene = scene;
+		newShape->createShape(scene->mMeshes[i]);
+		newShape->measure();
+		newShape->init(rootJoint);
+		string temp;
+
+		//load texture path into texPath
+		scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
+		temp = texPath->C_Str();
+
+		//if mesh has texture, create a texture from it
+		if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
+			((texPath->length > 5) and (temp != "none"))) {
+			// cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
+			if (texPath->C_Str()[0] != '/') {
+				newShape->texture = createTexture(meshPath + texPath->C_Str());
+			} else
+				newShape->texture = createTexture(texPath->C_Str());
 		}
+		return newShape;
 	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
-		shared_ptr<AnimatedShape> newShape;
-		aiString* texPath;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 		mesh->name = objName;
-		Joint *rootJoint;
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -277,45 +302,12 @@ public:
 		traverseNode(scene->mRootNode, scene);
 
 		cout << "creating " << objName << endl;
-		// cout << "   " << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
-		// cout << "   " << objName + " has: " << scene->mNumMaterials << " materials" << endl;
-		// cout << "   " << objName + " has: " << scene->mNumTextures << " textures" << endl;
-		// cout << "   " << objName + " has: " << scene->mNumAnimations << " animations" << endl;
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
-			newShape = make_shared<AnimatedShape>();
-			if (scene->mMeshes[i]->mNumBones > 0) {
-				aiBone* j = scene->mMeshes[i]->mBones[0];
-				rootJoint = new Joint(0, j->mName.C_Str(), mat4(0));
-				newShape->isAnimated = true;
-			} else {
-				newShape->isAnimated = false;
-			}
-			texPath = new aiString();
-			newShape->scene = scene;
-			newShape->createShape(scene->mMeshes[i]);
-			newShape->measure();
-			newShape->init(rootJoint);
-			mesh->shapeList.push_back(newShape);
-			string temp;
-
-			//load texture path into texPath
-			scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
-			temp = texPath->C_Str();
-
-			//if mesh has texture, create a texture from it
-			if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
-				((texPath->length > 5) and (temp != "none"))) {
-				// cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
-				if (texPath->C_Str()[0] != '/') {
-					newShape->texture = createTexture(meshPath + texPath->C_Str());
-				} else
-					newShape->texture = createTexture(texPath->C_Str());
-			}
+			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i));
 		}
 
 		objL[objName] = mesh;
-		// cout << "created " << objName << endl << endl;;
 	}
 
 	shared_ptr<Texture> createTexture(string texturePath) {
