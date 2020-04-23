@@ -8,6 +8,7 @@
 #include <memory>
 #include <assimp/scene.h>
 
+#include "Joint.h"
 #include "Animator.h"
 #include "../Shape.h"
 

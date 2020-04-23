@@ -3,7 +3,6 @@
 #define ANIMATOR_H
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <unordered_map>
 #include <iostream>
 #include <cassert>
 #include <assimp/types.h>
@@ -15,19 +14,15 @@
 #include "../GLSL.h"
 #include "../Program.h"
 #include "../Shape.h" 
+#include "Joint.h"
 
-static inline glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); }
-static inline glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
-static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
-// #include "AnimatedShape.h"
-
+class AnimatedShape;
 
 class Animation 
 {
 public:
     float length; //in seconds
-    // std::vector<KeyFrame> frames;
-    std::map<std::string, KeyFrame> frames;
+    std::vector<KeyFrame> frames;
     
     Animation(float lengthInSeconds, std::vector<KeyFrame> frames);
 };
@@ -42,6 +37,13 @@ public:
     float animTime;
 
     void update();
+    void doAnimation(Animation *a);
+    void increaseAnimationTime();
+    void applyPoseToJoints(std::shared_ptr<std::map<std::string, glm::mat4>> currentPose, Joint *joint, glm::mat4 parentTransform);
+    std::shared_ptr<std::map<std::string, glm::mat4>> calculateCurrentAnimationPose();
+    float calculateProgression(KeyFrame previousFrame, KeyFrame nextFrame);
+    std::vector<KeyFrame> getPreviousAndNextFrames();
+    std::shared_ptr<std::map<std::string, glm::mat4>> interpolatePoses(KeyFrame prev, KeyFrame next, float prog);
 };
 
 #endif

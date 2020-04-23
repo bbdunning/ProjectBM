@@ -4,9 +4,21 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <unordered_map>
-#include <string>
+#include <iostream>
+#include <cassert>
+#include <assimp/types.h>
+#include <assimp/quaternion.h>
 #include <memory>
-#include <assimp/scene.h>
+#include <vector>
+#include <string>
+
+#include "../GLSL.h"
+#include "../Program.h"
+#include "../Shape.h" 
+
+static inline glm::quat quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); }
+static inline glm::mat4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
+static inline glm::mat4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
 
 class Joint {
@@ -34,9 +46,10 @@ public:
     glm::quat rotation;
 
     //CHECK quaternion copying may be wierd, might need to use a pointer
+    JointTransform() {};
     JointTransform(glm::vec3 position, glm::quat rotation);
     glm::mat4 getLocalTransform();
-    JointTransform interpolate(JointTransform frameA, JointTransform frameB, float progression);
+    static JointTransform interpolate(JointTransform frameA, JointTransform frameB, float progression);
 };
 
 class KeyFrame
@@ -47,6 +60,7 @@ public:
     float timeStamp;
 
     KeyFrame(float timeStamp, std::map<std::string, JointTransform> pose);
+    std::vector<std::string> getJointKeyFrames();
 };
 
 #endif

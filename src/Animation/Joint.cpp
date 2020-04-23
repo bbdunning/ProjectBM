@@ -1,4 +1,8 @@
 #include "Joint.h"
+#include "Animator.h"
+
+using namespace glm;
+using namespace std;
 
 Joint::Joint(int index, std::string name, glm::mat4 localBindTransform)
 {
@@ -16,10 +20,6 @@ void Joint::calcInverseBindTransform(mat4 *parentBindTransform)
     for (int i=0; i<this->children.size(); i++) {
         this->children[i].calcInverseBindTransform(&bindTransform);
     }
-}
-
-void Animator::update() 
-{
 }
 
 JointTransform::JointTransform(glm::vec3 position, glm::quat rotation) 
