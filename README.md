@@ -1,5 +1,5 @@
+* might need to normalize weights
 
-Program 4
 =====
 
 ## Final Project Features ##

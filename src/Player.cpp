@@ -119,9 +119,6 @@ int Player::update() {
     // if (!axes[0]==1 && velocity.x > 0)
     //     velocity.x -= .001;
 
-    if (standing) cout << "standing ";
-    if (isGrounded) cout << "isGrounded ";
-    cout << location.y << endl;
     location += velocity;
     return 0;
 }

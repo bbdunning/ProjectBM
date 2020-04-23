@@ -24,6 +24,7 @@ public:
     Joint *rootJoint;
     int jointCount;
     Animator animator;
+    bool isAnimated;
 
 
     void init(Joint* rootJoint);

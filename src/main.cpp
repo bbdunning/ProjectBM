@@ -247,6 +247,21 @@ public:
 		createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
+	
+	// void readJoints() {
+
+	// }
+	void traverseNode(aiNode *node, const aiScene* scene) {
+		if (node->mName.length != 0)
+			cout << "node name: " << node->mName.C_Str() << endl;
+		for (int i=0; i< node->mNumMeshes; i++) {
+			aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+			// cout << "   mesh bones: " << scene->mMeshes[node->mMeshes[i]]->mNumBones << endl;
+		}
+		for (int i=0; i<node->mNumChildren;i++) {
+			traverseNode(node->mChildren[i], scene);
+		}
+	}
 
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
@@ -259,19 +274,24 @@ public:
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
+		traverseNode(scene->mRootNode, scene);
+
 		cout << "creating " << objName << endl;
-		cout << "   " << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
-		cout << "   " << objName + " has: " << scene->mNumMaterials << " materials" << endl;
-		cout << "   " << objName + " has: " << scene->mNumTextures << " textures" << endl;
-		cout << "   " << objName + " has: " << scene->mNumAnimations << " animations" << endl;
+		// cout << "   " << objName + " has: " << scene->mNumMeshes << " meshes" << endl;
+		// cout << "   " << objName + " has: " << scene->mNumMaterials << " materials" << endl;
+		// cout << "   " << objName + " has: " << scene->mNumTextures << " textures" << endl;
+		// cout << "   " << objName + " has: " << scene->mNumAnimations << " animations" << endl;
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
+			newShape = make_shared<AnimatedShape>();
 			if (scene->mMeshes[i]->mNumBones > 0) {
 				aiBone* j = scene->mMeshes[i]->mBones[0];
 				rootJoint = new Joint(0, j->mName.C_Str(), mat4(0));
+				newShape->isAnimated = true;
+			} else {
+				newShape->isAnimated = false;
 			}
 			texPath = new aiString();
-			newShape = make_shared<AnimatedShape>();
 			newShape->scene = scene;
 			newShape->createShape(scene->mMeshes[i]);
 			newShape->measure();
@@ -286,7 +306,7 @@ public:
 			//if mesh has texture, create a texture from it
 			if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
 				((texPath->length > 5) and (temp != "none"))) {
-				cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
+				// cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
 				if (texPath->C_Str()[0] != '/') {
 					newShape->texture = createTexture(meshPath + texPath->C_Str());
 				} else
@@ -295,7 +315,7 @@ public:
 		}
 
 		objL[objName] = mesh;
-		cout << "created " << objName << endl << endl;;
+		// cout << "created " << objName << endl << endl;;
 	}
 
 	shared_ptr<Texture> createTexture(string texturePath) {
@@ -374,7 +394,6 @@ public:
 			player1->update();
 			Model->translate(player1->location);
 			// Model->scale(vec3(.35, .75, .35));
-			cout << player1->facingRight << endl;
 			if (!player1->isGrounded)
 			{
 				if (!player1->facingRight) {
@@ -416,7 +435,7 @@ public:
 				setMaterial(3, prog);
 
 			Model->scale(vec3(.025, .025, .025));
-			cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
+			// cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
 			setModel(prog, Model);
 			objL["totodile"]->draw(prog); 
 		Model->popMatrix();
