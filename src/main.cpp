@@ -283,11 +283,11 @@ public:
 		if (jointMap->find(node->mName.C_Str()) != jointMap->end()) {
 			return &(*jointMap)[node->mName.C_Str()];
 		}
-		for (int i=0; i< node->mNumChildren; i++) {
-			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-				return &(*jointMap)[node->mChildren[i]->mName.C_Str()];
-			}
-		}
+		// for (int i=0; i< node->mNumChildren; i++) {
+		// 	if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
+		// 		return &(*jointMap)[node->mChildren[i]->mName.C_Str()];
+		// 	}
+		// }
 		for (int i=0; i<node->mNumChildren; i++) {
 			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
 			string childname = node->mChildren[i]->mName.C_Str();
@@ -306,7 +306,8 @@ public:
 		}
 		cout << "joint name: " << j->name << endl;
 		for (int i=0;i<j->children.size();i++) {
-			cout << to_string(*(j->localBindTransform)) << endl;
+		// if (j->name != "")
+				// cout << to_string(*(j->localBindTransform)) << endl;
 			printJoints((j->children[i]));
 		}
 	}
@@ -321,16 +322,15 @@ public:
 		}
 	}
 
-	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, string fileName, string objName, shared_ptr<GameObject> obj, int i) {
+	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
+		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint) {
 		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
-		Joint *rootJoint = nullptr;
 
 
 		newShape = make_shared<AnimatedShape>();
 		if (scene->mMeshes[i]->mNumBones > 0) {
 			aiBone* j = scene->mMeshes[i]->mBones[0];
-			rootJoint = new Joint(0, j->mName.C_Str(), make_shared<mat4>());
 			newShape->isAnimated = true;
 		} else {
 			newShape->isAnimated = false;
@@ -365,6 +365,7 @@ public:
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 		shared_ptr<map<string, Joint>> jointMap = make_shared<map<string, Joint>>();
 		mesh->name = objName;
+		Joint *rootJoint = nullptr;
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -374,12 +375,13 @@ public:
 		cout << "jointMap size: " << jointMap->size() << endl;
 		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
 		printAllJoints(jointMap);
-		if (jointMap->size() > 0)
-			printJoints(getRootJoint(jointMap, scene->mRootNode));
-
+		if (jointMap->size() > 0) {
+			printJoints(getRootJoint(jointMap, scene->mRootNode)->children[0]);
+			rootJoint = getRootJoint(jointMap, scene->mRootNode)->children[0];
+		}
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
-			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i));
+			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint));
 		}
 
 		objL[objName] = mesh;
