@@ -33,11 +33,11 @@ class Animator
 {
 public:
     AnimatedShape *entity;
-    Animation *currentAnimation;
+    std::shared_ptr<Animation> currentAnimation;
     float animTime;
 
     void update();
-    void doAnimation(Animation *a);
+    void doAnimation(std::shared_ptr<Animation> a);
     void increaseAnimationTime();
     void applyPoseToJoints(std::shared_ptr<std::map<std::string, glm::mat4>> currentPose, Joint *joint, glm::mat4 parentTransform);
     std::shared_ptr<std::map<std::string, glm::mat4>> calculateCurrentAnimationPose();

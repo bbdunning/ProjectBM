@@ -28,7 +28,7 @@ public:
     std::vector<int> jointIdBuf;
     std::vector<float> jointWeightBuf;
     std::shared_ptr<std::map<std::string, Joint>> jointMap;
-    std::vector<Joint> joints;
+    std::shared_ptr<std::vector<Joint>> joints;
     std::vector<glm::mat4> jointTransforms;
     unsigned int jointBufId = 0;
     unsigned int weightBufId = 0;

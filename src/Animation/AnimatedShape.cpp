@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cassert>
 #include <assimp/types.h>
+#include <glm/gtx/string_cast.hpp>
 #include <memory>
 #include <vector>
 #include <string>
@@ -96,8 +97,13 @@ void AnimatedShape::addJointsToArray(Joint *headJoint, vector<mat4> jointMatrice
 
 void AnimatedShape::init(Joint *rootJoint)
 {
+	this->rootJoint = rootJoint;
 	if (rootJoint != nullptr)
 		rootJoint->calcInverseBindTransform(new mat4(1));
+	if (this->isAnimated) {
+		this->animator = Animator();
+		animator.entity = this;
+	}
 	texture = nullptr;
 	material = nullptr;
 

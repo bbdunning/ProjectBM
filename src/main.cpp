@@ -275,15 +275,15 @@ public:
 	unsigned int jointCount=0;
 
 	//creates joints and builds map of all joints
-	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene, vector<Joint> &joints) {
+	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene, shared_ptr<vector<Joint>> &joints) {
 		for (int i=0; i<scene->mNumMeshes; i++) {
 			aiMesh *mesh = scene->mMeshes[i];
 			for (int j=0; j<mesh->mNumBones;j++) {
 				aiBone *bone = mesh->mBones[j];
 				string boneName = bone->mName.C_Str();
 				if (jointMap->find(boneName) == jointMap->end()) {
-					joints.push_back(Joint(jointCount, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix))));
-					(*jointMap)[boneName] = joints[jointCount];
+					joints->push_back(Joint(jointCount, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix))));
+					(*jointMap)[boneName] = (*joints)[jointCount];
 					jointCount++;
 				}
 			}
@@ -301,23 +301,18 @@ public:
 		}
 	}
 
-	Joint* getRootJoint(shared_ptr<map<string, Joint>> jointMap, aiNode *node) {
+	Joint* getRootJoint(shared_ptr<map<string, Joint>> jointMap, shared_ptr<vector<Joint>> joints, aiNode *node) {
 		if (node == nullptr || jointMap == nullptr) {
 			return nullptr;
 		}
 		if (jointMap->find(node->mName.C_Str()) != jointMap->end()) {
 			return &(*jointMap)[node->mName.C_Str()];
 		}
-		// for (int i=0; i< node->mNumChildren; i++) {
-		// 	if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-		// 		return &(*jointMap)[node->mChildren[i]->mName.C_Str()];
-		// 	}
-		// }
 		for (int i=0; i<node->mNumChildren; i++) {
 			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
 			string childname = node->mChildren[i]->mName.C_Str();
 			if (childname == "Armature"){
-				return getRootJoint(jointMap, node->mChildren[i]);
+				return getRootJoint(jointMap, joints, node->mChildren[i]);
 			}
 		}
 		return nullptr;
@@ -337,13 +332,10 @@ public:
 		}
 	}
 
-	void printAllJoints(shared_ptr<map<string, Joint>> jointMap) {
-		for (map<string,Joint>::iterator it=jointMap->begin(); it != jointMap->end(); ++it) {
-			Joint *j = &it->second;
-			cout << it->first << " has children: " << j->children.size() << endl;
-			for (int q=0; q<j->children.size();q++) {
-				cout << "   child: " << j->children[q]->name.c_str() << endl;
-			}
+	void printAllJoints(vector<Joint> joints) {
+	for (int i=0;i<joints.size();i++) {
+		cout << joints[i].name << endl;
+		cout << to_string(joints[i].animatedTransform) << endl;
 		}
 	}
 
@@ -355,7 +347,7 @@ public:
 
 	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
 		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
-		shared_ptr<map<string, Joint>> jointMap, vector<Joint> joints) {
+		shared_ptr<map<string, Joint>> jointMap, shared_ptr<vector<Joint>> joints) {
 		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
 
@@ -376,6 +368,7 @@ public:
 		newShape->name = scene->mMeshes[i]->mName.C_Str();
 		newShape->measure();
 		//fix rootJoint
+		cout << "root Joint: " << rootJoint << endl;
 		newShape->init(rootJoint);
 		string temp;
 
@@ -449,7 +442,7 @@ public:
 		mesh->name = objName;
 		Joint *rootJoint = nullptr;
 		vector<Animation> animList; 
-		vector<Joint> joints;
+		shared_ptr<vector<Joint>> joints = make_shared<vector<Joint>>();
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -461,24 +454,26 @@ public:
 		createAnimations(scene, animList);
 		// printAnimations(animList);
 		// printAllJoints(jointMap);
-		for (int i=0; i<joints.size(); i++) {
-			cout<< joints[i].name << endl;
+		for (int i=0; i<joints->size(); i++) {
+			cout<< (*joints)[i].name << endl;
 		}
 
 
-		if (jointMap->size() > 0) {
-			rootJoint = getRootJoint(jointMap, scene->mRootNode)->children[0];
+		if (joints->size() > 0) {
+			rootJoint = getRootJoint(jointMap, joints, scene->mRootNode)->children[0];
 			// printJoints(rootJoint);
-			mat4 temp = mat4();
+			mat4 temp = mat4(1);
 			rootJoint->calcInverseBindTransform(&temp);
 		}
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap, joints));
 		}
-
-		for (int i=0; i<mesh->shapeList.size(); i++) {
-			mesh->shapeList[i]->animator.doAnimation(&animList[0]);
+		if (animList.size() > 0) {
+		shared_ptr<Animation> animation = make_shared<Animation>(animList[0].length, animList[0].frames);
+			for (int i=0; i<mesh->shapeList.size(); i++) {
+				mesh->shapeList[i]->animator.doAnimation(animation);
+			}
 		}
 
 		objL[objName] = mesh;
@@ -635,7 +630,6 @@ public:
 			objL["skyring2"]->draw(prog);
 		Model->popMatrix();
 
-
 		//draw Captain Falcon
 		Model->pushMatrix();
 			// getPlayerDisplacement();
@@ -665,7 +659,8 @@ public:
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
 			vector<mat4> hi;
-			printTransforms(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms);
+			// printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
+			// printTransforms(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms);
 			cout << endl << endl << endl;
 			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 			objL["animModel"]->draw(animProg);
