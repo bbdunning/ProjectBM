@@ -275,14 +275,16 @@ public:
 	unsigned int jointCount=0;
 
 	//creates joints and builds map of all joints
-	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
+	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene, vector<Joint> &joints) {
 		for (int i=0; i<scene->mNumMeshes; i++) {
 			aiMesh *mesh = scene->mMeshes[i];
 			for (int j=0; j<mesh->mNumBones;j++) {
 				aiBone *bone = mesh->mBones[j];
 				string boneName = bone->mName.C_Str();
 				if (jointMap->find(boneName) == jointMap->end()) {
-					(*jointMap)[boneName] = Joint(jointCount++, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix)));
+					joints.push_back(Joint(jointCount, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix))));
+					(*jointMap)[boneName] = joints[jointCount];
+					jointCount++;
 				}
 			}
 		}
@@ -345,8 +347,15 @@ public:
 		}
 	}
 
+	void printTransforms(vector<mat4> t) {
+		for (int i=0; i<t.size();i++) {
+			cout << to_string(t[i]) << endl;
+		}
+	}
+
 	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
-		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, shared_ptr<map<string, Joint>> jointMap) {
+		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
+		shared_ptr<map<string, Joint>> jointMap, vector<Joint> joints) {
 		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
 
@@ -361,6 +370,8 @@ public:
 		texPath = new aiString();
 		newShape->scene = scene;
 		newShape->jointMap = jointMap;
+		newShape->joints = joints;
+		newShape->jointTransforms.resize(50); //max joints
 		newShape->createShape(scene->mMeshes[i]);
 		newShape->name = scene->mMeshes[i]->mName.C_Str();
 		newShape->measure();
@@ -438,17 +449,21 @@ public:
 		mesh->name = objName;
 		Joint *rootJoint = nullptr;
 		vector<Animation> animList; 
+		vector<Joint> joints;
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
 		cout << "creating " << objName << endl;
-		populateJointMap(jointMap, scene->mRootNode, scene);
+		populateJointMap(jointMap, scene->mRootNode, scene, joints);
 		// cout << "jointMap size: " << jointMap->size() << endl;
 		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
 		createAnimations(scene, animList);
 		// printAnimations(animList);
 		// printAllJoints(jointMap);
+		for (int i=0; i<joints.size(); i++) {
+			cout<< joints[i].name << endl;
+		}
 
 
 		if (jointMap->size() > 0) {
@@ -459,7 +474,7 @@ public:
 		}
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
-			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap));
+			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap, joints));
 		}
 
 		for (int i=0; i<mesh->shapeList.size(); i++) {
@@ -644,11 +659,15 @@ public:
 
 		Model->pushMatrix();
 			// getPlayerDisplacement();
-			Model->rotate(-PI/2, vec3(1, 0, 0));
-			Model->rotate(-PI/2, vec3(0, 0, 1));
-			Model->scale(vec3(0.035, 0.035, 0.035));
+			// Model->rotate(-PI/2, vec3(1, 0, 0));
+			// Model->rotate(-PI/2, vec3(0, 0, 1));
+			// Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
+			vector<mat4> hi;
+			printTransforms(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms);
+			cout << endl << endl << endl;
+			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 			objL["animModel"]->draw(animProg);
 			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
 		Model->popMatrix();
