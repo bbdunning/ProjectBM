@@ -323,7 +323,7 @@ public:
 	}
 
 	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
-		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint) {
+		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, shared_ptr<map<string, Joint>> jointMap) {
 		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
 
@@ -337,9 +337,9 @@ public:
 		}
 		texPath = new aiString();
 		newShape->scene = scene;
+		newShape->jointMap = jointMap;
 		newShape->createShape(scene->mMeshes[i]);
 		newShape->name = scene->mMeshes[i]->mName.C_Str();
-		cout << newShape->name << endl;
 		newShape->measure();
 		//fix rootJoint
 		newShape->init(rootJoint);
@@ -433,9 +433,8 @@ public:
 			// printJoints(rootJoint);
 		}
 
-		cout << "num Meshes: " << scene->mNumMeshes << endl;
 		for (int i=0; i< scene->mNumMeshes; i++) {
-			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint));
+			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap));
 		}
 
 		objL[objName] = mesh;

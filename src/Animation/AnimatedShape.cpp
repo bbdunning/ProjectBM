@@ -11,6 +11,7 @@
 #include "../Program.h"
 #include "../Shape.h" 
 #include "AnimatedShape.h"
+#define MAX_JOINTS 4
 
 
 using namespace std;
@@ -42,11 +43,38 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 		for (int j=0; j < inMesh->mNumUVComponents[0]; j++)
 			texBuf.push_back((inMesh->mTextureCoords[0])[i][j]);
 
-	this->jointCount = inMesh->mNumBones;
-	// for (int i=0; i < inMesh->mNumBones; i++) {
-	// 	inMesh->mBones[i];
-	// }
+	jointIdBuf.resize(inMesh->mNumVertices * MAX_JOINTS);
+	jointWeightBuf.resize(inMesh->mNumVertices * MAX_JOINTS);
 
+	map<int, int> countmap;
+	for (int i=0; i<inMesh->mNumVertices;i++) {
+		countmap[i]=0;
+	}
+
+	// cout << inMesh->mNumVertices << endl;
+	// cout << "REEEEEEEEEEKLJOISJFOPSJOFJEPIESJPFOJSE" << endl << endl << endl;
+	// cout << "mesh bones: " << inMesh->mNumBones << endl;
+	for (int i=0; i<inMesh->mNumBones; i++) {
+		// cout << "weights: " << inMesh->mBones[i]->mNumWeights << endl;
+		for (int j=0; j<inMesh->mBones[i]->mNumWeights; j++) {
+			int vertexId = inMesh->mBones[i]->mWeights[j].mVertexId;
+			float vertexWeight = inMesh->mBones[i]->mWeights[j].mWeight;
+			// cout << vertexId << " " << vertexWeight << endl;
+			//set index
+			string name = inMesh->mBones[i]->mName.C_Str();
+			Joint q = (*jointMap)[name];
+			jointIdBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = q.index;
+			//set weight
+			jointWeightBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = vertexWeight;
+			countmap[vertexId]++;
+		}
+	}
+
+	// if (inMesh->HasBones()) {
+	// 	for (int i=0; i<inMesh->mNumVertices; i++) {
+	// 		cout << jointIdBuf[i] << " " << jointWeightBuf[i] << endl;
+	// 	}
+	// }
 }
 
 //should make sure these are working correctly; make sure vector is changing
@@ -110,13 +138,18 @@ void AnimatedShape::init(Joint *rootJoint)
 
 
     //send JOINT and WEIGHT buf to GPU
-    // glGenBuffers(1, &boneBufId);
-    // glBindBuffer(GL_ARRAY_BUFFER, boneBufId);
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(Bones[0]) * Bones.size(), &Bones[0], GL_STATIC_DRAW);
-    // glEnableVertexAttribArray(BONE_ID_LOCATION);
-    // glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*) 0);
-    // glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+    glGenBuffers(1, &weightBufId);
+    glBindBuffer(GL_ARRAY_BUFFER, weightBufId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(jointWeightBuf[0]) * jointWeightBuf.size(), &jointWeightBuf[0], GL_STATIC_DRAW);
     // glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
+    // glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+
+    glGenBuffers(1, &jointBufId);
+    glBindBuffer(GL_ARRAY_BUFFER, jointBufId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(jointIdBuf[0]) * jointIdBuf.size(), &jointIdBuf[0], GL_STATIC_DRAW);
+    // glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
+    // glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*) 0);
+    // glEnableVertexAttribArray(BONE_ID_LOCATION);
 
 	// Unbind the arrays
 	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -125,8 +158,8 @@ void AnimatedShape::init(Joint *rootJoint)
 
 void AnimatedShape::draw(const shared_ptr<Program> prog) const
 {
-	int h_pos, h_nor, h_tex;
-	h_pos = h_nor = h_tex = -1;
+	int h_pos, h_nor, h_tex, h_jid, h_wid;
+	h_pos = h_nor = h_tex = h_jid = h_wid = -1;
 
 	if (texture != nullptr)
 		(this->texture)->bind(prog->getUniform("Texture0"));
@@ -164,8 +197,15 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 		}
 	}
 
+	//Bind jointBuf
+	if (jointBufId != 0) {
+		 
+	}
+
 	// Bind element buffer
 	CHECKED_GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eleBufID));
+
+
 
 	// Draw
 	CHECKED_GL_CALL(glDrawElements(GL_TRIANGLES, (int)eleBuf.size(), GL_UNSIGNED_INT, (const void *)0));
