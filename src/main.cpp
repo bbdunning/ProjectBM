@@ -292,11 +292,14 @@ public:
 	void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node, const aiScene* scene) {
 		for (int i=0; i< node->mNumChildren; i++) {
 			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-				cout << (*jointMap)[node->mName.C_Str()] << endl;
-				// (*joints)[(*jointMap)[node->mName.C_Str()]->index] = ;
-				(*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
-				// (*jointMap)[node->mName.C_Str()]->children.push_back((*jointMap)[node->mChildren[i]->mName.C_Str()]);
-				// &(*jointMap)[node->mChildren[i]->mName.C_Str()];
+				if ((*joints)[(*jointMap)[node->mName.C_Str()]].name != (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name) {
+					// cout << (*jointMap)[node->mName.C_Str()] << endl;
+					// (*joints)[(*jointMap)[node->mName.C_Str()]->index] = ;
+					(*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
+					cout << (*joints)[(*jointMap)[node->mName.C_Str()]].name << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
+					// (*jointMap)[node->mName.C_Str()]->children.push_back((*jointMap)[node->mChildren[i]->mName.C_Str()]);
+					// &(*jointMap)[node->mChildren[i]->mName.C_Str()];
+				}
 			}
 			buildJointHeirarchy(jointMap, joints, node->mChildren[i], scene);
 		}
@@ -449,20 +452,21 @@ public:
 
 		cout << "creating " << objName << endl;
 		populateJointMap(jointMap, scene->mRootNode, scene, joints);
-		for (map<string, unsigned int>::iterator it = jointMap->begin(); it != jointMap->end(); ++it)
-			// cout << it->first << " " << it->second->name << endl;
+		// for (map<string, unsigned int>::iterator it = jointMap->begin(); it != jointMap->end(); ++it)
+		// 	cout << it->first << " " << it->second->name << endl;
 
 		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		printAnimations(animList);
+		// printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
-			cout<< (*joints)[i].name << endl;
+			cout<< (*joints)[i].name << " " << (*joints)[i].children.size() << endl;
 		}
 
 
 		if (joints->size() > 0) {
-			rootJoint = getRootJoint(jointMap, joints, scene->mRootNode)->children[0];
+			rootJoint = getRootJoint(jointMap, joints, scene->mRootNode);
+			cout << "root joint name: " << rootJoint->name << endl;
 			// printJoints(rootJoint);
 			mat4 temp(1.0f);
 			rootJoint->calcInverseBindTransform(&temp);
@@ -660,11 +664,10 @@ public:
 			// Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
-			// printTransforms(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms);
-			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
-			// printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
+			printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
 			cout << endl << endl << endl;
+			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 			objL["animModel"]->draw(animProg);
 		Model->popMatrix();
 

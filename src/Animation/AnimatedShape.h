@@ -39,6 +39,7 @@ public:
 	void draw(const std::shared_ptr<Program> prog) const override;
 	std::vector<glm::mat4> getJointTransforms();
     void addJointsToArray(Joint *headJoint, std::vector<glm::mat4> jointMatrices);
+    void setJointTransforms();
     //updates animator
     void update();
     

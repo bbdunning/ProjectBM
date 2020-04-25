@@ -20,6 +20,7 @@ using namespace glm;
 
 void AnimatedShape::update() {
 	this->animator.update();
+	this->setJointTransforms();
 }
 
 void AnimatedShape::createShape(aiMesh* inMesh)
@@ -259,3 +260,9 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 
 //     return to;
 // }
+
+void AnimatedShape::setJointTransforms() {
+	for (int i=0; i<this->joints->size(); i++) {
+		this->jointTransforms[(*joints)[i].index] = (*joints)[i].animatedTransform;
+	}
+}
