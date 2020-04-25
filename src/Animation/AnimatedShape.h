@@ -19,6 +19,7 @@
 class AnimatedShape: public Shape
 {
 public:
+    std::string name;
     const aiScene* scene;
     Joint *rootJoint;
     int jointCount;

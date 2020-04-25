@@ -338,6 +338,8 @@ public:
 		texPath = new aiString();
 		newShape->scene = scene;
 		newShape->createShape(scene->mMeshes[i]);
+		newShape->name = scene->mMeshes[i]->mName.C_Str();
+		cout << newShape->name << endl;
 		newShape->measure();
 		//fix rootJoint
 		newShape->init(rootJoint);
@@ -360,26 +362,57 @@ public:
 		return newShape;
 	}
 
+	Animation createAnimation(const aiAnimation *anim) {
+		vector<KeyFrame> frames;
+		shared_ptr<map<string, JointTransform>> pose;
+		//add all poses to frames
+		for (int j=0; j<anim->mNumChannels; j++) {
+			aiNodeAnim *anode = anim->mChannels[j];
+			pose = make_shared<map<string, JointTransform>>(); //pose maps joint transforms to joints
+			float time = 999999999;
+			//add all JointTransforms to pose
+			for (int k=0; k<anode->mNumPositionKeys; k++) {
+				time = anode->mPositionKeys[k].mTime;
+				vec3 position = vec3_cast(anode->mPositionKeys[k].mValue);
+				quat rotation = quat_cast(anode->mRotationKeys[k].mValue);
+				(*pose)[anode->mNodeName.C_Str()] = JointTransform(position, rotation);
+			}
+			frames.push_back(KeyFrame(time, *pose));
+		}
+		return Animation((float) (anim->mDuration*anim->mTicksPerSecond), frames);
+	}
+
+	void createAnimations(const aiScene *scene, vector<Animation> &animList) {
+		for (int i=0; i<scene->mNumAnimations; i++) {
+			animList.push_back(createAnimation(scene->mAnimations[i]));
+		}
+	}
+
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
 		shared_ptr<map<string, Joint>> jointMap = make_shared<map<string, Joint>>();
 		mesh->name = objName;
 		Joint *rootJoint = nullptr;
+		vector<Animation> animList; 
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
 		cout << "creating " << objName << endl;
 		populateJointMap(jointMap, scene->mRootNode, scene);
-		cout << "jointMap size: " << jointMap->size() << endl;
+		// cout << "jointMap size: " << jointMap->size() << endl;
 		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
-		printAllJoints(jointMap);
+		createAnimations(scene, animList);
+		// printAllJoints(jointMap);
+
+
 		if (jointMap->size() > 0) {
-			printJoints(getRootJoint(jointMap, scene->mRootNode)->children[0]);
 			rootJoint = getRootJoint(jointMap, scene->mRootNode)->children[0];
+			printJoints(rootJoint);
 		}
 
+		cout << "num Meshes: " << scene->mNumMeshes << endl;
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint));
 		}

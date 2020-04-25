@@ -44,3 +44,8 @@ JointTransform JointTransform::interpolate(JointTransform frameA, JointTransform
     quat rot = mix(frameA.rotation, frameB.rotation, progression);
     return JointTransform(pos, rot);
 }
+
+KeyFrame::KeyFrame(float timeStamp, std::map<std::string, JointTransform> pose) {
+    this->timeStamp = timeStamp;
+    this->pose = pose;
+}

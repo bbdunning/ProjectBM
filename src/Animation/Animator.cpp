@@ -6,6 +6,11 @@ using namespace std;
 using namespace glm;
 
 //sets current animation
+Animation::Animation(float lengthInSeconds, std::vector<KeyFrame> frames) {
+    this->length = lengthInSeconds;
+    this->frames = frames;
+}
+
 void Animator::doAnimation(Animation *a) 
 {
     this->animTime = 0;

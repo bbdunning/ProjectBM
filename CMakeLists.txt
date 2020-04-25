@@ -20,6 +20,8 @@ include_directories("ext")
 include_directories("ext/glad/include")
 
 include_directories("src/input")
+include_directories("src/Animation")
+link_directories("src/Animation")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
