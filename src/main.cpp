@@ -192,7 +192,7 @@ public:
 		prog->addUniform("P");
 		prog->addUniform("V");
 		prog->addUniform("M");
-			prog->addAttribute("vertPos");
+		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
 		prog->addAttribute("vertTex");
 
@@ -204,6 +204,29 @@ public:
 		prog->addUniform("MatSpec");
 		prog->addUniform("shine");
 		prog->addUniform("Texture0");
+
+		animProg = make_shared<Program>();
+		animProg->setVerbose(true);
+		animProg->setShaderNames(resourceDirectory + "/shaders/simple_vert.glsl", resourceDirectory + "/shaders/blinn-phong.glsl");
+		animProg->init();
+		animProg->addUniform("P");
+		animProg->addUniform("V");
+		animProg->addUniform("M");
+		animProg->addAttribute("vertPos");
+		animProg->addAttribute("vertNor");
+		animProg->addAttribute("vertTex");		
+		animProg->addAttribute("jointIndices");		
+		animProg->addAttribute("jointWeights");		
+
+		animProg->addUniform("viewDirection");
+		animProg->addUniform("LightPos");
+		animProg->addUniform("LightCol");
+		animProg->addUniform("MatAmb");
+		animProg->addUniform("MatDif");
+		animProg->addUniform("MatSpec");
+		animProg->addUniform("shine");
+		animProg->addUniform("Texture0");
+		animProg->addUniform("jointTransforms");
 
 		cubeProg = make_shared<Program>();
 		cubeProg->setVerbose(true);
@@ -603,18 +626,26 @@ public:
 			// objL["falcon"]->draw(prog);
 		Model->popMatrix();
 
+		prog->unbind();
+		animProg->bind();
+		glUniformMatrix4fv(animProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(animProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
+		glUniform3f(animProg->getUniform("viewDirection"), vd.x, vd.y, vd.z);
+
+		//set initial material and Light
+		setLight(animProg);
+
 		Model->pushMatrix();
 			// getPlayerDisplacement();
 			Model->rotate(-PI/2, vec3(1, 0, 0));
 			Model->rotate(-PI/2, vec3(0, 0, 1));
 			Model->scale(vec3(0.035, 0.035, 0.035));
-			setMaterial(1, prog);
-			setModel(prog, Model);
-			objL["animModel"]->draw(prog);
+			setMaterial(1, animProg);
+			setModel(animProg, Model);
+			objL["animModel"]->draw(animProg);
 		Model->popMatrix();
 
-
-		prog->unbind();
+		animProg->unbind();
 
 		//animation update example
 		sTheta = sin(glfwGetTime());
