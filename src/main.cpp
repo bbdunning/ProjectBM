@@ -266,8 +266,6 @@ public:
 		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
 		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
-/* 		createGameObject(rDir + "melee/", "pikachu.obj", "pikachu"); */
-//		createGameObject("/home/bbdunning/Desktop/Wii - Super Smash Bros Brawl - Captain Falcon/", "falcon.fbx", "falcon");
 		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		createGameObject(rDir + "anim/", "model.dae", "animModel");
 	}
@@ -275,7 +273,7 @@ public:
 	unsigned int jointCount=0;
 
 	//creates joints and builds map of all joints
-	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene, shared_ptr<vector<Joint>> &joints) {
+	void populateJointMap(shared_ptr<map<string, unsigned int>> &jointMap, aiNode *node, const aiScene* scene, shared_ptr<vector<Joint>> &joints) {
 		for (int i=0; i<scene->mNumMeshes; i++) {
 			aiMesh *mesh = scene->mMeshes[i];
 			for (int j=0; j<mesh->mNumBones;j++) {
@@ -283,7 +281,7 @@ public:
 				string boneName = bone->mName.C_Str();
 				if (jointMap->find(boneName) == jointMap->end()) {
 					joints->push_back(Joint(jointCount, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix))));
-					(*jointMap)[boneName] = (*joints)[jointCount];
+					(*jointMap)[boneName] = jointCount;
 					jointCount++;
 				}
 			}
@@ -291,22 +289,25 @@ public:
 	}
 
 	//adds children to Joints
-	void buildJointHeirarchy(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
+	void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node, const aiScene* scene) {
 		for (int i=0; i< node->mNumChildren; i++) {
 			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-				(*jointMap)[node->mName.C_Str()].children.push_back(&(*jointMap)[node->mChildren[i]->mName.C_Str()]);
-				&(*jointMap)[node->mChildren[i]->mName.C_Str()];
+				cout << (*jointMap)[node->mName.C_Str()] << endl;
+				// (*joints)[(*jointMap)[node->mName.C_Str()]->index] = ;
+				(*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
+				// (*jointMap)[node->mName.C_Str()]->children.push_back((*jointMap)[node->mChildren[i]->mName.C_Str()]);
+				// &(*jointMap)[node->mChildren[i]->mName.C_Str()];
 			}
-			buildJointHeirarchy(jointMap, node->mChildren[i], scene);
+			buildJointHeirarchy(jointMap, joints, node->mChildren[i], scene);
 		}
 	}
 
-	Joint* getRootJoint(shared_ptr<map<string, Joint>> jointMap, shared_ptr<vector<Joint>> joints, aiNode *node) {
+	Joint* getRootJoint(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node) {
 		if (node == nullptr || jointMap == nullptr) {
 			return nullptr;
 		}
 		if (jointMap->find(node->mName.C_Str()) != jointMap->end()) {
-			return &(*jointMap)[node->mName.C_Str()];
+			return &(*joints)[(*jointMap)[node->mName.C_Str()]];
 		}
 		for (int i=0; i<node->mNumChildren; i++) {
 			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
@@ -347,7 +348,7 @@ public:
 
 	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
 		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
-		shared_ptr<map<string, Joint>> jointMap, shared_ptr<vector<Joint>> joints) {
+		shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> joints) {
 		shared_ptr<AnimatedShape> newShape;
 		aiString* texPath;
 
@@ -437,19 +438,21 @@ public:
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
-		shared_ptr<map<string, Joint>> jointMap = make_shared<map<string, Joint>>();
 		mesh->name = objName;
 		Joint *rootJoint = nullptr;
 		vector<Animation> animList; 
 		shared_ptr<vector<Joint>> joints = make_shared<vector<Joint>>();
+		shared_ptr<map<string, unsigned int>> jointMap = make_shared<map<string, unsigned int>>();
 
 		const aiScene* scene = importer.ReadFile(
 			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
 		cout << "creating " << objName << endl;
 		populateJointMap(jointMap, scene->mRootNode, scene, joints);
-		// cout << "jointMap size: " << jointMap->size() << endl;
-		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
+		for (map<string, unsigned int>::iterator it = jointMap->begin(); it != jointMap->end(); ++it)
+			// cout << it->first << " " << it->second->name << endl;
+
+		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
 		printAnimations(animList);
 		// printAllJoints(jointMap);
@@ -660,7 +663,7 @@ public:
 			// printTransforms(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms);
 			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
-			printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
+			// printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
 			cout << endl << endl << endl;
 			objL["animModel"]->draw(animProg);
 		Model->popMatrix();

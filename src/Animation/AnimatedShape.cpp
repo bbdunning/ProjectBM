@@ -63,7 +63,7 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 			// cout << vertexId << " " << vertexWeight << endl;
 			//set index
 			string name = inMesh->mBones[i]->mName.C_Str();
-			Joint q = (*jointMap)[name];
+			Joint q = (*joints)[(*jointMap)[name]];
 			jointIdBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = q.index;
 			//set weight
 			jointWeightBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = vertexWeight;
