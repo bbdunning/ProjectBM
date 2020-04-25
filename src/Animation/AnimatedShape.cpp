@@ -70,11 +70,11 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 		}
 	}
 
-	// if (inMesh->HasBones()) {
-	// 	for (int i=0; i<inMesh->mNumVertices; i++) {
-	// 		cout << jointIdBuf[i] << " " << jointWeightBuf[i] << endl;
-	// 	}
-	// }
+	if (inMesh->HasBones()) {
+		for (int i=0; i<inMesh->mNumVertices; i++) {
+			cout << i << " " << jointIdBuf[i] << " " << jointWeightBuf[i] << endl;
+		}
+	}
 }
 
 //should make sure these are working correctly; make sure vector is changing
