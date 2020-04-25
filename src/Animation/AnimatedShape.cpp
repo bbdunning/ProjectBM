@@ -138,18 +138,13 @@ void AnimatedShape::init(Joint *rootJoint)
 
 
 
-    glGenBuffers(1, &jointBufId);
-    glBindBuffer(GL_ARRAY_BUFFER, jointBufId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(jointIdBuf[0]) * jointIdBuf.size(), &jointIdBuf[0], GL_STATIC_DRAW);
-    // glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
-    // glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(VertexBoneData), (const GLvoid*) 0);
-    // glEnableVertexAttribArray(BONE_ID_LOCATION);
+    CHECKED_GL_CALL(glGenBuffers(1, &jointBufId));
+    CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, jointBufId));
+    CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(sizeof(float)) * jointIdBuf.size(), &jointIdBuf[0], GL_STATIC_DRAW));
 
-    glGenBuffers(1, &weightBufId);
-    glBindBuffer(GL_ARRAY_BUFFER, weightBufId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(jointWeightBuf[0]) * jointWeightBuf.size(), &jointWeightBuf[0], GL_STATIC_DRAW);
-    // glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)16);
-    // glEnableVertexAttribArray(BONE_WEIGHT_LOCATION);
+    CHECKED_GL_CALL(glGenBuffers(1, &weightBufId));
+    CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, weightBufId));
+    CHECKED_GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(sizeof(unsigned int)) * jointWeightBuf.size(), &jointWeightBuf[0], GL_STATIC_DRAW));
 
 	// Unbind the arrays
 	CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -198,27 +193,29 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 	}
 
 	//Bind jointBuf
-	if (jointBufId != 0) {
-		h_jid = prog->getAttribute("jointIndices");
+	if (isAnimated) {
+		if (jointBufId != 0) {
+			h_jid = prog->getAttribute("jointIndices");
 
-		if (h_jid != -1 && jointBufId != 0) {
-			CHECKED_GL_CALL(glEnableVertexAttribArray(BONE_ID_LOCATION));
-			CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, jointBufId));
-			CHECKED_GL_CALL(glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, 0, (const GLvoid*) 0));
-			// glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(int), (const GLvoid*) 0);
-			
+			if (h_jid != -1 && jointBufId != 0) {
+				CHECKED_GL_CALL(glEnableVertexAttribArray(BONE_ID_LOCATION));
+				CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, jointBufId));
+				CHECKED_GL_CALL(glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, 0, (const GLvoid*) 0));
+				// glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(int), (const GLvoid*) 0);
+				
+			}
 		}
-	}
 
-	if (weightBufId != 0) {
-		h_wid = prog->getAttribute("jointWeights");
+		if (weightBufId != 0) {
+			h_wid = prog->getAttribute("jointWeights");
 
-		if (h_wid != -1 && weightBufId != 0) {
-			CHECKED_GL_CALL(glEnableVertexAttribArray(BONE_WEIGHT_LOCATION));
-			CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, weightBufId));
-			CHECKED_GL_CALL(glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid*) 0));
-			// glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(int), (const GLvoid*) 0);
-			
+			if (h_wid != -1 && weightBufId != 0) {
+				CHECKED_GL_CALL(glEnableVertexAttribArray(BONE_WEIGHT_LOCATION));
+				CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, weightBufId));
+				CHECKED_GL_CALL(glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid*) 0));
+				// glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(int), (const GLvoid*) 0);
+				
+			}
 		}
 	}
 

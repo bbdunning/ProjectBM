@@ -14,7 +14,7 @@ uniform mat4 V;
 uniform mat4 M;
 uniform vec3 LightPos;
 //contains current transform for all joints in model
-uniform mat4 jointTransforms[MAX_JOINTS]// ADD ME
+uniform mat4 jointTransforms[MAX_JOINTS]; // ADD ME
 
 out vec3 fragNor;
 out vec3 lightDir;

@@ -207,7 +207,7 @@ public:
 
 		animProg = make_shared<Program>();
 		animProg->setVerbose(true);
-		animProg->setShaderNames(resourceDirectory + "/shaders/simple_vert.glsl", resourceDirectory + "/shaders/blinn-phong.glsl");
+		animProg->setShaderNames(resourceDirectory + "/shaders/anim_vert.glsl", resourceDirectory + "/shaders/blinn-phong.glsl");
 		animProg->init();
 		animProg->addUniform("P");
 		animProg->addUniform("V");
@@ -274,7 +274,7 @@ public:
 	
 	unsigned int jointCount=0;
 
-	//creates joings and builds map of all joints
+	//creates joints and builds map of all joints
 	void populateJointMap(shared_ptr<map<string, Joint>> jointMap, aiNode *node, const aiScene* scene) {
 		for (int i=0; i<scene->mNumMeshes; i++) {
 			aiMesh *mesh = scene->mMeshes[i];
@@ -454,10 +454,16 @@ public:
 		if (jointMap->size() > 0) {
 			rootJoint = getRootJoint(jointMap, scene->mRootNode)->children[0];
 			// printJoints(rootJoint);
+			mat4 temp = mat4();
+			rootJoint->calcInverseBindTransform(&temp);
 		}
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
 			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap));
+		}
+
+		for (int i=0; i<mesh->shapeList.size(); i++) {
+			mesh->shapeList[i]->animator.doAnimation(&animList[0]);
 		}
 
 		objL[objName] = mesh;
@@ -627,6 +633,7 @@ public:
 		Model->popMatrix();
 
 		prog->unbind();
+
 		animProg->bind();
 		glUniformMatrix4fv(animProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(animProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
@@ -643,6 +650,7 @@ public:
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
 			objL["animModel"]->draw(animProg);
+			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
 		Model->popMatrix();
 
 		animProg->unbind();
