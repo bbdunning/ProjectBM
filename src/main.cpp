@@ -368,7 +368,6 @@ public:
 		newShape->name = scene->mMeshes[i]->mName.C_Str();
 		newShape->measure();
 		//fix rootJoint
-		cout << "root Joint: " << rootJoint << endl;
 		newShape->init(rootJoint);
 		string temp;
 
@@ -452,7 +451,7 @@ public:
 		// cout << "jointMap size: " << jointMap->size() << endl;
 		buildJointHeirarchy(jointMap, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		// printAnimations(animList);
+		printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
 			cout<< (*joints)[i].name << endl;
@@ -462,7 +461,7 @@ public:
 		if (joints->size() > 0) {
 			rootJoint = getRootJoint(jointMap, joints, scene->mRootNode)->children[0];
 			// printJoints(rootJoint);
-			mat4 temp = mat4(1);
+			mat4 temp(1.0f);
 			rootJoint->calcInverseBindTransform(&temp);
 		}
 
@@ -658,13 +657,12 @@ public:
 			// Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
-			vector<mat4> hi;
-			// printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
 			// printTransforms(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms);
-			cout << endl << endl << endl;
 			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
-			objL["animModel"]->draw(animProg);
 			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
+			printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
+			cout << endl << endl << endl;
+			objL["animModel"]->draw(animProg);
 		Model->popMatrix();
 
 		animProg->unbind();

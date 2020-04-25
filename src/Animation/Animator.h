@@ -46,4 +46,5 @@ public:
     std::shared_ptr<std::map<std::string, glm::mat4>> interpolatePoses(KeyFrame prev, KeyFrame next, float prog);
 };
 
+
 #endif

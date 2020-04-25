@@ -3,6 +3,7 @@
 #define JOINT_H
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <unordered_map>
 #include <iostream>
 #include <cassert>
