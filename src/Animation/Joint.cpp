@@ -37,10 +37,7 @@ glm::mat4 JointTransform::getLocalTransform()
 {
     mat4 m;
     m = translate(mat4(1.0f), position);
-    // cout << "position: " << to_string(position) << endl;
-    // cout << "m1 " << to_string(m) << endl;
     m = m * toMat4(rotation);
-    // cout << "m2 " << to_string(m) << endl << endl << endl;
     return m;
 }
 
@@ -49,7 +46,8 @@ JointTransform JointTransform::interpolate(JointTransform frameA, JointTransform
 {
     // vec3 pos = interpolate(frameA.position, frameB.position, progression);
     vec3 pos = mix(frameA.position, frameB.position, progression);
-    quat rot = mix(frameA.rotation, frameB.rotation, progression);
+    quat rot = slerp(frameA.rotation, frameB.rotation, progression);
+    cout << progression << endl;
     return JointTransform(pos, rot);
 }
 
