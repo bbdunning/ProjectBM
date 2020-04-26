@@ -6,15 +6,15 @@ const int MAX_WEIGHTS = 3; //max joints for a vertex
 layout(location = 0) in vec4 vertPos;
 layout(location = 1) in vec3 vertNor;
 layout(location = 2) in vec2 vertTex;
-layout(location = 3) in ivec3 jointIndices; //ADD ME
-layout(location = 4) in vec4 jointWeights; // ADD ME 
+layout(location = 3) in ivec3 jointIndices;
+layout(location = 4) in vec4 jointWeights;
 
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
 uniform vec3 LightPos;
 //contains current transform for all joints in model
-uniform mat4 jointTransforms[MAX_JOINTS]; // ADD ME
+uniform mat4 jointTransforms[MAX_JOINTS];
 
 out vec3 fragNor;
 out vec3 lightDir;

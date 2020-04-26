@@ -57,7 +57,7 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 	// cout << "REEEEEEEEEEKLJOISJFOPSJOFJEPIESJPFOJSE" << endl << endl << endl;
 	// cout << "mesh bones: " << inMesh->mNumBones << endl;
 	for (int i=0; i<inMesh->mNumBones; i++) {
-		// cout << "weights: " << inMesh->mBones[i]->mNumWeights << endl;
+		cout << inMesh->mBones[i]->mName.C_Str() << " " << inMesh->mBones[i]->mNumWeights << endl;
 		for (int j=0; j<inMesh->mBones[i]->mNumWeights; j++) {
 			int vertexId = inMesh->mBones[i]->mWeights[j].mVertexId;
 			float vertexWeight = inMesh->mBones[i]->mWeights[j].mWeight;
@@ -71,12 +71,6 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 			countmap[vertexId]++;
 		}
 	}
-
-	// if (inMesh->HasBones()) {
-	// 	for (int i=0; i<inMesh->mNumVertices; i++) {
-	// 		cout << i << " " << jointIdBuf[i] << " " << jointWeightBuf[i] << endl;
-	// 	}
-	// }
 }
 
 //should make sure these are working correctly; make sure vector is changing
@@ -208,8 +202,6 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 				CHECKED_GL_CALL(glEnableVertexAttribArray(BONE_ID_LOCATION));
 				CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, jointBufId));
 				CHECKED_GL_CALL(glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, 0, (const GLvoid*) 0));
-				// glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(int), (const GLvoid*) 0);
-				
 			}
 		}
 
@@ -220,8 +212,6 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 				CHECKED_GL_CALL(glEnableVertexAttribArray(BONE_WEIGHT_LOCATION));
 				CHECKED_GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, weightBufId));
 				CHECKED_GL_CALL(glVertexAttribPointer(BONE_WEIGHT_LOCATION, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid*) 0));
-				// glVertexAttribIPointer(BONE_ID_LOCATION, 4, GL_INT, sizeof(int), (const GLvoid*) 0);
-				
 			}
 		}
 	}
@@ -264,5 +254,6 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 void AnimatedShape::setJointTransforms() {
 	for (int i=0; i<this->joints->size(); i++) {
 		this->jointTransforms[(*joints)[i].index] = (*joints)[i].animatedTransform;
+		// this->jointTransforms[(*joints)[i].index] = mat4(1);
 	}
 }

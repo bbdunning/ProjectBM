@@ -53,3 +53,65 @@ KeyFrame::KeyFrame(float timeStamp, std::map<std::string, JointTransform> pose) 
     this->timeStamp = timeStamp;
     this->pose = pose;
 }
+
+
+	//adds children to Joints
+	void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node, const aiScene* scene) {
+		for (int i=0; i< node->mNumChildren; i++) {
+			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
+				if ((*joints)[(*jointMap)[node->mName.C_Str()]].name != (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name) {
+					// cout << (*jointMap)[node->mName.C_Str()] << endl;
+					// (*joints)[(*jointMap)[node->mName.C_Str()]->index] = ;
+					(*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
+					cout << (*joints)[(*jointMap)[node->mName.C_Str()]].name << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
+					// (*jointMap)[node->mName.C_Str()]->children.push_back((*jointMap)[node->mChildren[i]->mName.C_Str()]);
+					// &(*jointMap)[node->mChildren[i]->mName.C_Str()];
+				}
+			}
+			buildJointHeirarchy(jointMap, joints, node->mChildren[i], scene);
+		}
+	}
+
+	Joint* getRootJoint(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node) {
+		if (node == nullptr || jointMap == nullptr) {
+			return nullptr;
+		}
+		if (jointMap->find(node->mName.C_Str()) != jointMap->end()) {
+			return &(*joints)[(*jointMap)[node->mName.C_Str()]];
+		}
+		for (int i=0; i<node->mNumChildren; i++) {
+			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
+			string childname = node->mChildren[i]->mName.C_Str();
+			if (childname == "Armature"){
+				return getRootJoint(jointMap, joints, node->mChildren[i]);
+			}
+		}
+		return nullptr;
+	}
+
+	void printJoints(Joint *j)
+	{
+		if (j == nullptr) {
+			cout << "nothing" << endl;
+			return;
+		}
+		cout << "joint name: " << j->name << endl;
+		for (int i=0;i<j->children.size();i++) {
+		// if (j->name != "")
+				// cout << to_string(*(j->localBindTransform)) << endl;
+			printJoints((j->children[i]));
+		}
+	}
+
+	void printAllJoints(vector<Joint> joints) {
+	for (int i=0;i<joints.size();i++) {
+		cout << joints[i].name << endl;
+		cout << to_string(joints[i].animatedTransform) << endl;
+		}
+	}
+
+	void printTransforms(vector<mat4> t) {
+		for (int i=0; i<t.size();i++) {
+			cout << to_string(t[i]) << endl;
+		}
+	}

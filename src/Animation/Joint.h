@@ -9,6 +9,11 @@
 #include <cassert>
 #include <assimp/types.h>
 #include <assimp/quaternion.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/mesh.h>
+#include <assimp/texture.h>
+#include <assimp/postprocess.h>
 #include <memory>
 #include <vector>
 #include <string>
@@ -41,6 +46,12 @@ public:
     Joint(int index, std::string name, std::shared_ptr<glm::mat4> localBindTransform);
     void calcInverseBindTransform(glm::mat4 *parentBindTransform);
 };
+
+void buildJointHeirarchy(std::shared_ptr<std::map<std::string, unsigned int>> jointMap, std::shared_ptr<std::vector<Joint>> &joints, aiNode *node, const aiScene* scene);
+Joint* getRootJoint(std::shared_ptr<std::map<std::string, unsigned int>> jointMap, std::shared_ptr<std::vector<Joint>> &joints, aiNode *node);
+void printJoints(Joint *j);
+void printAllJoints(std::vector<Joint> joints);
+void printTransforms(std::vector<glm::mat4> t);
 
 class JointTransform
 {

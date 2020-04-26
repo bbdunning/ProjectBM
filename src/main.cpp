@@ -287,68 +287,6 @@ public:
 			}
 		}
 	}
-
-	//adds children to Joints
-	void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node, const aiScene* scene) {
-		for (int i=0; i< node->mNumChildren; i++) {
-			if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
-				if ((*joints)[(*jointMap)[node->mName.C_Str()]].name != (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name) {
-					// cout << (*jointMap)[node->mName.C_Str()] << endl;
-					// (*joints)[(*jointMap)[node->mName.C_Str()]->index] = ;
-					(*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
-					cout << (*joints)[(*jointMap)[node->mName.C_Str()]].name << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
-					// (*jointMap)[node->mName.C_Str()]->children.push_back((*jointMap)[node->mChildren[i]->mName.C_Str()]);
-					// &(*jointMap)[node->mChildren[i]->mName.C_Str()];
-				}
-			}
-			buildJointHeirarchy(jointMap, joints, node->mChildren[i], scene);
-		}
-	}
-
-	Joint* getRootJoint(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node) {
-		if (node == nullptr || jointMap == nullptr) {
-			return nullptr;
-		}
-		if (jointMap->find(node->mName.C_Str()) != jointMap->end()) {
-			return &(*joints)[(*jointMap)[node->mName.C_Str()]];
-		}
-		for (int i=0; i<node->mNumChildren; i++) {
-			cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
-			string childname = node->mChildren[i]->mName.C_Str();
-			if (childname == "Armature"){
-				return getRootJoint(jointMap, joints, node->mChildren[i]);
-			}
-		}
-		return nullptr;
-	}
-
-	void printJoints(Joint *j)
-	{
-		if (j == nullptr) {
-			cout << "nothing" << endl;
-			return;
-		}
-		cout << "joint name: " << j->name << endl;
-		for (int i=0;i<j->children.size();i++) {
-		// if (j->name != "")
-				// cout << to_string(*(j->localBindTransform)) << endl;
-			printJoints((j->children[i]));
-		}
-	}
-
-	void printAllJoints(vector<Joint> joints) {
-	for (int i=0;i<joints.size();i++) {
-		cout << joints[i].name << endl;
-		cout << to_string(joints[i].animatedTransform) << endl;
-		}
-	}
-
-	void printTransforms(vector<mat4> t) {
-		for (int i=0; i<t.size();i++) {
-			cout << to_string(t[i]) << endl;
-		}
-	}
-
 	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
 		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
 		shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> joints) {
@@ -382,13 +320,11 @@ public:
 		//if mesh has texture, create a texture from it
 		if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
 			((texPath->length > 5) and (temp != "none"))) {
-			// cout << "   " << objName << " has texture. Texture path: " << texPath->C_Str() << endl;
 			if (texPath->C_Str()[0] != '/') {
 				newShape->texture = createTexture(meshPath + texPath->C_Str());
 			} else
 				newShape->texture = createTexture(texPath->C_Str());
 		}
-		// mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i));
 		return newShape;
 	}
 
@@ -432,7 +368,7 @@ public:
 			for (int j=0; j<animList[i].frames.size(); j++) {
 				cout << "keyframe " << j << " has " << animList[i].frames[j].pose.size() << " joints" << " timeStamp: " << animList[i].frames[j].timeStamp << endl;
 				for (map<string, JointTransform>::iterator it = animList[i].frames[j].pose.begin(); it != animList[i].frames[j].pose.end(); ++it) {
-					cout << "joint " << it->first << endl;
+					cout << "animated joint " << it->first << endl;
 				}
 			}
 		}
@@ -457,7 +393,7 @@ public:
 
 		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		// printAnimations(animList);
+		printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
 			cout<< (*joints)[i].name << " " << (*joints)[i].children.size() << endl;
@@ -659,14 +595,12 @@ public:
 
 		Model->pushMatrix();
 			// getPlayerDisplacement();
-			// Model->rotate(-PI/2, vec3(1, 0, 0));
+			Model->rotate(-PI/2, vec3(1, 0, 0));
 			// Model->rotate(-PI/2, vec3(0, 0, 1));
-			// Model->scale(vec3(0.035, 0.035, 0.035));
+			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
 			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
-			printAllJoints(*((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->joints);
-			cout << endl << endl << endl;
 			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 			objL["animModel"]->draw(animProg);
 		Model->popMatrix();
