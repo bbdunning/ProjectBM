@@ -45,7 +45,8 @@ void Animator::update()
 
 void Animator::increaseAnimationTime() 
 {
-    animTime += glfwGetTime() / 3000.0f;
+    // animTime += (glfwGetTime() / 1000.0f);
+    animTime += .001f;
     if (animTime > currentAnimation->length) {
         animTime = fmod(animTime, currentAnimation->length);
     }
@@ -59,11 +60,11 @@ shared_ptr<map<string, mat4>> Animator::calculateCurrentAnimationPose()
     // }
     float progression = calculateProgression(frames[0], frames[1]);
 
-    //removes inerpolation. change this once everything else works
-    shared_ptr<map<string, mat4>> temp = make_shared<map<string, mat4>>();
-    for (map<string, JointTransform>::iterator it=frames[0].pose.begin(); it != frames[0].pose.end(); ++it)
-        (*temp)[it->first] = it->second.getLocalTransform();
-    return temp;
+    //removes interpolation. change this once everything else works
+    // shared_ptr<map<string, mat4>> temp = make_shared<map<string, mat4>>();
+    // for (map<string, JointTransform>::iterator it=frames[0].pose.begin(); it != frames[0].pose.end(); ++it)
+    //     (*temp)[it->first] = it->second.getLocalTransform();
+    // return temp;
 
     return interpolatePoses(frames[0], frames[1], progression);
 }
@@ -80,23 +81,11 @@ void Animator::applyPoseToJoints(shared_ptr<map<string, mat4>> currentPose, Join
     mat4 currentLocalTransform = (*currentPose)[joint->name];
     mat4 currentTransform = parentTransform * currentLocalTransform;
 
-
-    //check to see if current pose is correct
-    // for (map<string, mat4>::iterator it = (*currentPose).begin(); it != (*currentPose).end(); ++it) {
-    //     cout << "name: " << it->first << " mat: " << to_string(it->second) << endl;
-    // }
-    // cout << joint->name << "   ";
-    // cout << "parentTransform: " << to_string(parentTransform) << endl;
-    // cout << "currentLocal : " << to_string(currentLocalTransform) << endl;
-    // cout << "currentTransform: " << to_string(currentTransform) << endl;
-    // cout << endl;
-
     for (int i=0; i<joint->children.size();i++) {
         applyPoseToJoints(currentPose, joint->children[i], currentTransform);
     }
     currentTransform = currentTransform * joint->inverseBindTransform ;
     joint->animatedTransform = currentTransform;
-    // cout << joint->name << " " << to_string(joint->animatedTransform) << endl;
 }
 
 float Animator::calculateProgression(KeyFrame previousFrame, KeyFrame nextFrame) 
@@ -132,10 +121,11 @@ vector<string> getKeySet(map<string,JointTransform> m)
 shared_ptr<std::map<std::string, glm::mat4>> Animator::interpolatePoses(KeyFrame prev, KeyFrame next, float prog)
 {
     shared_ptr<map<string, mat4>> currentPose = make_shared<map<string, mat4>>();
-    vector<string> names;// = getKeySet(prev.pose);
+    vector<string> names;
     //get all joints in pose
     for (map<string, JointTransform>::iterator it = prev.pose.begin(); it != prev.pose.end(); ++it)
         names.push_back(it->first);
+
     //interpolate for each joint
     for (int i=0; i<names.size(); i++){
         JointTransform previousTransform = prev.pose[names[i]];
