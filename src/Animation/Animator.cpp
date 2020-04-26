@@ -45,9 +45,8 @@ void Animator::update()
 
 void Animator::increaseAnimationTime() 
 {
-    animTime += glfwGetTime();
+    animTime += glfwGetTime() / 3000.0f;
     if (animTime > currentAnimation->length) {
-        //CHECK this
         animTime = fmod(animTime, currentAnimation->length);
     }
 }
@@ -59,6 +58,12 @@ shared_ptr<map<string, mat4>> Animator::calculateCurrentAnimationPose()
     //     cout << frames[i].pose << endl;
     // }
     float progression = calculateProgression(frames[0], frames[1]);
+
+    //removes inerpolation. change this once everything else works
+    shared_ptr<map<string, mat4>> temp = make_shared<map<string, mat4>>();
+    for (map<string, JointTransform>::iterator it=frames[0].pose.begin(); it != frames[0].pose.end(); ++it)
+        (*temp)[it->first] = it->second.getLocalTransform();
+    return temp;
 
     return interpolatePoses(frames[0], frames[1], progression);
 }
@@ -136,10 +141,7 @@ shared_ptr<std::map<std::string, glm::mat4>> Animator::interpolatePoses(KeyFrame
         JointTransform previousTransform = prev.pose[names[i]];
         JointTransform nextTransform = next.pose[names[i]];
         JointTransform currentTransform = JointTransform::interpolate(previousTransform, nextTransform, prog);
-        if (currentTransform.getLocalTransform() == mat4(0))
-            cout << names[i] << endl;
-        else
-            (*currentPose)[names[i]] = currentTransform.getLocalTransform();
+        (*currentPose)[names[i]] = currentTransform.getLocalTransform();
     }
     return currentPose;
 }

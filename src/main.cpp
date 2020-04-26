@@ -344,6 +344,7 @@ public:
 				if (timePosMap.find(time) == timePosMap.end()) {
 					timePosMap[time] = pose;
 					pose = make_shared<map<string, JointTransform>>(); //pose maps joint transforms to joint names
+					(*timePosMap[time])[anode->mNodeName.C_Str()] = JointTransform(position, rotation);
 				}
 				else {
 					(*timePosMap[time])[anode->mNodeName.C_Str()] = JointTransform(position, rotation);
@@ -393,7 +394,7 @@ public:
 
 		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		// printAnimations(animList);
+		printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
 			cout<< (*joints)[i].name << " " << (*joints)[i].children.size() << endl;
@@ -596,7 +597,7 @@ public:
 		Model->pushMatrix();
 			// getPlayerDisplacement();
 			Model->rotate(-PI/2, vec3(1, 0, 0));
-			// Model->rotate(-PI/2, vec3(0, 0, 1));
+			Model->rotate(-PI/2, vec3(0, 0, 1));
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
