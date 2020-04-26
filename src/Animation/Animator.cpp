@@ -59,6 +59,7 @@ shared_ptr<map<string, mat4>> Animator::calculateCurrentAnimationPose()
     //     cout << frames[i].pose << endl;
     // }
     float progression = calculateProgression(frames[0], frames[1]);
+
     return interpolatePoses(frames[0], frames[1], progression);
 }
 

@@ -280,7 +280,7 @@ public:
 				aiBone *bone = mesh->mBones[j];
 				string boneName = bone->mName.C_Str();
 				if (jointMap->find(boneName) == jointMap->end()) {
-					joints->push_back(Joint(jointCount, boneName, make_shared<mat4>(mat4_cast(bone->mOffsetMatrix))));
+					joints->push_back(Joint(jointCount, boneName, mat4_cast(bone->mOffsetMatrix)));
 					(*jointMap)[boneName] = jointCount;
 					jointCount++;
 				}
@@ -393,7 +393,7 @@ public:
 
 		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		printAnimations(animList);
+		// printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
 			cout<< (*joints)[i].name << " " << (*joints)[i].children.size() << endl;
@@ -405,7 +405,7 @@ public:
 			cout << "root joint name: " << rootJoint->name << endl;
 			// printJoints(rootJoint);
 			mat4 temp(1.0f);
-			rootJoint->calcInverseBindTransform(&temp);
+			// rootJoint->calcInverseBindTransform(&temp);
 		}
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
