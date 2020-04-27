@@ -53,9 +53,6 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 		countmap[i]=0;
 	}
 
-	// cout << inMesh->mNumVertices << endl;
-	// cout << "REEEEEEEEEEKLJOISJFOPSJOFJEPIESJPFOJSE" << endl << endl << endl;
-	// cout << "mesh bones: " << inMesh->mNumBones << endl;
 	for (int i=0; i<inMesh->mNumBones; i++) {
 		cout << inMesh->mBones[i]->mName.C_Str() << " " << inMesh->mBones[i]->mNumWeights << endl;
 		for (int j=0; j<inMesh->mBones[i]->mNumWeights; j++) {
@@ -63,13 +60,13 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 			float vertexWeight = inMesh->mBones[i]->mWeights[j].mWeight;
 			// cout << vertexId << " " << vertexWeight << endl;
 			//set index
-			string name = inMesh->mBones[i]->mName.C_Str();
-			Joint q = (*joints)[(*jointMap)[name]];
-			jointIdBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = q.index;
-			//set weight
-			jointWeightBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = vertexWeight;
-			countmap[vertexId]++;
-			if (countmap[vertexId] > 4) {
+			if (countmap[vertexId] < 4) {
+				string name = inMesh->mBones[i]->mName.C_Str(); Joint q = (*joints)[(*jointMap)[name]];
+				jointIdBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = q.index;
+				//set weight
+				jointWeightBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = vertexWeight;
+				countmap[vertexId]++;
+			} else {
 				cout << " REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE " << endl;
 			}
 		}

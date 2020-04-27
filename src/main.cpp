@@ -394,7 +394,7 @@ public:
 
 		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		printAnimations(animList);
+		// printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
 			cout<< (*joints)[i].name << " " << (*joints)[i].children.size() << endl;
