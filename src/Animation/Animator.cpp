@@ -51,10 +51,13 @@ shared_ptr<map<string, mat4>> Animator::calculateCurrentAnimationPose()
 void Animator::applyPoseToJoints(shared_ptr<map<string, mat4>> currentPose, Joint *joint, mat4 parentTransform)
 {
     // cout << "pose size in application: " << currentPose->size() << endl;
+    // if (parentTransform == mat4(0)) {
+    //     cout << "KLJASOIFJSOPIDJFPOJSDOPFJOSIDJF" << endl << endl;
+    // }
+    // cout << to_string(parentTransform) << endl;
 
-    //eventually going to need to change this
+    //set currentLocalTransform of joints not in currentPose to 1
     if (currentPose->find(joint->name) == currentPose->end()) {
-        // cout << "NOT FOUND" << endl;
         (*currentPose)[joint->name] = mat4(1);
     }
     mat4 currentLocalTransform = (*currentPose)[joint->name];
@@ -63,7 +66,8 @@ void Animator::applyPoseToJoints(shared_ptr<map<string, mat4>> currentPose, Join
     for (int i=0; i<joint->children.size();i++) {
         applyPoseToJoints(currentPose, joint->children[i], currentTransform);
     }
-    currentTransform = currentTransform * joint->inverseBindTransform ;
+    currentTransform = currentTransform * joint->inverseBindTransform;
+    cout << "anim: " << to_string(currentTransform) << endl;
     joint->animatedTransform = currentTransform;
 }
 

@@ -267,7 +267,7 @@ public:
 		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
 		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
 		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		createGameObject(rDir + "anim/", "model.dae", "animModel");
+		createGameObject(rDir + "anim/", "totodile_anim.dae", "animModel");
 	}
 	
 	unsigned int jointCount=0;
@@ -397,7 +397,7 @@ public:
 		// printAnimations(animList);
 		// printAllJoints(jointMap);
 		for (int i=0; i<joints->size(); i++) {
-			cout<< (*joints)[i].name << " " << (*joints)[i].children.size() << endl;
+			cout<< "joint: " << (*joints)[i].name << " has children: " << (*joints)[i].children.size() << endl;
 		}
 
 
@@ -595,7 +595,7 @@ public:
 
 		Model->pushMatrix();
 			// getPlayerDisplacement();
-			Model->rotate(-PI/2, vec3(1, 0, 0));
+			// Model->rotate(-PI/2, vec3(1, 0, 0));
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);

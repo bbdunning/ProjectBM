@@ -10,7 +10,6 @@ Joint::Joint(int index, std::string name, glm::mat4 localBindTransform)
     this->index = index;
     this->name = name;
     this->localBindTransform = localBindTransform;
-    animatedTransform;
 }
 
 //call during setup, after join heirarchy has been formed
