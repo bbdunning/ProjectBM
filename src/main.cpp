@@ -387,15 +387,6 @@ public:
 		cubeProg->unbind();
 	}
 
-	// bool hitSpherePlane(float c, float r, float A, float B, float C, float D) {
-	// 	return 0 < A*v.x + B*v.y + C*v.z + D;
-	// }
-
-	/*
-	/ m - P*V (perspective matrix * view matrix)
-	/ v - position of model to be checked against the frustum
-	*/
-
 
 	void render() {
 		// Get current frame buffer size.
@@ -430,96 +421,88 @@ public:
 		//set initial material and Light
 		setLight(prog);
 
-		//draw totodile player
-		Model->pushMatrix();
-			player1->update();
-			Model->translate(player1->location);
-			// Model->scale(vec3(.35, .75, .35));
-			if (!player1->isGrounded)
-			{
-				if (!player1->facingRight) {
-					Model->rotate(-PI/2, vec3(0,1,0));
-					Model->rotate(PI/8, vec3(1,0,0));
-				}
-				else {
-					Model->rotate(PI/2, vec3(0,1,0));
-					Model->rotate(PI/8, vec3(1,0,0));
-				}
+		// draw totodile player
+		player1->update();
+		objL["totodile"]->translate(player1->location);
+		// objL["totodile"]->scale(vec3(.35, .75, .35));
+		if (!player1->isGrounded)
+		{
+			if (!player1->facingRight) {
+				objL["totodile"]->rotate(-PI/2, vec3(0,1,0));
+				objL["totodile"]->rotate(PI/8, vec3(1,0,0));
 			}
-			//facing left
-			else if (!player1->facingRight) {
-				if (abs(player1->velocity.x <= -.04f) || inputHandler->Downflag){
-					Model->rotate(PI/4, vec3(0,0,1));
-					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
-				}
-				else if (abs(player1->velocity.x <= -.01f)) {
-					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
-				}
-				Model->rotate(-PI/2, vec3(0,1,0));
-			}
-			//facing right
 			else {
-				if (abs(player1->velocity.x >= .04f) || inputHandler->Downflag) {
-					Model->rotate(-PI/4, vec3(0,0,1));
-					Model->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
-				}
-				else if (abs(player1->velocity.x >= .01f)) {
-					Model->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
-				}
-				Model->rotate(PI/2, vec3(0,1,0));
+				objL["totodile"]->rotate(PI/2, vec3(0,1,0));
+				objL["totodile"]->rotate(PI/8, vec3(1,0,0));
 			}
-			if (player1->standing)
-				setMaterial(0, prog);
-			else if (player1->isGrounded)
-				setMaterial(1, prog);
-			else if (!player1->isGrounded)
-				setMaterial(3, prog);
+		}
+		//facing left
+		else if (!player1->facingRight) {
+			if (abs(player1->velocity.x <= -.04f) || inputHandler->Downflag){
+				objL["totodile"]->rotate(PI/4, vec3(0,0,1));
+				objL["totodile"]->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
+			}
+			else if (abs(player1->velocity.x <= -.01f)) {
+				objL["totodile"]->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
+			}
+			objL["totodile"]->rotate(-PI/2, vec3(0,1,0));
+		}
+		//facing right
+		else {
+			if (abs(player1->velocity.x >= .04f) || inputHandler->Downflag) {
+				objL["totodile"]->rotate(-PI/4, vec3(0,0,1));
+				objL["totodile"]->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
+			}
+			else if (abs(player1->velocity.x >= .01f)) {
+				objL["totodile"]->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
+			}
+			objL["totodile"]->rotate(PI/2, vec3(0,1,0));
+		}
+		if (player1->standing)
+			setMaterial(0, prog);
+		else if (player1->isGrounded)
+			setMaterial(1, prog);
+		else if (!player1->isGrounded)
+			setMaterial(3, prog);
 
-			Model->scale(vec3(.025, .025, .025));
-			// cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
-			setModel(prog, Model);
-			objL["totodile"]->draw(prog); 
-		Model->popMatrix();
+		objL["totodile"]->scale(vec3(.025, .025, .025));
+		// cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
+		objL["totodile"]->setModel(prog);
+		objL["totodile"]->draw(prog); 
 
 		//Main Stage
-		Model->pushMatrix();
-			Model->translate(vec3(0, -1, -2));
-			Model->scale(vec3(0.03, 0.03, 0.03));
-			setMaterial(3, prog);
-			setModel(prog, Model);
-			objL["FoD"]->draw(prog);
-		Model->popMatrix();
+		objL["FoD"]->translate(vec3(0, -1, -2));
+		objL["FoD"]->scale(vec3(0.03f, 0.03f, 0.03f));
+		setMaterial(3, prog);
+		objL["FoD"]->setModel(prog);
+		objL["FoD"]->draw(prog);
 
 		//Skyring 1
-		Model->pushMatrix();
-			Model->translate(vec3(-2.4, 2, -2));
-			Model->rotate(.1, vec3(1,0,0));
-			Model->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setMaterial(1, prog);
-			setModel(prog, Model);
-			objL["skyring1"]->draw(prog);
-		Model->popMatrix();
+		objL["skyring1"]->translate(vec3(-2.4, 2, -2));
+		objL["skyring1"]->rotate(.1, vec3(1,0,0));
+		objL["skyring1"]->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
+		objL["skyring1"]->scale(vec3(0.2, 0.2, 0.2));
+		setMaterial(1, prog);
+		objL["skyring1"]->setModel(prog);
+		objL["skyring1"]->draw(prog);
 		//Skyring2
-		Model->pushMatrix();
-			Model->translate(vec3(-2.8, 2.1, -.26));
-			Model->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
-			Model->rotate(.3, vec3(1,0,0));
-			Model->scale(vec3(0.2, 0.2, 0.2));
-			setModel(prog, Model);
-			objL["skyring2"]->draw(prog);
-		Model->popMatrix();
+		objL["skyring2"]->translate(vec3(-2.8, 2.1, -.26));
+		objL["skyring2"]->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
+		objL["skyring2"]->rotate(.3, vec3(1,0,0));
+		objL["skyring2"]->scale(vec3(0.2, 0.2, 0.2));
+		objL["skyring2"]->setModel(prog);
+		objL["skyring2"]->draw(prog);
 
-		//draw Captain Falcon
-		Model->pushMatrix();
-			// getPlayerDisplacement();
-			Model->rotate(-PI/2, vec3(1, 0, 0));
-			Model->rotate(-PI/2, vec3(0, 0, 1));
-			Model->scale(vec3(0.035, 0.035, 0.035));
-			setMaterial(1, prog);
-			setModel(prog, Model);
-			// objL["falcon"]->draw(prog);
-		Model->popMatrix();
+		// //draw Captain Falcon
+		// Model->pushMatrix();
+		// 	// getPlayerDisplacement();
+		// 	Model->rotate(-PI/2, vec3(1, 0, 0));
+		// 	Model->rotate(-PI/2, vec3(0, 0, 1));
+		// 	Model->scale(vec3(0.035, 0.035, 0.035));
+		// 	setMaterial(1, prog);
+		// 	setModel(prog, Model);
+		// 	// objL["falcon"]->draw(prog);
+		// Model->popMatrix();
 
 		prog->unbind();
 
@@ -531,16 +514,13 @@ public:
 		//set initial material and Light
 		setLight(animProg);
 
-		Model->pushMatrix();
-			// getPlayerDisplacement();
-			// Model->rotate(-PI/2, vec3(1, 0, 0));
-			Model->scale(vec3(0.035, 0.035, 0.035));
-			setMaterial(1, animProg);
-			setModel(animProg, Model);
-			((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
-			glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
-			objL["animModel"]->draw(animProg);
-		Model->popMatrix();
+		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
+		objL["animModel"]->scale(vec3(0.035, 0.035, 0.035));
+		setMaterial(1, animProg);
+		objL["animModel"]->setModel(animProg);
+		((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
+		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
+		objL["animModel"]->draw(animProg);
 
 		animProg->unbind();
 
