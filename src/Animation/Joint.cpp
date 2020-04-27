@@ -47,7 +47,6 @@ JointTransform JointTransform::interpolate(JointTransform frameA, JointTransform
     // vec3 pos = interpolate(frameA.position, frameB.position, progression);
     vec3 pos = mix(frameA.position, frameB.position, progression);
     quat rot = slerp(frameA.rotation, frameB.rotation, progression);
-    cout << progression << endl;
     return JointTransform(pos, rot);
 }
 
@@ -63,11 +62,8 @@ void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_
         if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
             if ((*joints)[(*jointMap)[node->mName.C_Str()]].name != (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name) {
                 // cout << (*jointMap)[node->mName.C_Str()] << endl;
-                // (*joints)[(*jointMap)[node->mName.C_Str()]->index] = ;
                 (*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
                 cout << (*joints)[(*jointMap)[node->mName.C_Str()]].name << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
-                // (*jointMap)[node->mName.C_Str()]->children.push_back((*jointMap)[node->mChildren[i]->mName.C_Str()]);
-                // &(*jointMap)[node->mChildren[i]->mName.C_Str()];
             }
         }
         buildJointHeirarchy(jointMap, joints, node->mChildren[i], scene);

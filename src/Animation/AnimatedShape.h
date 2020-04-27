@@ -40,14 +40,8 @@ public:
 	std::vector<glm::mat4> getJointTransforms();
     void addJointsToArray(Joint *headJoint, std::vector<glm::mat4> jointMatrices);
     void setJointTransforms();
-    //updates animator
-    void update();
+    void update(); //updates animator
     
-    // std::vector<int> jointIdBuf;
-    // std::vector<float> vertexWeightBuf;
-
-    // unsigned int jointIdBufID;
-    // unsigned int vertexWeightBufID;
 private:
 };
 

@@ -69,6 +69,9 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 			//set weight
 			jointWeightBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = vertexWeight;
 			countmap[vertexId]++;
+			if (countmap[vertexId] > 4) {
+				cout << " REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE " << endl;
+			}
 		}
 	}
 }

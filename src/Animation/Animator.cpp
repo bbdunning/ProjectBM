@@ -6,17 +6,6 @@
 using namespace std;
 using namespace glm;
 
-// void printPose(map<string, mat4> pose) {
-//     for (map<string, mat4>::iterator it=pose.begin(); it != pose.end(); ++it) {
-//         cout << "joint: " << it->first << "  mat: " << to_string(it->second) << endl;
-//     }
-// }
-// void printPose2(map<string, JointTransform> pose) {
-//     for (map<string, JointTransform>::iterator it=pose.begin(); it != pose.end(); ++it) {
-//         cout << "joint: " << it->first << "  mat: " << to_string(it->second) << endl;
-//     }
-// }
-
 
 //sets current animation
 Animation::Animation(float lengthInSeconds, std::vector<KeyFrame> frames) {
@@ -55,17 +44,7 @@ void Animator::increaseAnimationTime()
 shared_ptr<map<string, mat4>> Animator::calculateCurrentAnimationPose()
 {
     vector<KeyFrame> frames = getPreviousAndNextFrames();
-    // for (int i =0; i < frames.size(); i++) {
-    //     cout << frames[i].pose << endl;
-    // }
     float progression = calculateProgression(frames[0], frames[1]);
-
-    //removes interpolation. change this once everything else works
-    shared_ptr<map<string, mat4>> temp = make_shared<map<string, mat4>>();
-    // for (map<string, JointTransform>::iterator it=frames[0].pose.begin(); it != frames[0].pose.end(); ++it)
-    //     (*temp)[it->first] = it->second.getLocalTransform();
-    // return temp;
-
     return interpolatePoses(frames[0], frames[1], progression);
 }
 

@@ -406,7 +406,6 @@ public:
 			cout << "root joint name: " << rootJoint->name << endl;
 			// printJoints(rootJoint);
 			mat4 temp(1.0f);
-			// rootJoint->calcInverseBindTransform(&temp);
 		}
 
 		for (int i=0; i< scene->mNumMeshes; i++) {
@@ -597,7 +596,6 @@ public:
 		Model->pushMatrix();
 			// getPlayerDisplacement();
 			Model->rotate(-PI/2, vec3(1, 0, 0));
-			Model->rotate(-PI/2, vec3(0, 0, 1));
 			Model->scale(vec3(0.035, 0.035, 0.035));
 			setMaterial(1, animProg);
 			setModel(animProg, Model);
