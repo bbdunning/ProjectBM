@@ -39,7 +39,7 @@ public:
     glm::mat4 animatedTransform;
 
     //transform relative to parent
-    glm::mat4 localBindTransform;
+    glm::mat4 offsetMatrix;
     glm::mat4 inverseBindTransform;
 
     Joint() {};

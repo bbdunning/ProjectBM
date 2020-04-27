@@ -5,11 +5,11 @@
 using namespace glm;
 using namespace std;
 
-Joint::Joint(int index, std::string name, glm::mat4 localBindTransform)
+Joint::Joint(int index, std::string name, glm::mat4 offsetMatrix)
 {
     this->index = index;
     this->name = name;
-    this->localBindTransform = localBindTransform;
+    this->offsetMatrix = offsetMatrix;
 }
 
 //call during setup, after join heirarchy has been formed
@@ -20,7 +20,7 @@ void Joint::calcInverseBindTransform(mat4 *parentBindTransform)
     // for (int i=0; i<this->children.size(); i++) {
     //     this->children[i]->calcInverseBindTransform(&bindTransform);
     // }
-    this->inverseBindTransform = localBindTransform;
+    this->inverseBindTransform = offsetMatrix;
     for (int i=0; i<this->children.size(); i++) {
         this->children[i]->calcInverseBindTransform(parentBindTransform);
     }
@@ -57,12 +57,18 @@ KeyFrame::KeyFrame(float timeStamp, std::map<std::string, JointTransform> pose) 
 
 //adds children to Joints
 void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node, const aiScene* scene) {
+    cout << "NODE NAME: " << node->mName.C_Str() << endl;
     for (int i=0; i< node->mNumChildren; i++) {
+        cout << "NODE CHILD NAME: " << node->mChildren[i]->mName.C_Str() << endl;
+        //if node child name is in jointMap
         if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
             if ((*joints)[(*jointMap)[node->mName.C_Str()]].name != (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name) {
-                // cout << (*jointMap)[node->mName.C_Str()] << endl;
-                (*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
-                cout << (*joints)[(*jointMap)[node->mName.C_Str()]].name << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
+                // cout << (*joints)[(*jointMap)[node->mName.C_Str()]].name << endl;
+                string childname = node->mName.C_Str();
+                if (childname != "Armature") {
+                    (*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
+                    cout << node->mName.C_Str() << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
+                }
             }
         }
         buildJointHeirarchy(jointMap, joints, node->mChildren[i], scene);

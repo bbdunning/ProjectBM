@@ -66,8 +66,8 @@ void Animator::applyPoseToJoints(shared_ptr<map<string, mat4>> currentPose, Join
     for (int i=0; i<joint->children.size();i++) {
         applyPoseToJoints(currentPose, joint->children[i], currentTransform);
     }
+
     currentTransform = currentTransform * joint->inverseBindTransform;
-    cout << "anim: " << to_string(currentTransform) << endl;
     joint->animatedTransform = currentTransform;
 }
 

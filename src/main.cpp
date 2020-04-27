@@ -374,6 +374,17 @@ public:
 			}
 		}
 	}
+	
+	// void fillAnimations(vector<Animation> &animList, vector<Joint> joints) {
+	// 	for (int i=0; i<joints.size();i++) {
+	// 		for (int j=0;j<animList.size();j++) {
+	// 			for (int k=0;k<animList[j].frames.size();k++) {
+	// 				if (animList[j].frames[k].pose.find(joints[i].name) == animList[j].frames[k].pose.end())
+	// 					animList[j].frames[k].pose[joints[i].name] = JointTransform(vec3(0), quat());
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
@@ -394,11 +405,12 @@ public:
 
 		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
 		createAnimations(scene, animList);
-		// printAnimations(animList);
+		// fillAnimations(animList, *joints);
+		printAnimations(animList);
 		// printAllJoints(jointMap);
-		for (int i=0; i<joints->size(); i++) {
-			cout<< "joint: " << (*joints)[i].name << " has children: " << (*joints)[i].children.size() << endl;
-		}
+		// for (int i=0; i<joints->size(); i++) {
+		// 	cout<< "joint: " << (*joints)[i].name << " has children: " << (*joints)[i].children.size() << endl;
+		// }
 
 
 		if (joints->size() > 0) {
