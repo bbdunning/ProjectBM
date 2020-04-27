@@ -92,6 +92,21 @@ Joint* getRootJoint(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<v
     return nullptr;
 }
 
+//creates joints and builds map of all joints
+void populateJointMap(shared_ptr<map<string, unsigned int>> &jointMap, aiNode *node, const aiScene* scene, shared_ptr<vector<Joint>> &joints) {
+    for (int i=0; i<scene->mNumMeshes; i++) {
+        aiMesh *mesh = scene->mMeshes[i];
+        for (int j=0; j<mesh->mNumBones;j++) {
+            aiBone *bone = mesh->mBones[j];
+            string boneName = bone->mName.C_Str();
+            if (jointMap->find(boneName) == jointMap->end()) {
+                (*jointMap)[boneName] = joints->size();
+                joints->push_back(Joint(joints->size(), boneName, mat4_cast(bone->mOffsetMatrix)));
+            }
+        }
+    }
+}
+
 void printJoints(Joint *j)
 {
     if (j == nullptr) {

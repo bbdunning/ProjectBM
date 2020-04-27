@@ -46,5 +46,9 @@ public:
     std::shared_ptr<std::map<std::string, glm::mat4>> interpolatePoses(KeyFrame prev, KeyFrame next, float prog);
 };
 
+Animation createAnimation(const aiAnimation *anim);
+void createAnimations(const aiScene *scene, std::vector<Animation> &animList);
+void printAnimations(std::vector<Animation> &animList);
+
 
 #endif

@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED 14)
 set(CMAKE_CXX_STANDARD 14)
 
 # Use glob to get the list of all source files.
-file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/ext/*/*.cpp" "${CMAKE_SOURCE_DIR}/ext/glad/src/*.c")
+file(GLOB_RECURSE SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/ext/*/*.cpp" "${CMAKE_SOURCE_DIR}/ext/glad/src/*.c" "${CMAKE_SOURCE_DIR}/ext/glad/src/*/*.c")
 
 # We don't really need to include header and resource files to build, but it's
 # nice to have them show up in IDEs.
@@ -19,9 +19,10 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 include_directories("ext")
 include_directories("ext/glad/include")
 
-include_directories("src/input")
 include_directories("src/Animation")
 link_directories("src/Animation")
+include_directories("src/Physics")
+link_directories("src/Physics")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})

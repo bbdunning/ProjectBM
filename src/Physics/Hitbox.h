@@ -1,7 +1,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
-#include "Program.h"
 
 class Hitbox
 {
@@ -9,17 +8,22 @@ class Hitbox
         virtual bool checkCollision(Hitbox other);
 };
 
-class HitSphere
+//sphere-shaped hitbox
+class HitSphere : public Hitbox
 {
     public:
-        vec3 center;
+        glm::vec3 center;
         float radius;
 
+        HitSphere(glm::vec3 center, float radius);
         bool checkCollision(Hitbox other) override;
-}
+};
 
-class HitBox
+//Axis-Aligned Bounding Box (AABB)
+class AABB : public Hitbox
 {
     public:
+        glm::vec3 min, max;
+
         bool checkCollision(Hitbox other) override;
-}
+};

@@ -119,3 +119,60 @@ shared_ptr<std::map<std::string, glm::mat4>> Animator::interpolatePoses(KeyFrame
     return currentPose;
 }
 
+Animation createAnimation(const aiAnimation *anim) {
+    vector<KeyFrame> frames;
+    shared_ptr<map<string, JointTransform>> pose = make_shared<map<string, JointTransform>>();
+    map<double, shared_ptr<map<string, JointTransform>>> timePosMap;
+    float time = 999999999;
+    //
+    for (int j=0; j<anim->mNumChannels; j++) {
+        aiNodeAnim *anode = anim->mChannels[j];
+        //
+        for (int k=0; k<anode->mNumPositionKeys; k++) {
+            time = anode->mPositionKeys[k].mTime;
+            vec3 position = vec3_cast(anode->mPositionKeys[k].mValue);
+            quat rotation = quat_cast(anode->mRotationKeys[k].mValue);
+            if (timePosMap.find(time) == timePosMap.end()) {
+                timePosMap[time] = pose;
+                pose = make_shared<map<string, JointTransform>>(); //pose maps joint transforms to joint names
+                (*timePosMap[time])[anode->mNodeName.C_Str()] = JointTransform(position, rotation);
+            }
+            else {
+                (*timePosMap[time])[anode->mNodeName.C_Str()] = JointTransform(position, rotation);
+            }
+        }
+    }
+    for (map<double, shared_ptr<map<string, JointTransform>>>::iterator it = timePosMap.begin(); it != timePosMap.end(); ++it)
+        frames.push_back(KeyFrame(it->first, *(it->second)));
+    cout << timePosMap.size() << endl;
+    return Animation((float) (anim->mDuration*anim->mTicksPerSecond), frames);
+}
+
+void createAnimations(const aiScene *scene, vector<Animation> &animList) {
+    for (int i=0; i<scene->mNumAnimations; i++) {
+        animList.push_back(createAnimation(scene->mAnimations[i]));
+    }
+}
+
+void printAnimations(vector<Animation> &animList) {
+    for (int i=0; i<animList.size(); i++) {
+        cout << "animation " << i << " length: " << animList[i].length << endl;
+        for (int j=0; j<animList[i].frames.size(); j++) {
+            cout << "keyframe " << j << " has " << animList[i].frames[j].pose.size() << " joints" << " timeStamp: " << animList[i].frames[j].timeStamp << endl;
+            for (map<string, JointTransform>::iterator it = animList[i].frames[j].pose.begin(); it != animList[i].frames[j].pose.end(); ++it) {
+                cout << "animated joint " << it->first << endl;
+            }
+        }
+    }
+}
+	
+	// void fillAnimations(vector<Animation> &animList, vector<Joint> joints) {
+	// 	for (int i=0; i<joints.size();i++) {
+	// 		for (int j=0;j<animList.size();j++) {
+	// 			for (int k=0;k<animList[j].frames.size();k++) {
+	// 				if (animList[j].frames[k].pose.find(joints[i].name) == animList[j].frames[k].pose.end())
+	// 					animList[j].frames[k].pose[joints[i].name] = JointTransform(vec3(0), quat());
+	// 			}
+	// 		}
+	// 	}
+	// }

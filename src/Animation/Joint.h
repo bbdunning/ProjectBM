@@ -39,6 +39,7 @@ public:
     glm::mat4 animatedTransform;
 
     //transform relative to parent
+    //transform from model space to bone space
     glm::mat4 offsetMatrix;
     glm::mat4 inverseBindTransform;
 
@@ -48,6 +49,7 @@ public:
 };
 
 void buildJointHeirarchy(std::shared_ptr<std::map<std::string, unsigned int>> jointMap, std::shared_ptr<std::vector<Joint>> &joints, aiNode *node, const aiScene* scene);
+void populateJointMap(std::shared_ptr<std::map<std::string, unsigned int>> &jointMap, aiNode *node, const aiScene* scene, std::shared_ptr<std::vector<Joint>> &joints);
 Joint* getRootJoint(std::shared_ptr<std::map<std::string, unsigned int>> jointMap, std::shared_ptr<std::vector<Joint>> &joints, aiNode *node);
 void printJoints(Joint *j);
 void printAllJoints(std::vector<Joint> joints);
@@ -59,7 +61,6 @@ public:
     glm::vec3 position;
     glm::quat rotation;
 
-    //CHECK quaternion copying may be wierd, might need to use a pointer
     JointTransform() {};
     JointTransform(glm::vec3 position, glm::quat rotation);
     glm::mat4 getLocalTransform();

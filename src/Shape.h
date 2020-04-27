@@ -1,8 +1,6 @@
-
 #pragma once
-
-#ifndef LAB471_SHAPE_H_INCLUDED
-#define LAB471_SHAPE_H_INCLUDED
+#ifndef SHAPE_H
+#define SHAPE_H
 
 #include <string>
 #include <vector>
@@ -46,4 +44,4 @@ protected:
 
 };
 
-#endif // LAB471_SHAPE_H_INCLUDED
+#endif
