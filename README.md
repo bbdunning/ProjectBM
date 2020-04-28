@@ -2,15 +2,17 @@
     - Articulated Mesh Animation (wow this took a long time)
 
 ## Game Features Implemented ##
-    - Hitboxes
+    - Environmental Collision
+    - Platforms
+    - player action states 25%
+    - action hitboxes - 25% 
 
 ## Planned Graphics Technologies ##
     - Bump Mapping / Normal Mapping
     - Particles Effects (Billboards)
+    - Hitbox Visualization
 
 ## Planned Game Features ##
-* player action states 25%
-* action hitboxes - 25% 
 * gamepad support
 * 2nd player
 * action animations

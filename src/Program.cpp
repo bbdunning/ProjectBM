@@ -152,7 +152,7 @@ void setMaterial(int i, std::shared_ptr<Program> prog) {
 				glUniform1f(prog->getUniform("shine"), 120.0);
 		break;    
 		case 1: // 
-			glUniform3f(prog->getUniform("MatAmb"), 0.3, 0.3, 0.3);       
+			glUniform3f(prog->getUniform("MatAmb"), 0.35, 0.35, 0.35);       
 			glUniform3f(prog->getUniform("MatDif"), 0.3, 0.3, 0.35);       
 			glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.3);       
 			glUniform1f(prog->getUniform("shine"), 4.0);

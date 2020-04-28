@@ -53,7 +53,7 @@ public:
 
 	// Shape to be used (from  file) - modify to support multiple
 	unordered_map<string, shared_ptr<GameObject>> objL;
-	unordered_map<string, shared_ptr<GameObject>> platforms;
+	map<string, shared_ptr<GameObject>> platforms;
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -66,6 +66,7 @@ public:
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
 	shared_ptr<CollisionDetector> cd = make_shared<CollisionDetector>();
 	shared_ptr<Player> player1 = make_shared<Player>();
+	shared_ptr<Sandbag> player1 = make_shared<Player>();
 	
 	//animation data
 	float sTheta = 0;
@@ -252,10 +253,14 @@ public:
 		platforms["platform"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform2"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform3"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
+		platforms["platform4"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
+		platforms["platform5"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		objL["moon"] = GameObject::create(rDir + "terrain/", "moon.fbx", "moon");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
 
+
+		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-5, -2, -1), vec3(5, -1, 1)));
 
 		platforms["platform"]->location = vec3(-1, -.5, -2);
 		vec3 *temp = &platforms["platform"]->location;
@@ -272,7 +277,15 @@ public:
 		platforms["platform3"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
 		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform3"]->hitboxes[0]));
 
-		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-2, -2, -1), vec3(2, -1, 1)));
+		platforms["platform4"]->location = vec3(2, 0.25, -2);
+		temp = &platforms["platform4"]->location;
+		platforms["platform4"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
+		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform4"]->hitboxes[0]));
+
+		platforms["platform5"]->location = vec3(3, -.5, -2);
+		temp = &platforms["platform5"]->location;
+		platforms["platform5"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
+		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform5"]->hitboxes[0]));
 		// cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-.35f, -.11f, -1.f), vec3(.35f, -0.1f, 1.0f)));
 	}
 	
@@ -364,11 +377,11 @@ public:
 		objL["FoD"]->scale(vec3(0.03f, 0.03f, 0.03f));
 		setMaterial(3, prog);
 		objL["FoD"]->setModel(prog);
-		objL["FoD"]->draw(prog);
+		// objL["FoD"]->draw(prog);
 
-		objL["moon"]->translate(vec3(0,-1,0));
+		objL["moon"]->translate(vec3(0,-1,-2));
 		objL["moon"]->scale(vec3(10.0f, 10.0f, 10.0f));
-		objL["moon"]->rotate(PI/2, vec3(1, 0, 0));
+		objL["moon"]->rotate(-PI/2, vec3(1, 0, 0));
 		setMaterial(1, prog);
 		objL["moon"]->setModel(prog);
 		objL["moon"]->draw(prog);
@@ -376,17 +389,19 @@ public:
 		//platform
 		// cout << platforms["platform"]->hitboxes[0]->checkCollision(player1->environmentalHbox)<< endl;
 		// platforms["platform"]->translate(vec3(0, -.5, -2));
-		platforms["platform"]->translate(platforms["platform"]->location);
-		platforms["platform"]->setModel(prog);
-		platforms["platform"]->draw(prog);
+		for (map<string, shared_ptr<GameObject>>::iterator it=platforms.begin(); it!=platforms.end(); ++it) {
+			it->second->translate(it->second->location);
+			it->second->setModel(prog);
+			it->second->draw(prog);
+		}
 
-		platforms["platform2"]->translate(platforms["platform2"]->location);
-		platforms["platform2"]->setModel(prog);
-		platforms["platform2"]->draw(prog);
+		// platforms["platform2"]->translate(platforms["platform2"]->location);
+		// platforms["platform2"]->setModel(prog);
+		// platforms["platform2"]->draw(prog);
 
-		platforms["platform3"]->translate(platforms["platform3"]->location);
-		platforms["platform3"]->setModel(prog);
-		platforms["platform3"]->draw(prog);
+		// platforms["platform3"]->translate(platforms["platform3"]->location);
+		// platforms["platform3"]->setModel(prog);
+		// platforms["platform3"]->draw(prog);
 
 		//Skyring 1
 		setMaterial(3, prog);
@@ -395,14 +410,14 @@ public:
 		objL["skyring1"]->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
 		objL["skyring1"]->scale(vec3(0.2, 0.2, 0.2));
 		objL["skyring1"]->setModel(prog);
-		objL["skyring1"]->draw(prog);
+		// objL["skyring1"]->draw(prog);
 		//Skyring2
 		objL["skyring2"]->translate(vec3(-2.8, 2.1, -.26));
 		objL["skyring2"]->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
 		objL["skyring2"]->rotate(.3, vec3(1,0,0));
 		objL["skyring2"]->scale(vec3(0.2, 0.2, 0.2));
 		objL["skyring2"]->setModel(prog);
-		objL["skyring2"]->draw(prog);
+		// objL["skyring2"]->draw(prog);
 
 		// //draw Captain Falcon
 		// Model->pushMatrix();
@@ -426,7 +441,7 @@ public:
 		setLight(animProg);
 
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
-		objL["animModel"]->scale(vec3(0.035, 0.035, 0.035));
+		objL["animModel"]->scale(vec3(0.05, 0.05, 0.05));
 		setMaterial(1, animProg);
 		objL["animModel"]->setModel(animProg);
 		((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
