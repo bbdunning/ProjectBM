@@ -13,6 +13,7 @@
 - Bump Mapping / Normal Mapping
 - Particles Effects (Billboards)
 - Hitbox Visualization
+- Input Buffer?
 
 ## Planned Game Features ##
 * gamepad support
@@ -23,7 +24,6 @@
 * camera tracking characters
 * camera shake effect
 * airdodge
-* moonwalking
 * wavedashing
 
 

@@ -462,7 +462,7 @@ public:
 		//set initial material and Light
 		setLight(animProg);
 
-		objL["animModel"]->translate(vec3(0,0,5));
+		objL["animModel"]->translate(vec3(0,0,6));
 		objL["animModel"]->scale(vec3(0.1, 0.1, 0.1));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
 		// objL["animModel"]->rotate(PI, vec3(0, 1, 0));

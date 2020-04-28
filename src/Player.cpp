@@ -216,11 +216,11 @@ int Sandbag::update(vector<HitSphere> &hitboxes) {
 
     if (this->checkCollisions(hitboxes) != 0) {
         cout << this->checkCollisions(hitboxes) << endl;
-        this->currentPercent += .1;
+        this->currentPercent += .06;
         if (this->checkCollisions(hitboxes) == 1) {
-            this->velocity = vec3(.3,.1,0) * currentPercent;
+            this->velocity = vec3(.2,.2,0) * currentPercent;
         } else {
-            this->velocity = vec3(-.3,.1,0) * currentPercent;
+            this->velocity = vec3(-.2,.2,0) * currentPercent;
         }
         isGrounded = false;
         standing = false;
