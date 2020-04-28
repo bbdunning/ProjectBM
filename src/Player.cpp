@@ -36,6 +36,7 @@ int Player::update() {
     // const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
     this->environmentalHbox.center = this->location;
+    bool isOnPlatform = false;
 
     //landing
     if (location.y <= -1) {
@@ -141,10 +142,12 @@ int Player::update() {
             isGrounded = true;
             velocity.y = 0;
             hasDoubleJump = true;
+            isOnPlatform = true;
+            this->location.y = cd->environmentBoxes[i]->max.y;
         } 
-        else if (location.y != -1 || ih->Downflag) {
-            isGrounded = false;
-        }
+    }
+    if ((!isOnPlatform && location.y != -1) || ih->Downflag) {
+        isGrounded = false;
     }
 
     location += velocity;
