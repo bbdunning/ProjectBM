@@ -14,6 +14,7 @@ class CollisionDetector
         CollisionDetector() {};
         std::vector<std::shared_ptr<AABB>> environmentBoxes;
         bool check(AABB &box, HitSphere &sphere);
+        bool check2(AABB &box, HitSphere &sphere);
 };
 
 

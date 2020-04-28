@@ -23,7 +23,7 @@ int Player::init(shared_ptr<InputHandler> ih) {
     this->location=vec3(0,-1,-2);
     this->ih = ih;
     this->isGrounded = true;
-    this->standing = true; //change to true
+    this->standing = true;
     this->hasDoubleJump = true;
     this->facingRight = true;
 
@@ -39,16 +39,45 @@ int Player::update() {
     bool isOnPlatform = false;
 
     //landing
-    if (location.y <= -1) {
+    // if (location.y <= -1) {
+    //     if (!isGrounded) {
+    //         //add landing lag
+    //         location.y = -1;
+    //         standing = true;
+    //     }
+    //     isGrounded = true;
+    //     velocity.y = 0;
+    //     hasDoubleJump = true;
+    // }
+
+    //landing
+    for (int i=0; i<cd->environmentBoxes.size(); i++) {
+        if (cd->check(*cd->environmentBoxes[i], this->environmentalHbox) && velocity.y <= 0 && !ih->Downflag) {// && !isGrounded) {
+            if (!isGrounded) {
+                standing=true;
+            }
+            isGrounded = true;
+            velocity.y = 0;
+            hasDoubleJump = true;
+            isOnPlatform = true;
+            this->location.y = cd->environmentBoxes[i]->max.y;
+        } 
+    }
+    cout << cd->check2(*cd->environmentBoxes[3], this->environmentalHbox) << endl;
+    if (cd->check2(*cd->environmentBoxes[3], this->environmentalHbox) && velocity.y <=0) {// && !isGrounded) {
         if (!isGrounded) {
-            //add landing lag
-            location.y = -1;
-            standing = true;
+            standing=true;
         }
         isGrounded = true;
         velocity.y = 0;
         hasDoubleJump = true;
+        isOnPlatform = true;
+        this->location.y = cd->environmentBoxes[3]->max.y;
+    } 
+    if (!isOnPlatform || ih->Downflag) {
+        isGrounded = false;
     }
+
 
     //gravity
     if (!isGrounded && velocity.y < MAX_GRAVITY)
@@ -108,17 +137,19 @@ int Player::update() {
     //grounded friction
     if (isGrounded && velocity.x < 0.0f && !ih->Leftflag && !standing)
     {
+        //stop and stand
         if (velocity.x > -.009)
             standing = true;
+        //slow down
         else
-            velocity.x += .003f;
+            velocity.x += .002f;
     }
     if (isGrounded && velocity.x > 0.0f && !ih->Rightflag && !standing)
     {
         if (velocity.x < .009)
             standing = true;
         else
-            velocity.x -= .003;
+            velocity.x -= .002;
     }
 
     if ((velocity.x > -.0005 && velocity.x < .0005) && isGrounded)
@@ -135,20 +166,6 @@ int Player::update() {
     //     velocity.x += .001;
     // if (!axes[0]==1 && velocity.x > 0)
     //     velocity.x -= .001;
-
-    for (int i=0; i<cd->environmentBoxes.size(); i++) {
-        if (cd->check(*cd->environmentBoxes[i], this->environmentalHbox) && velocity.y <= 0 && !ih->Downflag) {// && !isGrounded) {
-            // cout <<cd->check(*cd->environmentBoxes[0], this->environmentalHbox) << endl;
-            isGrounded = true;
-            velocity.y = 0;
-            hasDoubleJump = true;
-            isOnPlatform = true;
-            this->location.y = cd->environmentBoxes[i]->max.y;
-        } 
-    }
-    if ((!isOnPlatform && location.y != -1) || ih->Downflag) {
-        isGrounded = false;
-    }
 
     location += velocity;
     // cout << location.x << " " << location.y << " " << location.z << endl;
