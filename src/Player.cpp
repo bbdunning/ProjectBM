@@ -11,7 +11,7 @@ using namespace std;
 
 //need to change
 #define MAX_GRAVITY 100
-#define MAX_SPEED .045f
+#define MAX_SPEED .035f
 #define MAX_AIR_SPEED .03f
 
 Player::Player() {
@@ -27,7 +27,7 @@ int Player::init(shared_ptr<InputHandler> ih) {
     this->hasDoubleJump = true;
     this->facingRight = true;
 
-    this->environmentalHbox = HitSphere(this->location, .1);
+    this->environmentalHbox = HitSphere(this->location, .008);
     return 0;
 }
 
@@ -37,9 +37,10 @@ int Player::update() {
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
     this->environmentalHbox.center = this->location;
 
+    //landing
     if (location.y <= -1) {
         if (!isGrounded) {
-            //landing lag
+            //add landing lag
             location.y = -1;
             standing = true;
         }
@@ -47,13 +48,17 @@ int Player::update() {
         velocity.y = 0;
         hasDoubleJump = true;
     }
+
+    //gravity
     if (!isGrounded && velocity.y < MAX_GRAVITY)
-    velocity.y -= .004;
+        velocity.y -= .004;
+
+    //jump
     if (ih->Spaceflag && isGrounded) {
         // velocity.y += .065; //fullhop
         velocity.y = .07; //shorthop
         velocity.x = clamp(velocity.x, -0.018f, 0.018f);
-        isGrounded=false;
+        isGrounded = false;
         standing = false;
     }
     
@@ -72,6 +77,10 @@ int Player::update() {
         }
         else if (!facingRight)
             velocity.x -= .002;
+        else if (facingRight) {
+            velocity.x = -MAX_SPEED;
+            facingRight = false;
+        }
         standing = false;
     }
     if (ih->Rightflag && velocity.x < MAX_SPEED && isGrounded)
@@ -82,6 +91,10 @@ int Player::update() {
         }
         else if (facingRight)
             velocity.x += .002;
+        else if (!facingRight) {
+            velocity.x = MAX_SPEED;
+            facingRight = true;
+        }
         standing = false;
     }
 
@@ -121,6 +134,18 @@ int Player::update() {
     //     velocity.x += .001;
     // if (!axes[0]==1 && velocity.x > 0)
     //     velocity.x -= .001;
+
+    for (int i=0; i<cd->environmentBoxes.size(); i++) {
+        if (cd->check(*cd->environmentBoxes[i], this->environmentalHbox) && velocity.y <= 0 && !ih->Downflag) {// && !isGrounded) {
+            // cout <<cd->check(*cd->environmentBoxes[0], this->environmentalHbox) << endl;
+            isGrounded = true;
+            velocity.y = 0;
+            hasDoubleJump = true;
+        } 
+        else if (location.y != -1 || ih->Downflag) {
+            isGrounded = false;
+        }
+    }
 
     location += velocity;
     // cout << location.x << " " << location.y << " " << location.z << endl;

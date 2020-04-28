@@ -5,12 +5,14 @@
 
 #include "InputHandler.h"
 #include "Physics/Hitbox.h"
+#include "Physics/CollisionDetector.h"
 
 class Player {
 public:
     glm::vec3 velocity;
     glm::vec3 location;
     std::shared_ptr<InputHandler> ih;
+    std::shared_ptr<CollisionDetector> cd;
     bool isGrounded;
     bool standing;
     bool hasDoubleJump;

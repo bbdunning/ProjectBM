@@ -2,6 +2,7 @@
 #include <cmath>
 #include <unordered_map>
 #include <glad/glad.h>
+#include <memory>
 
 #include "GLSL.h"
 #include "Program.h"
@@ -18,6 +19,7 @@
 #include "GameObjects/Platform.h"
 #include "Camera.h"
 #include "Hitbox.h"
+#include "CollisionDetector.h"
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -62,6 +64,7 @@ public:
 	shared_ptr<Texture> texture_glass;
 
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
+	shared_ptr<CollisionDetector> cd = make_shared<CollisionDetector>();
 	shared_ptr<Player> player1 = make_shared<Player>();
 	
 	//animation data
@@ -211,6 +214,7 @@ public:
 		camera.init();
 		camera.setInputHandler(inputHandler);
 		player1->init(inputHandler);
+		player1->cd = cd;
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
@@ -250,7 +254,10 @@ public:
 		objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
 
 
-		platforms["platform"]->hitboxes.push_back(make_shared<AABB>(vec3(-.4f,-.01f,-1.f), vec3(.4f,0.01f,1.f)));
+		platforms["platform"]->location = vec3(0, -.5, -2);
+		vec3 *temp = &platforms["platform"]->location;
+		platforms["platform"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
+		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform"]->hitboxes[0]));
 	}
 	
 
@@ -304,7 +311,7 @@ public:
 		}
 		//facing left
 		else if (!player1->facingRight) {
-			if (abs(player1->velocity.x <= -.04f) || inputHandler->Downflag){
+			if (abs(player1->velocity.x <= -.035f) || inputHandler->Downflag){
 				objL["totodile"]->rotate(PI/4, vec3(0,0,1));
 				objL["totodile"]->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
 			}
@@ -315,7 +322,7 @@ public:
 		}
 		//facing right
 		else {
-			if (abs(player1->velocity.x >= .04f) || inputHandler->Downflag) {
+			if (abs(player1->velocity.x >= .035f) || inputHandler->Downflag) {
 				objL["totodile"]->rotate(-PI/4, vec3(0,0,1));
 				objL["totodile"]->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
 			}
@@ -344,8 +351,9 @@ public:
 		objL["FoD"]->draw(prog);
 
 		//platform
-		cout << platforms["platform"]->hitboxes[0]->checkCollision(player1->environmentalHbox)<< endl;
-		platforms["platform"]->translate(vec3(0, -.5, -2));
+		// cout << platforms["platform"]->hitboxes[0]->checkCollision(player1->environmentalHbox)<< endl;
+		// platforms["platform"]->translate(vec3(0, -.5, -2));
+		platforms["platform"]->translate(platforms["platform"]->location);
 		platforms["platform"]->setModel(prog);
 		platforms["platform"]->draw(prog);
 
