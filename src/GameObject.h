@@ -7,6 +7,7 @@
 #include "Shape.h"
 #include "Animation/AnimatedShape.h"
 #include "MatrixStack.h"
+#include "Physics/Hitbox.h"
 
 
 class GameObject {
@@ -16,8 +17,10 @@ class GameObject {
         glm::vec3 location = glm::vec3(0,0,0);
         glm::vec3 scaleFactor = glm::vec3(1,1,1);
         glm::vec3 min, max;
+        std::vector<std::shared_ptr<Hitbox>> hitboxes;
         
-        void init();
+        static std::shared_ptr<GameObject> create(std::string meshPath, std::string fileName, std::string objName);
+        virtual void init();
         void draw(std::shared_ptr<Program> prog);
         void setModel(std::shared_ptr<Program> prog);
         // void measure();
@@ -30,5 +33,6 @@ class GameObject {
         MatrixStack endTransform;
 
 };
+
 
 #endif

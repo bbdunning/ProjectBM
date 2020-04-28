@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "InputHandler.h"
+#include "Physics/Hitbox.h"
 
 class Player {
 public:
@@ -14,6 +15,7 @@ public:
     bool standing;
     bool hasDoubleJump;
     bool facingRight;
+    HitSphere environmentalHbox;
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);

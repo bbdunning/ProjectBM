@@ -15,6 +15,7 @@
 #include "Player.h"
 #include "Animation/AnimatedShape.h"
 #include "Animation/Animator.h"
+#include "GameObjects/Platform.h"
 #include "Camera.h"
 #include "Hitbox.h"
 
@@ -50,6 +51,7 @@ public:
 
 	// Shape to be used (from  file) - modify to support multiple
 	unordered_map<string, shared_ptr<GameObject>> objL;
+	unordered_map<string, shared_ptr<GameObject>> platforms;
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -212,69 +214,6 @@ public:
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
-	void initTex(const std::string& resourceDirectory){  
-		texture_glass = make_shared<Texture>();  
-		texture_glass->setFilename(resourceDirectory + "/textures/glass.jpg");  
-		texture_glass->init();  
-		texture_glass->setUnit(2);  
-		texture_glass->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
-	}
-
-	void createGameObject(string meshPath, string fileName, string objName) {
-		Assimp::Importer importer;
-        shared_ptr<GameObject> mesh = make_shared<GameObject>();
-		mesh->name = objName;
-		Joint *rootJoint = nullptr;
-		vector<Animation> animList; 
-		shared_ptr<vector<Joint>> joints = make_shared<vector<Joint>>();
-		shared_ptr<map<string, unsigned int>> jointMap = make_shared<map<string, unsigned int>>();
-
-		const aiScene* scene = importer.ReadFile(
-			meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
-
-		cout << "creating " << objName << endl;
-		populateJointMap(jointMap, scene->mRootNode, scene, joints);
-		// for (map<string, unsigned int>::iterator it = jointMap->begin(); it != jointMap->end(); ++it)
-		// 	cout << it->first << " " << it->second->name << endl;
-
-		buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
-		createAnimations(scene, animList);
-		// fillAnimations(animList, *joints);
-		// printAnimations(animList);
-		// printAllJoints(jointMap);
-		// for (int i=0; i<joints->size(); i++) {
-		// 	cout<< "joint: " << (*joints)[i].name << " has children: " << (*joints)[i].children.size() << endl;
-		// }
-
-
-		if (joints->size() > 0) {
-			rootJoint = getRootJoint(jointMap, joints, scene->mRootNode);
-			cout << "root joint name: " << rootJoint->name << endl;
-			// printJoints(rootJoint);
-			mat4 temp(1.0f);
-		}
-
-		for (int i=0; i< scene->mNumMeshes; i++) {
-			mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap, joints));
-		}
-		if (animList.size() > 0) {
-		shared_ptr<Animation> animation = make_shared<Animation>(animList[0].length, animList[0].frames);
-			for (int i=0; i<mesh->shapeList.size(); i++) {
-				mesh->shapeList[i]->animator.doAnimation(animation);
-			}
-		}
-
-		objL[objName] = mesh;
-	}
-
-	shared_ptr<Texture> createTexture(string texturePath) {
-		shared_ptr<Texture> tex = make_shared<Texture>();  
-		tex->setFilename(texturePath);  
-		tex->init();  tex->setUnit(1);  
-		tex->setWrapModes(GL_REPEAT, GL_REPEAT);  
-		return tex;
-	}
-
 	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
 	}
@@ -300,15 +239,18 @@ public:
 		string rDir = resourceDirectory + "/";
 
 		//load geometry, initialize meshes, create objects
-		createGameObject(rDir, "cube.obj", "cube");
-		createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
-		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
-		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
-		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
-		createGameObject(rDir + "melee/fod/", "platform.fbx", "platform");
-		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
-		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		createGameObject(rDir + "anim/", "model.dae", "animModel");
+		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
+		objL["totodile"] = GameObject::create(rDir + "melee/totodile/", "toto.dae", "totodile");
+		objL["FoD"] = GameObject::create(rDir + "melee/fod/", "fountain.fbx", "FoD");
+		objL["skyring1"] = GameObject::create(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
+		objL["skyring2"] = GameObject::create(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
+		platforms["platform"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
+		objL["moon"] = GameObject::create(rDir + "terrain/", "moon.fbx", "moon");
+		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
+
+
+		platforms["platform"]->hitboxes.push_back(make_shared<AABB>(vec3(-.4f,-.01f,-1.f), vec3(.4f,0.01f,1.f)));
 	}
 	
 
@@ -402,9 +344,10 @@ public:
 		objL["FoD"]->draw(prog);
 
 		//platform
-		objL["platform"]->translate(vec3(0, -.5, -2));
-		objL["platform"]->setModel(prog);
-		objL["platform"]->draw(prog);
+		cout << platforms["platform"]->hitboxes[0]->checkCollision(player1->environmentalHbox)<< endl;
+		platforms["platform"]->translate(vec3(0, -.5, -2));
+		platforms["platform"]->setModel(prog);
+		platforms["platform"]->draw(prog);
 
 		//Skyring 1
 		setMaterial(1, prog);
@@ -481,7 +424,6 @@ int main(int argc, char *argv[])
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
-	application->initTex(resourceDir);
 
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))

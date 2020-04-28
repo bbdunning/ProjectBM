@@ -26,6 +26,8 @@ int Player::init(shared_ptr<InputHandler> ih) {
     this->standing = true; //change to true
     this->hasDoubleJump = true;
     this->facingRight = true;
+
+    this->environmentalHbox = HitSphere(this->location, .1);
     return 0;
 }
 
@@ -33,6 +35,7 @@ int Player::update() {
     // int axesCount;
     // const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
+    this->environmentalHbox.center = this->location;
 
     if (location.y <= -1) {
         if (!isGrounded) {
@@ -120,6 +123,6 @@ int Player::update() {
     //     velocity.x -= .001;
 
     location += velocity;
-    cout << location.x << " " << location.y << " " << location.z << endl;
+    // cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }

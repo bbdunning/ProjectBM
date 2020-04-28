@@ -6,7 +6,7 @@
         {
             "label": "build & run",
             "type": "shell",
-            "command": "cd build ; if ($?) { mingw32-make -j }",
+            "command": "cd build ; if ($?) { make -j }",
             
             "group": {
                 "kind": "build",
