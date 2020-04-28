@@ -142,3 +142,38 @@ GLint Program::getUniform(const std::string &name) const
 	}
 	return uniform->second;
 }
+
+void setMaterial(int i, std::shared_ptr<Program> prog) {  
+	switch (i) {    
+		case 0:
+				glUniform3f(prog->getUniform("MatAmb"), 0.02, 0.04, 0.2);        
+				glUniform3f(prog->getUniform("MatDif"), 0.0, 0.16, 0.9);       
+				glUniform3f(prog->getUniform("MatSpec"), 0.14, 0.2, 0.8);       
+				glUniform1f(prog->getUniform("shine"), 120.0);
+		break;    
+		case 1: // 
+			glUniform3f(prog->getUniform("MatAmb"), 0.13, 0.13, 0.13);       
+			glUniform3f(prog->getUniform("MatDif"), 0.3, 0.3, 0.4);       
+			glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.3);       
+			glUniform1f(prog->getUniform("shine"), 4.0);
+		break;    
+		case 2: //pikachu
+			glUniform3f(prog->getUniform("MatAmb"), 0.1294, 0.0235, 0.02745);        
+			glUniform3f(prog->getUniform("MatDif"), 0.7804, 0.5686, 0.11373);       
+			glUniform3f(prog->getUniform("MatSpec"), 0.3922, 0.341176, 0.30784);       
+			glUniform1f(prog->getUniform("shine"), 20);
+		break;  
+		case 3: //stage
+			glUniform3f(prog->getUniform("MatAmb"), 0.00745, 0.1175, 0.3175);        
+			glUniform3f(prog->getUniform("MatDif"), 0.61424, 0.04136, 0.04136);       
+			glUniform3f(prog->getUniform("MatSpec"), 0.727811, 0.626959, 0.626959);       
+			glUniform1f(prog->getUniform("shine"), 100);
+		break;
+		case 4:
+			glUniform3f(prog->getUniform("MatAmb"), 0.1, 0.1, 0.1);        
+			glUniform3f(prog->getUniform("MatDif"), 0.5, 0.5, 0.5);       
+			glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
+			glUniform1f(prog->getUniform("shine"), 100);
+		break;
+	}
+}

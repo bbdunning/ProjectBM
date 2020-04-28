@@ -23,6 +23,8 @@ include_directories("src/Animation")
 link_directories("src/Animation")
 include_directories("src/Physics")
 link_directories("src/Physics")
+include_directories("src/GameObjects")
+link_directories("src/GameObjects")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})

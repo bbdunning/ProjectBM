@@ -45,10 +45,10 @@ int Player::update() {
         hasDoubleJump = true;
     }
     if (!isGrounded && velocity.y < MAX_GRAVITY)
-    velocity.y -= .005;
+    velocity.y -= .004;
     if (ih->Spaceflag && isGrounded) {
         // velocity.y += .065; //fullhop
-        velocity.y = .075; //shorthop
+        velocity.y = .07; //shorthop
         velocity.x = clamp(velocity.x, -0.018f, 0.018f);
         isGrounded=false;
         standing = false;
@@ -84,9 +84,9 @@ int Player::update() {
 
     //arial movment
     if (ih->Leftflag && (velocity.x > -MAX_AIR_SPEED) && !isGrounded)
-        velocity.x -= .0006;
+        velocity.x -= .0009;
     if (ih->Rightflag && (velocity.x < MAX_AIR_SPEED) && !isGrounded)
-        velocity.x += .0006;
+        velocity.x += .0009;
     
     //grounded friction
     if (isGrounded && velocity.x < 0.0f && !ih->Leftflag && !standing)
@@ -120,5 +120,6 @@ int Player::update() {
     //     velocity.x -= .001;
 
     location += velocity;
+    cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }

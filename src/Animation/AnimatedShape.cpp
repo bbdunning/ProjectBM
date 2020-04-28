@@ -67,7 +67,7 @@ void AnimatedShape::createShape(aiMesh* inMesh)
 				jointWeightBuf[(vertexId*MAX_JOINTS) + countmap[vertexId]] = vertexWeight;
 				countmap[vertexId]++;
 			} else {
-				cout << " REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE " << endl;
+				// cout << " REEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE " << endl;
 			}
 		}
 	}
@@ -243,4 +243,45 @@ void AnimatedShape::setJointTransforms() {
 		this->jointTransforms[(*joints)[i].index] = (*joints)[i].animatedTransform;
 		// this->jointTransforms[(*joints)[i].index] = mat4(1);
 	}
+}
+
+shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
+	string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
+	shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> joints) {
+	shared_ptr<AnimatedShape> newShape;
+	aiString* texPath;
+
+
+	newShape = make_shared<AnimatedShape>();
+	if (scene->mMeshes[i]->mNumBones > 0) {
+		aiBone* j = scene->mMeshes[i]->mBones[0];
+		newShape->isAnimated = true;
+	} else {
+		newShape->isAnimated = false;
+	}
+	texPath = new aiString();
+	newShape->scene = scene;
+	newShape->jointMap = jointMap;
+	newShape->joints = joints;
+	newShape->jointTransforms.resize(50); //max joints
+	newShape->createShape(scene->mMeshes[i]);
+	newShape->name = scene->mMeshes[i]->mName.C_Str();
+	newShape->measure();
+	//fix rootJoint
+	newShape->init(rootJoint);
+	string temp;
+
+	//load texture path into texPath
+	scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
+	temp = texPath->C_Str();
+
+	//if mesh has texture, create a texture from it
+	if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
+		((texPath->length > 5) and (temp != "none"))) {
+		if (texPath->C_Str()[0] != '/') {
+			newShape->texture = createTexture(meshPath + texPath->C_Str());
+		} else
+			newShape->texture = createTexture(texPath->C_Str());
+	}
+	return newShape;
 }

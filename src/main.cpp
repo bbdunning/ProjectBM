@@ -135,40 +135,6 @@ public:
 		glViewport(0, 0, width, height);
 	}
 
-	void setMaterial(int i, shared_ptr<Program> prog) {  
-		switch (i) {    
-			case 0:
-				 glUniform3f(prog->getUniform("MatAmb"), 0.02, 0.04, 0.2);        
-				 glUniform3f(prog->getUniform("MatDif"), 0.0, 0.16, 0.9);       
-				 glUniform3f(prog->getUniform("MatSpec"), 0.14, 0.2, 0.8);       
-				 glUniform1f(prog->getUniform("shine"), 120.0);
-			break;    
-			case 1: // 
-				glUniform3f(prog->getUniform("MatAmb"), 0.13, 0.13, 0.13);       
-				glUniform3f(prog->getUniform("MatDif"), 0.3, 0.3, 0.4);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.3);       
-				glUniform1f(prog->getUniform("shine"), 4.0);
-			break;    
-			case 2: //pikachu
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.1294, 0.0235, 0.02745);        
-				glUniform3f(prog->getUniform("MatDif"), 0.7804, 0.5686, 0.11373);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.3922, 0.341176, 0.30784);       
-				glUniform1f(prog->getUniform("shine"), 20);
-			break;  
-			case 3: //stage
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.00745, 0.1175, 0.3175);        
-				glUniform3f(prog->getUniform("MatDif"), 0.61424, 0.04136, 0.04136);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.727811, 0.626959, 0.626959);       
-				glUniform1f(prog->getUniform("shine"), 100);
-			break;
-			case 4:
-			 	glUniform3f(prog->getUniform("MatAmb"), 0.1, 0.1, 0.1);        
-				glUniform3f(prog->getUniform("MatDif"), 0.5, 0.5, 0.5);       
-				glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
-				glUniform1f(prog->getUniform("shine"), 100);
-			break;
-		}
-	}
 
 	void setLight(shared_ptr<Program> prog) {
 		glUniform3f(prog->getUniform("LightPos"), .3, 3, 3);
@@ -254,64 +220,6 @@ public:
 		texture_glass->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
 	}
 
-	void initGeom(const std::string& resourceDirectory)
-	{
-		string rDir = resourceDirectory + "/";
-		// Initialize mesh
-		// Load geometry
-
-		//create objects
-		createGameObject(rDir, "cube.obj", "cube");
-		createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
-		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
-		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
-		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
-		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
-		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		createGameObject(rDir + "anim/", "model.dae", "animModel");
-	}
-	
-	shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath, 
-		string fileName, string objName, shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
-		shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> joints) {
-		shared_ptr<AnimatedShape> newShape;
-		aiString* texPath;
-
-
-		newShape = make_shared<AnimatedShape>();
-		if (scene->mMeshes[i]->mNumBones > 0) {
-			aiBone* j = scene->mMeshes[i]->mBones[0];
-			newShape->isAnimated = true;
-		} else {
-			newShape->isAnimated = false;
-		}
-		texPath = new aiString();
-		newShape->scene = scene;
-		newShape->jointMap = jointMap;
-		newShape->joints = joints;
-		newShape->jointTransforms.resize(50); //max joints
-		newShape->createShape(scene->mMeshes[i]);
-		newShape->name = scene->mMeshes[i]->mName.C_Str();
-		newShape->measure();
-		//fix rootJoint
-		newShape->init(rootJoint);
-		string temp;
-
-		//load texture path into texPath
-		scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->GetTexture(aiTextureType_DIFFUSE, 0, texPath);
-		temp = texPath->C_Str();
-
-		//if mesh has texture, create a texture from it
-		if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
-			((texPath->length > 5) and (temp != "none"))) {
-			if (texPath->C_Str()[0] != '/') {
-				newShape->texture = createTexture(meshPath + texPath->C_Str());
-			} else
-				newShape->texture = createTexture(texPath->C_Str());
-		}
-		return newShape;
-	}
-
 	void createGameObject(string meshPath, string fileName, string objName) {
 		Assimp::Importer importer;
         shared_ptr<GameObject> mesh = make_shared<GameObject>();
@@ -387,6 +295,22 @@ public:
 		cubeProg->unbind();
 	}
 
+	void initGeom(const std::string& resourceDirectory)
+	{
+		string rDir = resourceDirectory + "/";
+
+		//load geometry, initialize meshes, create objects
+		createGameObject(rDir, "cube.obj", "cube");
+		createGameObject(rDir + "melee/totodile/", "toto.dae", "totodile");
+		createGameObject(rDir + "melee/fod/", "fountain.fbx", "FoD");
+		createGameObject(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
+		createGameObject(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
+		createGameObject(rDir + "melee/fod/", "platform.fbx", "platform");
+		createGameObject(rDir + "terrain/", "moon.fbx", "moon");
+		// createGameObject(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
+		createGameObject(rDir + "anim/", "model.dae", "animModel");
+	}
+	
 
 	void render() {
 		// Get current frame buffer size.
@@ -465,7 +389,7 @@ public:
 		else if (!player1->isGrounded)
 			setMaterial(3, prog);
 
-		objL["totodile"]->scale(vec3(.025, .025, .025));
+		objL["totodile"]->scale(vec3(.022, .022, .022));
 		// cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
 		objL["totodile"]->setModel(prog);
 		objL["totodile"]->draw(prog); 
@@ -477,12 +401,17 @@ public:
 		objL["FoD"]->setModel(prog);
 		objL["FoD"]->draw(prog);
 
+		//platform
+		objL["platform"]->translate(vec3(0, -.5, -2));
+		objL["platform"]->setModel(prog);
+		objL["platform"]->draw(prog);
+
 		//Skyring 1
+		setMaterial(1, prog);
 		objL["skyring1"]->translate(vec3(-2.4, 2, -2));
 		objL["skyring1"]->rotate(.1, vec3(1,0,0));
 		objL["skyring1"]->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
 		objL["skyring1"]->scale(vec3(0.2, 0.2, 0.2));
-		setMaterial(1, prog);
 		objL["skyring1"]->setModel(prog);
 		objL["skyring1"]->draw(prog);
 		//Skyring2
@@ -549,9 +478,6 @@ int main(int argc, char *argv[])
 	windowManager->init(1280, 900);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
-
-	// This is the code that will likely change program to program as you
-	// may need to initialize or set up different data and state
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);

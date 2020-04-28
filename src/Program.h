@@ -6,6 +6,7 @@
 
 #include <map>
 #include <string>
+#include <memory>
 
 #include <glad/glad.h>
 
@@ -43,5 +44,7 @@ private:
 	bool verbose = true;
 
 };
+
+void setMaterial(int i, std::shared_ptr<Program> prog);
 
 #endif // LAB471_PROGRAM_H_INCLUDED
