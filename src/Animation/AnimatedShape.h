@@ -15,6 +15,7 @@
 #define BONE_ID_LOCATION 3
 #define BONE_WEIGHT_LOCATION 4
 
+class GameObject;
 
 class AnimatedShape: public Shape
 {
@@ -44,5 +45,9 @@ public:
     
 private:
 };
+
+std::shared_ptr<AnimatedShape> createShape(const aiScene * scene, std::string meshPath, 
+	std::string fileName, std::string objName, std::shared_ptr<GameObject> obj, int i, Joint *rootJoint, 
+	std::shared_ptr<std::map<std::string, unsigned int>> jointMap, std::shared_ptr<std::vector<Joint>> joints);
 
 #endif

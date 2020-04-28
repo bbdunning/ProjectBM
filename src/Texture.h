@@ -4,6 +4,7 @@
 
 #include <glad/glad.h>
 #include <string>
+#include <memory>
 
 class Texture
 {
@@ -26,5 +27,7 @@ private:
 	GLint unit;
 	
 };
+
+std::shared_ptr<Texture> createTexture(std::string texturePath);
 
 #endif

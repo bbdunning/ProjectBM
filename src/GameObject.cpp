@@ -12,7 +12,6 @@ void GameObject::init() {
 }
 
 void GameObject::draw(std::shared_ptr<Program> prog) {
-    // this->setModel(prog);
     for (int i = 0; i < this->shapeList.size(); i++) {
         shapeList[i]->draw(prog);
     }

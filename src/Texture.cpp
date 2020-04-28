@@ -78,3 +78,11 @@ void Texture::unbind()
 	glActiveTexture(GL_TEXTURE0 + unit);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+shared_ptr<Texture> createTexture(string texturePath) {
+	shared_ptr<Texture> tex = make_shared<Texture>();  
+	tex->setFilename(texturePath);  
+	tex->init();  tex->setUnit(1);  
+	tex->setWrapModes(GL_REPEAT, GL_REPEAT);  
+	return tex;
+}

@@ -251,7 +251,6 @@ shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath,
 	shared_ptr<AnimatedShape> newShape;
 	aiString* texPath;
 
-
 	newShape = make_shared<AnimatedShape>();
 	if (scene->mMeshes[i]->mNumBones > 0) {
 		aiBone* j = scene->mMeshes[i]->mBones[0];
