@@ -155,6 +155,12 @@ int Player::update() {
         standing = true;
 
     if (standing) velocity.x = 0.0f;
+
+    if (ih->R) {
+        this->isAttacking = true;
+    } else {
+        this->isAttacking = false;
+    }
     
     //controller
     // if (axes[0]==-1 && velocity.x > -MAX_SPEED)
@@ -188,13 +194,37 @@ int Sandbag::init(shared_ptr<InputHandler> ih) {
     return 0;
 }
 
-int Sandbag::update() {
+int Sandbag::checkCollisions(vector<HitSphere> &hitboxes){
+    for (int i=0; i<hitboxes.size(); i++) {
+        if (CollisionDetector::sphereCheck(this->environmentalHbox, hitboxes[i])) {
+            if (this->environmentalHbox.center.x < hitboxes[i].center.x) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int Sandbag::update(vector<HitSphere> &hitboxes) {
     // int axesCount;
     // const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
     this->environmentalHbox.center = this->location;
     bool isOnPlatform = false;
 
+    if (this->checkCollisions(hitboxes) != 0) {
+        cout << this->checkCollisions(hitboxes) << endl;
+        this->currentPercent += .1;
+        if (this->checkCollisions(hitboxes) == 1) {
+            this->velocity = vec3(.3,.1,0) * currentPercent;
+        } else {
+            this->velocity = vec3(-.3,.1,0) * currentPercent;
+        }
+        isGrounded = false;
+        standing = false;
+    }
     //landing
     // if (location.y <= -1) {
     //     if (!isGrounded) {
@@ -209,7 +239,7 @@ int Sandbag::update() {
 
     //landing
     for (int i=1; i<cd->environmentBoxes.size(); i++) {
-        if (cd->check(*cd->environmentBoxes[i], this->environmentalHbox) && velocity.y <= 0 && !ih->Downflag) {// && !isGrounded) {
+        if (cd->check(*cd->environmentBoxes[i], this->environmentalHbox) && velocity.y <= 0 && !ih->kp2) {// && !isGrounded) {
             if (!isGrounded) {
                 standing=true;
             }
@@ -230,7 +260,7 @@ int Sandbag::update() {
         isOnPlatform = true;
         this->location.y = cd->environmentBoxes[0]->max.y;
     } 
-    if (!isOnPlatform || ih->Downflag) {
+    if (!isOnPlatform || ih->kp2) {
         isGrounded = false;
     }
 
@@ -240,7 +270,7 @@ int Sandbag::update() {
         velocity.y -= .004;
 
     //jump
-    if (ih->Spaceflag && isGrounded) {
+    if (ih->kp5 && isGrounded) {
         // velocity.y += .065; //fullhop
         velocity.y = .07; //shorthop
         velocity.x = clamp(velocity.x, -0.018f, 0.018f);
@@ -256,7 +286,7 @@ int Sandbag::update() {
     }
     
     //grounded movement
-    if (ih->Leftflag && velocity.x > -MAX_SPEED && isGrounded) {
+    if (ih->kp1 && velocity.x > -MAX_SPEED && isGrounded) {
         if (standing) {
             velocity.x = -.02;
             facingRight = false;
@@ -269,7 +299,7 @@ int Sandbag::update() {
         }
         standing = false;
     }
-    if (ih->Rightflag && velocity.x < MAX_SPEED && isGrounded)
+    if (ih->kp3 && velocity.x < MAX_SPEED && isGrounded)
     {
         if (standing) {
             velocity.x = .02;
@@ -285,13 +315,13 @@ int Sandbag::update() {
     }
 
     //arial movment
-    if (ih->Leftflag && (velocity.x > -MAX_AIR_SPEED) && !isGrounded)
+    if (ih->kp1 && (velocity.x > -MAX_AIR_SPEED) && !isGrounded)
         velocity.x -= .0009;
-    if (ih->Rightflag && (velocity.x < MAX_AIR_SPEED) && !isGrounded)
+    if (ih->kp3 && (velocity.x < MAX_AIR_SPEED) && !isGrounded)
         velocity.x += .0009;
     
     //grounded friction
-    if (isGrounded && velocity.x < 0.0f && !ih->Leftflag && !standing)
+    if (isGrounded && velocity.x < 0.0f && !ih->kp1 && !standing)
     {
         //stop and stand
         if (velocity.x > -.009)
@@ -300,7 +330,7 @@ int Sandbag::update() {
         else
             velocity.x += .002f;
     }
-    if (isGrounded && velocity.x > 0.0f && !ih->Rightflag && !standing)
+    if (isGrounded && velocity.x > 0.0f && !ih->kp3 && !standing)
     {
         if (velocity.x < .009)
             standing = true;
@@ -325,5 +355,6 @@ int Sandbag::update() {
 
     location += velocity;
     // cout << location.x << " " << location.y << " " << location.z << endl;
+
     return 0;
 }

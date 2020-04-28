@@ -57,9 +57,9 @@ KeyFrame::KeyFrame(float timeStamp, std::map<std::string, JointTransform> pose) 
 
 //adds children to Joints
 void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<vector<Joint>> &joints, aiNode *node, const aiScene* scene) {
-    cout << "NODE NAME: " << node->mName.C_Str() << endl;
+    // cout << "NODE NAME: " << node->mName.C_Str() << endl;
     for (int i=0; i< node->mNumChildren; i++) {
-        cout << "NODE CHILD NAME: " << node->mChildren[i]->mName.C_Str() << endl;
+        // cout << "NODE CHILD NAME: " << node->mChildren[i]->mName.C_Str() << endl;
         //if node child name is in jointMap
         if (jointMap->find(node->mChildren[i]->mName.C_Str()) != jointMap->end()) {
             if ((*joints)[(*jointMap)[node->mName.C_Str()]].name != (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name) {
@@ -67,7 +67,7 @@ void buildJointHeirarchy(shared_ptr<map<string, unsigned int>> jointMap, shared_
                 string childname = node->mName.C_Str();
                 if (childname != "Armature") {
                     (*joints)[(*jointMap)[node->mName.C_Str()]].children.push_back(&(*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]]);
-                    cout << node->mName.C_Str() << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
+                    // cout << node->mName.C_Str() << " < " << (*joints)[(*jointMap)[node->mChildren[i]->mName.C_Str()]].name << endl;
                 }
             }
         }
@@ -83,7 +83,7 @@ Joint* getRootJoint(shared_ptr<map<string, unsigned int>> jointMap, shared_ptr<v
         return &(*joints)[(*jointMap)[node->mName.C_Str()]];
     }
     for (int i=0; i<node->mNumChildren; i++) {
-        cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
+        // cout << "node name: " << node->mChildren[i]->mName.C_Str() << endl;
         string childname = node->mChildren[i]->mName.C_Str();
         if (childname == "Armature"){
             return getRootJoint(jointMap, joints, node->mChildren[i]);

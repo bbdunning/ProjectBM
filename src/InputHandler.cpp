@@ -24,9 +24,16 @@ void InputHandler::init() {
         this->Shiftflag = false;
 	    this->lightX = .4;
 	    this->up_time = 0;
+		this->Upflag = false;
         this->Leftflag = false;
         this->Rightflag = false;
 		this->Downflag = false;
+
+		this->kp5 = false;
+        this->kp1 = false;
+        this->kp2 = false;
+		this->kp3 = false;
+		this->R = false;
 
 		// controllerPresent = glfwJoystickIsGamepad(GLFW_JOYSTICK_1);
 		// if (controllerPresent)
@@ -42,8 +49,10 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_W && action == GLFW_RELEASE) { Wflag = false; }
 		if (key == GLFW_KEY_S && action == GLFW_PRESS) { Sflag = true; }
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE) { Sflag = false; }
-		if (key == GLFW_KEY_C && action == GLFW_RELEASE) { Cflag = true; }
-		if (key == GLFW_KEY_C && action == GLFW_PRESS) { Cflag = false; }
+		if (key == GLFW_KEY_C && action == GLFW_PRESS) { Cflag = true; }
+		if (key == GLFW_KEY_C && action == GLFW_RELEASE) { Cflag = false; }
+		if (key == GLFW_KEY_R && action == GLFW_PRESS) { R = true; }
+		if (key == GLFW_KEY_R && action == GLFW_RELEASE) { R = false; }
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { 
 			Spaceflag = true; 
 			if (!jump)
@@ -95,5 +104,30 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE) { 
 			Rightflag = false; 
 			right_time = 0;
+		}
+
+		if (key == GLFW_KEY_KP_5 && action == GLFW_PRESS) { 
+			kp5 = true;
+		}
+		if (key == GLFW_KEY_KP_5 && action == GLFW_RELEASE) { 
+			kp5 = false;
+		}
+		if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS) { 
+			kp2 = true;
+		}
+		if (key == GLFW_KEY_KP_2 && action == GLFW_RELEASE) { 
+			kp2 = false;
+		}
+		if (key == GLFW_KEY_KP_1 && action == GLFW_PRESS) { 
+			kp1 = true;
+		}
+		if (key == GLFW_KEY_KP_1 && action == GLFW_RELEASE) { 
+			kp1 = false;
+		}
+		if (key == GLFW_KEY_KP_3 && action == GLFW_PRESS) { 
+			kp3 = true;
+		}
+		if (key == GLFW_KEY_KP_3 && action == GLFW_RELEASE) { 
+			kp3 = false;
 		}
 }

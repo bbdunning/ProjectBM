@@ -1,16 +1,18 @@
 ## Graphics Technologies Implemented ##
-    - Articulated Mesh Animation (wow this took a long time)
+- Articulated Mesh Animation (wow this took a long time)
 
 ## Game Features Implemented ##
-    - Environmental Collision
-    - Platforms
-    - player action states 25%
-    - action hitboxes - 25% 
+- Environmental Collision
+- Platforms
+- player action states 25%
+- action hitboxes - 25% 
 
 ## Planned Graphics Technologies ##
-    - Bump Mapping / Normal Mapping
-    - Particles Effects (Billboards)
-    - Hitbox Visualization
+- UI
+- Sound Engine (Background music & Sound Effects)
+- Bump Mapping / Normal Mapping
+- Particles Effects (Billboards)
+- Hitbox Visualization
 
 ## Planned Game Features ##
 * gamepad support
@@ -42,10 +44,6 @@
     - shift -> move player up
     - ctrl -> move player down
 
-## progress made in 476 ##
+## Other ##
 * fully crossplatform
     - migrated from linux laptop to windows 10 pc
-
-* implemented player class
-    - much better movement and physics now
-    - double jump

@@ -19,6 +19,7 @@ class InputHandler {
         bool Cflag;
         bool Leftflag;
         bool Rightflag;
+        bool R;
 	    float lightX;
 	    float up_start_time;
 	    float down_start_time;
@@ -32,6 +33,11 @@ class InputHandler {
         float space_start_time;
         float shift_start_time;
         bool jump;
+
+		bool kp5;
+        bool kp1;
+        bool kp2;
+		bool kp3;
 
         bool controllerPresent;
 };

@@ -54,6 +54,7 @@ public:
 	// Shape to be used (from  file) - modify to support multiple
 	unordered_map<string, shared_ptr<GameObject>> objL;
 	map<string, shared_ptr<GameObject>> platforms;
+	vector<HitSphere> playerHitboxes;
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -66,7 +67,7 @@ public:
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
 	shared_ptr<CollisionDetector> cd = make_shared<CollisionDetector>();
 	shared_ptr<Player> player1 = make_shared<Player>();
-	shared_ptr<Sandbag> player1 = make_shared<Player>();
+	shared_ptr<Sandbag> sandbag = make_shared<Sandbag>();
 	
 	//animation data
 	float sTheta = 0;
@@ -217,6 +218,8 @@ public:
 		camera.setInputHandler(inputHandler);
 		player1->init(inputHandler);
 		player1->cd = cd;
+		sandbag->init(inputHandler);
+		sandbag->cd = cd;
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
@@ -256,11 +259,12 @@ public:
 		platforms["platform4"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform5"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		objL["moon"] = GameObject::create(rDir + "terrain/", "moon.fbx", "moon");
+		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
 
 
-		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-5, -2, -1), vec3(5, -1, 1)));
+		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-7, -2, -1), vec3(7, -1, 1)));
 
 		platforms["platform"]->location = vec3(-1, -.5, -2);
 		vec3 *temp = &platforms["platform"]->location;
@@ -289,6 +293,14 @@ public:
 		// cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-.35f, -.11f, -1.f), vec3(.35f, -0.1f, 1.0f)));
 	}
 	
+	void gethitBoxes(shared_ptr<Player> player, vector<HitSphere> &hitboxes) {
+		vec3 offset = vec3(.05, .05, 0);
+		if (!player->facingRight) {
+			offset = -offset;
+		}
+		if (player->isAttacking)
+			hitboxes.push_back(HitSphere(player->location+offset, .3));
+	}
 
 	void render() {
 		// Get current frame buffer size.
@@ -372,6 +384,16 @@ public:
 		objL["totodile"]->setModel(prog);
 		objL["totodile"]->draw(prog); 
 
+		gethitBoxes(player1, playerHitboxes);
+		
+		sandbag->update(playerHitboxes);
+		setMaterial(1, prog);
+		objL["sandbag"]->translate(sandbag->location + vec3(0,.9,0));
+		objL["sandbag"]->scale(.05);
+		objL["sandbag"]->rotate(-PI/2, vec3(1,0,0));
+		objL["sandbag"]->setModel(prog);
+		objL["sandbag"]->draw(prog); 
+
 		//Main Stage
 		objL["FoD"]->translate(vec3(0, -1, -2));
 		objL["FoD"]->scale(vec3(0.03f, 0.03f, 0.03f));
@@ -440,8 +462,10 @@ public:
 		//set initial material and Light
 		setLight(animProg);
 
+		objL["animModel"]->translate(vec3(0,0,5));
+		objL["animModel"]->scale(vec3(0.1, 0.1, 0.1));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
-		objL["animModel"]->scale(vec3(0.05, 0.05, 0.05));
+		// objL["animModel"]->rotate(PI, vec3(0, 1, 0));
 		setMaterial(1, animProg);
 		objL["animModel"]->setModel(animProg);
 		((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
@@ -455,6 +479,7 @@ public:
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
+		playerHitboxes.clear();
 	}
 };
 

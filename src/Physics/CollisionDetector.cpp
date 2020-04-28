@@ -29,3 +29,7 @@ bool CollisionDetector::check2(AABB &box, HitSphere &sphere) {
 
     return distance < 1 + sphere.radius;
 }
+
+bool CollisionDetector::sphereCheck(HitSphere s1, HitSphere s2) {
+  return glm::distance(s1.center, s2.center) < s1.radius + s2.radius;
+}
