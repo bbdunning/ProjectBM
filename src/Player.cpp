@@ -11,7 +11,7 @@ using namespace std;
 
 //need to change
 #define MAX_GRAVITY 100
-#define MAX_SPEED .035f
+#define MAX_SPEED .045f
 #define MAX_AIR_SPEED .03f
 
 Player::Player() {
@@ -63,7 +63,7 @@ int Player::update() {
             this->location.y = cd->environmentBoxes[i]->max.y;
         } 
     }
-    if (cd->check2(*cd->environmentBoxes[0], this->environmentalHbox) && velocity.y <=0) {// && !isGrounded) {
+    if (cd->check(*cd->environmentBoxes[0], this->environmentalHbox) && velocity.y <=0) {// && !isGrounded) {
         if (!isGrounded) {
             standing=true;
         }
@@ -91,70 +91,11 @@ int Player::update() {
         standing = false;
     }
     
-    //double jump
-    if (ih->Upflag && !isGrounded && hasDoubleJump) {
-        //double jump should be able to change velocity direction
-        velocity.y = .05;
-        hasDoubleJump = false;
-    }
-    
-    //grounded movement
-    if (ih->Leftflag && velocity.x > -MAX_SPEED && isGrounded) {
-        if (standing) {
-            velocity.x = -.02;
-            facingRight = false;
-        }
-        else if (!facingRight)
-            velocity.x -= .002;
-        else if (facingRight) {
-            velocity.x = -MAX_SPEED;
-            facingRight = false;
-        }
-        standing = false;
-    }
-    if (ih->Rightflag && velocity.x < MAX_SPEED && isGrounded)
-    {
-        if (standing) {
-            velocity.x = .02;
-            facingRight = true;
-        }
-        else if (facingRight)
-            velocity.x += .002;
-        else if (!facingRight) {
-            velocity.x = MAX_SPEED;
-            facingRight = true;
-        }
-        standing = false;
-    }
 
-    //arial movment
-    if (ih->Leftflag && (velocity.x > -MAX_AIR_SPEED) && !isGrounded)
-        velocity.x -= .0009;
-    if (ih->Rightflag && (velocity.x < MAX_AIR_SPEED) && !isGrounded)
-        velocity.x += .0009;
-    
-    //grounded friction
-    if (isGrounded && velocity.x < 0.0f && !ih->Leftflag && !standing)
-    {
-        //stop and stand
-        if (velocity.x > -.009)
-            standing = true;
-        //slow down
-        else
-            velocity.x += .002f;
+    if (standing) {
+        velocity.x = 0.0f;
+        velocity.z = 0.0f;
     }
-    if (isGrounded && velocity.x > 0.0f && !ih->Rightflag && !standing)
-    {
-        if (velocity.x < .009)
-            standing = true;
-        else
-            velocity.x -= .002;
-    }
-
-    if ((velocity.x > -.0005 && velocity.x < .0005) && isGrounded)
-        standing = true;
-
-    if (standing) velocity.x = 0.0f;
 
     if (ih->R) {
         this->isAttacking = true;
@@ -162,20 +103,26 @@ int Player::update() {
         this->isAttacking = false;
     }
     
-    //controller
-    // if (axes[0]==-1 && velocity.x > -MAX_SPEED)
-    //     velocity.x -= .001;
-    // if (axes[0]==1 && velocity.x < MAX_SPEED)
-    //     velocity.x += .001;
-    // if (!axes[0]==-1 && velocity.x < 0)
-    //     velocity.x += .001;
-    // if (!axes[0]==1 && velocity.x > 0)
-    //     velocity.x -= .001;
+    vec3 velocityDir = vec3(0,0,0);
+    if (ih->Downflag)
+        velocity += vec3(0,0,1);
+    if (ih->Upflag)
+        velocity += vec3(0,0,-1);
+    if (ih->Rightflag)
+        velocity += vec3(1,0,0);
+    if (ih->Leftflag)
+        velocity += vec3(-1,0,0);
 
-    location += velocity;
-    // cout << location.x << " " << location.y << " " << location.z << endl;
+    if (velocity != vec3(0))
+        velocityDir = normalize(velocity);
+
+
+    location += vec3(velocityDir.x, 0, velocityDir.z) * MAX_SPEED;
+    location += vec3(0, velocity.y, 0);
+    cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }
+
 
 Sandbag::Sandbag() {
 }

@@ -259,10 +259,10 @@ public:
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
-		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_run.dae", "animModel");
+		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_bite.dae", "animModel");
 
 
-		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-7, -2, -1), vec3(7, -1, 1)));
+		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, -1, 10)));
 
 		platforms["platform"]->location = vec3(-1, -.5, -2);
 		vec3 *temp = &platforms["platform"]->location;
