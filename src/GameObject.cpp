@@ -33,8 +33,8 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
 
     buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
     createAnimations(scene, animList);
-    // fillAnimations(animList, *joints);
-    // printAnimations(animList);
+    cout << "animations: " << endl;
+    printAnimations(animList);
     // printAllJoints(jointMap);
     // for (int i=0; i<joints->size(); i++) {
     // 	cout<< "joint: " << (*joints)[i].name << " has children: " << (*joints)[i].children.size() << endl;
@@ -43,7 +43,7 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
 
     if (joints->size() > 0) {
         rootJoint = getRootJoint(jointMap, joints, scene->mRootNode);
-        cout << "root joint name: " << rootJoint->name << endl;
+        cout << "\nroot joint name: " << rootJoint->name << endl;
         // printJoints(rootJoint);
         mat4 temp(1.0f);
     }

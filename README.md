@@ -1,3 +1,25 @@
+## 50% Demo ##
+Gameplay elements:
+    - Player actions: will require hitboxes and animations
+        - forward arial
+        - backward arial
+        - neutral attack
+        - forward smash
+    - animations:
+        - standing: done
+        - walking: done
+        - run
+
+Graphics technologies
+    - Blender .dae export issue
+    - Cell Shading (?):
+        ask for resources
+    - Improve physics engine
+        - collision detection okay, focus on collision resolution (primarily with environment)
+        - ask for resources
+    - Sound Engine (Background music & Sound Effects)
+    - Bump Mapping / Normal Mapping
+
 ## Graphics Technologies Implemented ##
 - Articulated Mesh Animation (wow this took a long time)
 
@@ -8,6 +30,7 @@
 - action hitboxes - 25% 
 
 ## Planned Graphics Technologies ##
+- Cell Shading / Outlines
 - UI
 - Sound Engine (Background music & Sound Effects)
 - Bump Mapping / Normal Mapping

@@ -72,6 +72,7 @@ public:
 	//animation data
 	float sTheta = 0;
 	int m = 1;
+	float prevOmega = 0.0f;
 
 	//Camera
 	Camera camera;
@@ -223,10 +224,6 @@ public:
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
-	void setModel(std::shared_ptr<Program> prog, std::shared_ptr<MatrixStack>M) {
-		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(M->topMatrix()));
-	}
-
 	void drawSkybox(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> Projection) {
 		cubeProg->bind(); 
 		glDisable(GL_DEPTH_TEST);
@@ -261,7 +258,8 @@ public:
 		objL["moon"] = GameObject::create(rDir + "terrain/", "moon.fbx", "moon");
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
+		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
+		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_run.dae", "animModel");
 
 
 		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-7, -2, -1), vec3(7, -1, 1)));
@@ -382,7 +380,7 @@ public:
 		objL["totodile"]->scale(vec3(.022, .022, .022));
 		// cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
 		objL["totodile"]->setModel(prog);
-		objL["totodile"]->draw(prog); 
+		// objL["totodile"]->draw(prog); 
 
 		gethitBoxes(player1, playerHitboxes);
 		
@@ -460,12 +458,27 @@ public:
 		glUniform3f(animProg->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
+		vec3 d = normalize(vec3(player1->velocity.x, 0, player1->velocity.z));
+		float omega = glm::acos(glm::dot(vec3(0,0,1), d));
+		if (player1->velocity.x < 0) {
+			omega = -omega;
+		}
+		if (player1->velocity.x == 0) {
+			omega = prevOmega;
+		} else {
+			prevOmega = omega;
+		}
+
 		setLight(animProg);
 
-		objL["animModel"]->translate(vec3(0,0,6));
-		objL["animModel"]->scale(vec3(0.1, 0.1, 0.1));
+		objL["animModel"]->translate(player1->location);
+		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
+		objL["animModel"]->rotate(omega, vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
-		// objL["animModel"]->rotate(PI, vec3(0, 1, 0));
+		// if (!player1->facingRight)
+		// 	objL["animModel"]->rotate(-PI/2, vec3(0,1,0));
+		// else 
+		// 	objL["animModel"]->rotate(PI/2, vec3(0,1,0));
 		setMaterial(1, animProg);
 		objL["animModel"]->setModel(animProg);
 		((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
