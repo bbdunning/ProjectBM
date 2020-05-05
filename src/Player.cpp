@@ -13,6 +13,7 @@ using namespace std;
 #define MAX_GRAVITY 100
 #define MAX_SPEED .045f
 #define MAX_AIR_SPEED .03f
+#define PI 3.14159
 
 Player::Player() {
 }
@@ -26,9 +27,27 @@ int Player::init(shared_ptr<InputHandler> ih) {
     this->standing = true;
     this->hasDoubleJump = true;
     this->facingRight = true;
+    theta = 0;
+    phi = 0;
+    prevX = 0;
+    prevY = 0;
+    viewFactor = 1;
 
     this->environmentalHbox = HitSphere(this->location, .008);
     return 0;
+}
+
+void Player::setViewAngles(GLFWwindow *window) {
+    double posX, posY;
+    glfwGetCursorPos(window, &posX, &posY);
+
+    theta += viewFactor *(posX - this->prevX);
+    phi -= (viewFactor * (posY - this->prevY));
+    phi = fmax(phi, -PI/2 + 0.2);
+    phi = fmin(phi, PI/2 - 0.2);
+
+    this->prevX = posX;
+    this->prevY = posY;
 }
 
 int Player::update() {
@@ -37,6 +56,13 @@ int Player::update() {
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
     this->environmentalHbox.center = this->location;
     bool isOnPlatform = false;
+
+    float radius = .1f;
+    lookAtPoint = vec3(
+        radius*cos(phi)*cos(theta),
+        radius*sin(phi),
+        radius*cos(phi)*cos((PI/2.0)-theta));
+
 
     //landing
     // if (location.y <= -1) {

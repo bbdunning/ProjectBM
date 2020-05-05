@@ -34,7 +34,6 @@ void Camera::setInputHandler(shared_ptr<InputHandler> ih) {
 
 mat4 Camera::getViewMatrix() {
     int radius = 50;
-    int step = .5;
 
     lookAtPoint = vec3(
         radius*cos(phi)*cos(theta),

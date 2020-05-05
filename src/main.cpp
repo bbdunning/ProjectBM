@@ -458,16 +458,18 @@ public:
 		glUniform3f(animProg->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
-		vec3 d = normalize(vec3(player1->velocity.x, 0, player1->velocity.z));
+		vec3 d = normalize(vec3(player1->lookAtPoint.x, 0, player1->lookAtPoint.z));
 		float omega = glm::acos(glm::dot(vec3(0,0,1), d));
-		if (player1->velocity.x < 0) {
+		if (player1->lookAtPoint.x < 0) {
 			omega = -omega;
 		}
-		if (player1->velocity.x == 0) {
+		if (player1->lookAtPoint.x == 0) {
 			omega = prevOmega;
 		} else {
 			prevOmega = omega;
 		}
+
+		cout << to_string(player1->lookAtPoint) << endl;
 
 		setLight(animProg);
 
@@ -523,6 +525,7 @@ int main(int argc, char *argv[])
 		// Render scene.
 		glfwSetInputMode(windowManager->getHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		application->camera.setViewAngles(windowManager->getHandle());
+		application->player1->setViewAngles(windowManager->getHandle());
 		application->render();
 
 		// Swap front and back buffers.

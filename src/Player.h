@@ -11,6 +11,7 @@ class Player {
 public:
     glm::vec3 velocity;
     glm::vec3 location;
+    glm::vec3 lookAtPoint;
     std::shared_ptr<InputHandler> ih;
     std::shared_ptr<CollisionDetector> cd;
     bool isGrounded;
@@ -18,11 +19,17 @@ public:
     bool hasDoubleJump;
     bool facingRight;
     bool isAttacking = false;
+    float theta;
+    float phi;
+    float prevX;
+    float prevY;
+    float viewFactor;
     HitSphere environmentalHbox;
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);
     int update();
+    void setViewAngles(GLFWwindow *window);
 };
 
 
