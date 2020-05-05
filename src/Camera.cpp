@@ -25,7 +25,6 @@ void Camera::init() {
 		cos(phi)*cos(theta),
 		sin(phi),
 		cos(phi)*cos((PI/2.0)-theta));
-	lookAtOffset = vec3(0,0,0);
 	up = vec3(0,1,0);
 }
 
@@ -42,20 +41,20 @@ mat4 Camera::getViewMatrix() {
         radius*sin(phi),
         radius*cos(phi)*cos((PI/2.0)-theta));
 
-    vec3 u = normalize((lookAtPoint+lookAtOffset) - eye);
+    vec3 u = normalize(lookAtPoint);
     vec3 v = cross(u, up);
 
     //move Eye + LookAtOffset
-    if (inputHandler->Wflag) {eye += float(moveVelocity)*u; lookAtOffset += float(moveVelocity)*u;}
-    if (inputHandler->Sflag) {eye -= float(moveVelocity)*u; lookAtOffset -= float(moveVelocity)*u;}
-    if (inputHandler->Aflag) {eye -= float(moveVelocity)*v; lookAtOffset -= float(moveVelocity)*v;}
-    if (inputHandler->Dflag) {eye += float(moveVelocity)*v; lookAtOffset += float(moveVelocity)*v;}
-    if (inputHandler->Shiftflag) {eye += .5f*float(moveVelocity)*(up); lookAtOffset += .5f * float(moveVelocity)*(up);}
-    if (inputHandler->Ctrlflag) {eye -= .5f*float(moveVelocity)*(up); lookAtOffset -= .5f * float(moveVelocity)*(up);}
+    if (inputHandler->Wflag) {eye += float(moveVelocity)*u;}
+    if (inputHandler->Sflag) {eye -= float(moveVelocity)*u;}
+    if (inputHandler->Aflag) {eye -= float(moveVelocity)*v;}
+    if (inputHandler->Dflag) {eye += float(moveVelocity)*v;}
+    if (inputHandler->Shiftflag) {eye += .5f*float(moveVelocity)*(up);}
+    if (inputHandler->Ctrlflag) {eye -= .5f*float(moveVelocity)*(up);}
     if (inputHandler->Shiftflag) {moveVelocity = .09;}
     if (!inputHandler->Shiftflag) {moveVelocity = .04;}
 
-    return glm::lookAt(eye, lookAtPoint + lookAtOffset, up);
+    return glm::lookAt(eye, lookAtPoint + eye, up);
 }
 
 void Camera::setViewAngles(GLFWwindow *window) {

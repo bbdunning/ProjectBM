@@ -12,7 +12,6 @@ class Camera {
 public:
     glm::vec3 eye;
     glm::vec3 lookAtPoint;
-    glm::vec3 lookAtOffset;
     glm::vec3 up;
 	float phi;
 	float theta;
