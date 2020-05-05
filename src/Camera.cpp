@@ -44,14 +44,14 @@ mat4 Camera::getViewMatrix() {
     vec3 v = cross(u, up);
 
     //move Eye + LookAtOffset
-    if (inputHandler->Wflag) {eye += float(moveVelocity)*u;}
-    if (inputHandler->Sflag) {eye -= float(moveVelocity)*u;}
-    if (inputHandler->Aflag) {eye -= float(moveVelocity)*v;}
-    if (inputHandler->Dflag) {eye += float(moveVelocity)*v;}
-    if (inputHandler->Shiftflag) {eye += .5f*float(moveVelocity)*(up);}
-    if (inputHandler->Ctrlflag) {eye -= .5f*float(moveVelocity)*(up);}
-    if (inputHandler->Shiftflag) {moveVelocity = .09;}
-    if (!inputHandler->Shiftflag) {moveVelocity = .04;}
+    // if (inputHandler->Wflag) {eye += float(moveVelocity)*u;}
+    // if (inputHandler->Sflag) {eye -= float(moveVelocity)*u;}
+    // if (inputHandler->Aflag) {eye -= float(moveVelocity)*v;}
+    // if (inputHandler->Dflag) {eye += float(moveVelocity)*v;}
+    // if (inputHandler->Shiftflag) {eye += .5f*float(moveVelocity)*(up);}
+    // if (inputHandler->Ctrlflag) {eye -= .5f*float(moveVelocity)*(up);}
+    // if (inputHandler->Shiftflag) {moveVelocity = .09;}
+    // if (!inputHandler->Shiftflag) {moveVelocity = .04;}
 
     return glm::lookAt(eye, lookAtPoint + eye, up);
 }

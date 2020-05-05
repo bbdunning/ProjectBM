@@ -57,6 +57,9 @@ int Player::update() {
     this->environmentalHbox.center = this->location;
     bool isOnPlatform = false;
 
+    vec3 forward = normalize(vec3(lookAtPoint.x - location.x, 0, lookAtPoint.z - location.z));
+    vec3 right = cross(normalize(lookAtPoint-location), vec3(0,1,0));
+
     float radius = 50;
     lookAtPoint = vec3(
         radius*cos(phi)*cos(theta),
@@ -113,6 +116,7 @@ int Player::update() {
         // velocity.y += .065; //fullhop
         velocity.y = .07; //shorthop
         velocity.x = clamp(velocity.x, -0.018f, 0.018f);
+        velocity.z = clamp(velocity.x, -0.018f, 0.018f);
         isGrounded = false;
         standing = false;
     }
@@ -130,20 +134,20 @@ int Player::update() {
     }
     
     vec3 velocityDir = vec3(0,0,0);
-    if (ih->Downflag)
-        velocity += vec3(0,0,1);
-    if (ih->Upflag)
-        velocity += vec3(0,0,-1);
-    if (ih->Rightflag)
-        velocity += vec3(1,0,0);
-    if (ih->Leftflag)
-        velocity += vec3(-1,0,0);
+    if (ih->Wflag)
+        velocity += forward;
+    if (ih->Sflag)
+        velocity -= forward;
+    if (ih->Aflag)
+        velocity -= right;
+    if (ih->Dflag)
+        velocity += right;
 
     if (velocity != vec3(0))
         velocityDir = normalize(velocity);
 
 
-    location += vec3(velocityDir.x, 0, velocityDir.z) * MAX_SPEED;
+    location += velocityDir * MAX_SPEED;
     location += vec3(0, velocity.y, 0);
     cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
