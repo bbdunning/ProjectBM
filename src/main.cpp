@@ -335,6 +335,7 @@ public:
 		setLight(prog);
 
 		// draw totodile player
+		camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * 5.0f;
 		player1->update();
 		camera.lookAtPoint = (player1->location + vec3(0,.8,0)) - camera.eye;
 		// updateEyeToPlayer();
