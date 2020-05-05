@@ -35,10 +35,10 @@ void Camera::setInputHandler(shared_ptr<InputHandler> ih) {
 mat4 Camera::getViewMatrix() {
     int radius = 50;
 
-    lookAtPoint = vec3(
-        radius*cos(phi)*cos(theta),
-        radius*sin(phi),
-        radius*cos(phi)*cos((PI/2.0)-theta));
+    // lookAtPoint = vec3(
+    //     radius*cos(phi)*cos(theta),
+    //     radius*sin(phi),
+    //     radius*cos(phi)*cos((PI/2.0)-theta));
 
     vec3 u = normalize(lookAtPoint);
     vec3 v = cross(u, up);
@@ -55,7 +55,6 @@ mat4 Camera::getViewMatrix() {
 
     return glm::lookAt(eye, lookAtPoint + eye, up);
 }
-
 
 void Camera::setViewAngles(GLFWwindow *window) {
     double posX, posY;

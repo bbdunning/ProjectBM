@@ -336,6 +336,8 @@ public:
 
 		// draw totodile player
 		player1->update();
+		camera.lookAtPoint = (player1->location + vec3(0,.8,0)) - camera.eye;
+		// updateEyeToPlayer();
 		objL["totodile"]->translate(player1->location);
 		// objL["totodile"]->scale(vec3(.35, .75, .35));
 		if (!player1->isGrounded)
@@ -470,7 +472,7 @@ public:
 			prevOmega = omega;
 		}
 
-		float angle = -glm::orientedAngle(normalize(player1->lookAtPoint), vec3(0, 0, 1), vec3(0,1,0));
+		float angle = -glm::orientedAngle(normalize(player1->lookAtPoint), vec3(1, 0, 0), vec3(0,1,0));
 		cout << angle << endl;
 		// objL["animModel"]->rotate(angle, vec3(0, 1, 0));
 
