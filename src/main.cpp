@@ -231,7 +231,7 @@ public:
 		glUniformMatrix4fv(cubeProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 		Model->pushMatrix();
 		Model->translate(camera.eye); //move to center around eye
-		Model->scale(vec3(75,75,75));
+		Model->scale(vec3(100,100,100));
 		glUniformMatrix4fv(cubeProg->getUniform("M"), 1, GL_FALSE,value_ptr(Model->topMatrix()));
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTextureId); 
 		objL["cube"]->draw(cubeProg); 
@@ -255,11 +255,11 @@ public:
 		platforms["platform3"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform4"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform5"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
-		objL["moon"] = GameObject::create(rDir + "terrain/", "moon.fbx", "moon");
+		objL["moon"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "moon");
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
-		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_bite.dae", "animModel");
+		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_jump.dae", "animModel");
 
 
 		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, -1, 10)));
@@ -318,7 +318,7 @@ public:
 
 		// Apply perspective projection.
 		Projection->pushMatrix();
-		Projection->perspective(45.0f, aspect, 0.01f, 100.0f);
+		Projection->perspective(45.0f, aspect, 0.01f, 200.0f);
 
 		//draw SKybox
 		drawSkybox(Model, Projection);
@@ -399,8 +399,8 @@ public:
 		objL["FoD"]->setModel(prog);
 		// objL["FoD"]->draw(prog);
 
-		objL["moon"]->translate(vec3(0,-1,-2));
-		objL["moon"]->scale(vec3(10.0f, 10.0f, 10.0f));
+		objL["moon"]->translate(vec3(0,-2.5,0));
+		objL["moon"]->scale(vec3(.2f, .2f, .2f));
 		objL["moon"]->rotate(-PI/2, vec3(1, 0, 0));
 		setMaterial(1, prog);
 		objL["moon"]->setModel(prog);
