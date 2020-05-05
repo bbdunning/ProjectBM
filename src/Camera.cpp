@@ -56,6 +56,7 @@ mat4 Camera::getViewMatrix() {
     return glm::lookAt(eye, lookAtPoint + eye, up);
 }
 
+
 void Camera::setViewAngles(GLFWwindow *window) {
     double posX, posY;
     glfwGetCursorPos(window, &posX, &posY);

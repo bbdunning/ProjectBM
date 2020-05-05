@@ -14,6 +14,7 @@ using namespace std;
 #define MAX_SPEED .045f
 #define MAX_AIR_SPEED .03f
 #define PI 3.14159
+#define viewFactor .002
 
 Player::Player() {
 }
@@ -31,7 +32,6 @@ int Player::init(shared_ptr<InputHandler> ih) {
     phi = 0;
     prevX = 0;
     prevY = 0;
-    viewFactor = 1;
 
     this->environmentalHbox = HitSphere(this->location, .008);
     return 0;
@@ -57,7 +57,7 @@ int Player::update() {
     this->environmentalHbox.center = this->location;
     bool isOnPlatform = false;
 
-    float radius = .1f;
+    float radius = 50;
     lookAtPoint = vec3(
         radius*cos(phi)*cos(theta),
         radius*sin(phi),

@@ -25,6 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/vector_angle.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/mesh.h>
@@ -469,13 +470,17 @@ public:
 			prevOmega = omega;
 		}
 
-		cout << to_string(player1->lookAtPoint) << endl;
+		float angle = -glm::orientedAngle(normalize(player1->lookAtPoint), vec3(0, 0, 1), vec3(0,1,0));
+		cout << angle << endl;
+		// objL["animModel"]->rotate(angle, vec3(0, 1, 0));
+
+		// cout << to_string(player1->lookAtPoint) << endl;
 
 		setLight(animProg);
 
 		objL["animModel"]->translate(player1->location);
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
-		objL["animModel"]->rotate(omega, vec3(0, 1, 0));
+		objL["animModel"]->rotate(PI/2 + angle, vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
 		// if (!player1->facingRight)
 		// 	objL["animModel"]->rotate(-PI/2, vec3(0,1,0));

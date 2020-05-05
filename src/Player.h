@@ -23,7 +23,6 @@ public:
     float phi;
     float prevX;
     float prevY;
-    float viewFactor;
     HitSphere environmentalHbox;
 
     Player();
