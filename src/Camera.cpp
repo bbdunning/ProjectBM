@@ -19,6 +19,7 @@ void Camera::init() {
 	prevX = 0;
 	prevY = 0;
     moveVelocity = .04;
+    distance = 5.0f;
 
 	eye = vec3(0,0,5);
 	lookAtPoint = vec3(
@@ -33,17 +34,23 @@ void Camera::setInputHandler(shared_ptr<InputHandler> ih) {
 }
 
 mat4 Camera::getViewMatrix() {
-    int radius = 50;
+    // int radius = 50;
 
     // lookAtPoint = vec3(
     //     radius*cos(phi)*cos(theta),
     //     radius*sin(phi),
     //     radius*cos(phi)*cos((PI/2.0)-theta));
 
-    vec3 u = normalize(lookAtPoint);
-    vec3 v = cross(u, up);
 
     //move Eye + LookAtOffset
+    // vec3 u = normalize(lookAtPoint);
+    // vec3 v = cross(u, up);
+    if (inputHandler->Upflag) {
+        distance -= .05f;
+    }
+    if (inputHandler->Downflag) {
+        distance += .05f;
+    }
     // if (inputHandler->Wflag) {eye += float(moveVelocity)*u;}
     // if (inputHandler->Sflag) {eye -= float(moveVelocity)*u;}
     // if (inputHandler->Aflag) {eye -= float(moveVelocity)*v;}

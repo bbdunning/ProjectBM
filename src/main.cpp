@@ -334,59 +334,6 @@ public:
 		//set initial material and Light
 		setLight(prog);
 
-		// draw totodile player
-		camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * 5.0f;
-		player1->update();
-		camera.lookAtPoint = (player1->location + vec3(0,.8,0)) - camera.eye;
-		// updateEyeToPlayer();
-		objL["totodile"]->translate(player1->location);
-		// objL["totodile"]->scale(vec3(.35, .75, .35));
-		if (!player1->isGrounded)
-		{
-			if (!player1->facingRight) {
-				objL["totodile"]->rotate(-PI/2, vec3(0,1,0));
-				objL["totodile"]->rotate(PI/8, vec3(1,0,0));
-			}
-			else {
-				objL["totodile"]->rotate(PI/2, vec3(0,1,0));
-				objL["totodile"]->rotate(PI/8, vec3(1,0,0));
-			}
-		}
-		//facing left
-		else if (!player1->facingRight) {
-			if (abs(player1->velocity.x <= -.035f) || inputHandler->Downflag){
-				objL["totodile"]->rotate(PI/4, vec3(0,0,1));
-				objL["totodile"]->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
-			}
-			else if (abs(player1->velocity.x <= -.01f)) {
-				objL["totodile"]->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
-			}
-			objL["totodile"]->rotate(-PI/2, vec3(0,1,0));
-		}
-		//facing right
-		else {
-			if (abs(player1->velocity.x >= .035f) || inputHandler->Downflag) {
-				objL["totodile"]->rotate(-PI/4, vec3(0,0,1));
-				objL["totodile"]->rotate(.5*sin(glfwGetTime()*12), vec3(1,0,0));
-			}
-			else if (abs(player1->velocity.x >= .01f)) {
-				objL["totodile"]->rotate(.5*sin(glfwGetTime()*10), vec3(1,0,0));
-			}
-			objL["totodile"]->rotate(PI/2, vec3(0,1,0));
-		}
-		if (player1->standing)
-			setMaterial(0, prog);
-		else if (player1->isGrounded)
-			setMaterial(1, prog);
-		else if (!player1->isGrounded)
-			setMaterial(3, prog);
-
-		objL["totodile"]->scale(vec3(.022, .022, .022));
-		// cout << camera.checkInFrustum(Projection->topMatrix()*camera.getViewMatrix(), vec4(player1->location, 1)) << endl;;
-		objL["totodile"]->setModel(prog);
-		// objL["totodile"]->draw(prog); 
-
-		gethitBoxes(player1, playerHitboxes);
 		
 		sandbag->update(playerHitboxes);
 		setMaterial(1, prog);
@@ -462,24 +409,14 @@ public:
 		glUniform3f(animProg->getUniform("viewDirection"), vd.x, vd.y, vd.z);
 
 		//set initial material and Light
-		vec3 d = normalize(vec3(player1->lookAtPoint.x, 0, player1->lookAtPoint.z));
-		float omega = glm::acos(glm::dot(vec3(0,0,1), d));
-		if (player1->lookAtPoint.x < 0) {
-			omega = -omega;
-		}
-		if (player1->lookAtPoint.x == 0) {
-			omega = prevOmega;
-		} else {
-			prevOmega = omega;
-		}
-
-		float angle = -glm::orientedAngle(normalize(player1->lookAtPoint), vec3(1, 0, 0), vec3(0,1,0));
-		cout << angle << endl;
-		// objL["animModel"]->rotate(angle, vec3(0, 1, 0));
-
-		// cout << to_string(player1->lookAtPoint) << endl;
-
 		setLight(animProg);
+
+		camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * camera.distance;
+		player1->update();
+		camera.lookAtPoint = (player1->location + vec3(0,.5,0)) - camera.eye + (cross(normalize(player1->lookAtPoint-player1->location), vec3(0,1,0)) * .5f);
+		gethitBoxes(player1, playerHitboxes);
+		//move this to player class
+		float angle = -glm::orientedAngle(normalize(vec3(player1->lookAtPoint.x, 0, player1->lookAtPoint.z)), vec3(1, 0, 0), vec3(0,1,0));
 
 		objL["animModel"]->translate(player1->location);
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
@@ -526,6 +463,8 @@ int main(int argc, char *argv[])
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
+
+	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 1980, 1080, 0);
 
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))

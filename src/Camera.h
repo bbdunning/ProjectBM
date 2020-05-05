@@ -14,6 +14,7 @@ public:
     glm::vec3 lookAtPoint;
     glm::vec3 up;
 	float phi;
+	float distance;
 	float theta;
 	float prevX;
 	float prevY;

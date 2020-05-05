@@ -116,7 +116,7 @@ int Player::update() {
         // velocity.y += .065; //fullhop
         velocity.y = .07; //shorthop
         velocity.x = clamp(velocity.x, -0.018f, 0.018f);
-        velocity.z = clamp(velocity.x, -0.018f, 0.018f);
+        velocity.z = clamp(velocity.z, -0.018f, 0.018f);
         isGrounded = false;
         standing = false;
     }
@@ -146,8 +146,11 @@ int Player::update() {
     if (velocity != vec3(0))
         velocityDir = normalize(velocity);
 
+    float speed =.05;
+    if (ih->Shiftflag)
+        speed = .08;
 
-    location += velocityDir * MAX_SPEED;
+    location += velocityDir * speed;
     location += vec3(0, velocity.y, 0);
     cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
