@@ -146,7 +146,7 @@ int Player::update() {
     if (velocity != vec3(0))
         velocityDir = normalize(velocity);
 
-    float speed =.05;
+    float speed =.04;
     if (ih->Shiftflag)
         speed = .08;
 

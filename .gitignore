@@ -4,3 +4,5 @@ build/*
 .vscode/*
 resources/melee
 resources/melee/*
+vsbuild
+vsbuild/*

@@ -40,8 +40,10 @@ void Shape::measure()
 	float minX, minY, minZ;
 	float maxX, maxY, maxZ;
 
-	minX = minY = minZ = std::numeric_limits<float>::max();
-	maxX = maxY = maxZ = -std::numeric_limits<float>::max();
+//	minX = minY = minZ = std::numeric_limits<float>::max();
+//	maxX = maxY = maxZ = -std::numeric_limits<float>::max();
+	minX = minY = minZ = 999999999999999;
+	maxX = maxY = maxZ = -99999999999999;
 
 	//Go through all vertices to determine min and max of each dimension
 	for (size_t v = 0; v < posBuf.size() / 3; v++)

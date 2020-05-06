@@ -20,6 +20,7 @@
 #include "Camera.h"
 #include "Hitbox.h"
 #include "CollisionDetector.h"
+//#include <btBulletCollisionCommon.h>
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -108,7 +109,7 @@ public:
 		double posX, posY;
 		bool lbutton_down;
 
-		if (action == GLFW_PRESS or action == GLFW_REPEAT)
+		if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		{
 			 glfwGetCursorPos(window, &posX, &posY);
 			 cout << "Pos X " << posX <<  " Pos Y " << posY << endl;

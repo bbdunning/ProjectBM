@@ -275,8 +275,8 @@ shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath,
 	temp = texPath->C_Str();
 
 	//if mesh has texture, create a texture from it
-	if (texPath->C_Str() != "" and texPath->C_Str() != "/" and texPath->length != 0 and 
-		((texPath->length > 5) and (temp != "none"))) {
+	if (texPath->C_Str() != "" && texPath->C_Str() != "/" && texPath->length != 0 && 
+		((texPath->length > 5) && (temp != "none"))) {
 		if (texPath->C_Str()[0] != '/') {
 			newShape->texture = createTexture(meshPath + texPath->C_Str());
 		} else
