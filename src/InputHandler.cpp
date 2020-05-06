@@ -34,6 +34,7 @@ void InputHandler::init() {
         this->kp2 = false;
 		this->kp3 = false;
 		this->R = false;
+		this->Q = false;
 
 		// controllerPresent = glfwJoystickIsGamepad(GLFW_JOYSTICK_1);
 		// if (controllerPresent)

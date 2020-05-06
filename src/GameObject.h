@@ -13,6 +13,7 @@
 class GameObject {
     public:
         std::string name;
+        std::string path;
         std::vector<std::shared_ptr<AnimatedShape>> shapeList;
         glm::vec3 location = glm::vec3(0,0,0);
         glm::vec3 scaleFactor = glm::vec3(1,1,1);
@@ -23,7 +24,9 @@ class GameObject {
         static std::shared_ptr<GameObject> create(std::string meshPath, std::string fileName, std::string objName);
         virtual void init();
         void draw(std::shared_ptr<Program> prog);
+        void doAnimation(int animNum);
         void setModel(std::shared_ptr<Program> prog);
+        void addAnimation(std::string fileName);
         // void measure();
         void translate(const glm::vec3 &offset);
         void scale(const glm::vec3 &scaleV);

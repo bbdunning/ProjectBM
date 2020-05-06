@@ -11,26 +11,26 @@ using namespace glm;
 
 void GameObject::init() {
     name = nullptr;
+    path = nullptr;
     location = glm::vec3(0,0,0);
 }
 
 shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, string objName) {
     Assimp::Importer importer;
     shared_ptr<GameObject> mesh = make_shared<GameObject>();
-    mesh->name = objName;
     Joint *rootJoint = nullptr;
     vector<shared_ptr<Animation>> animList; 
     shared_ptr<vector<Joint>> joints = make_shared<vector<Joint>>();
     shared_ptr<map<string, unsigned int>> jointMap = make_shared<map<string, unsigned int>>();
+
+    mesh->name = objName;
+    mesh->path = meshPath;
 
     const aiScene* scene = importer.ReadFile(
         meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
     cout << "creating " << objName << endl;
     populateJointMap(jointMap, scene->mRootNode, scene, joints);
-    // for (map<string, unsigned int>::iterator it = jointMap->begin(); it != jointMap->end(); ++it)
-    // 	cout << it->first << " " << it->second->name << endl;
-
     buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
     createAnimations(scene, animList);
     cout << "animations: " << endl;
@@ -52,35 +52,27 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
     for (int i=0; i< scene->mNumMeshes; i++) {
         mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap, joints));
     }
-    if (animList.size() > 0) {
-        for (int i=0; i<mesh->shapeList.size(); i++) {
-            mesh->shapeList[i]->animator.doAnimation(mesh->animList[0]);
-        }
-    }
-
+    mesh->doAnimation(0);
     return mesh;
-    // objL[objName] = mesh;
 }
 
-// void GameObject::createAnimation() {
-//     Assimp::Importer importer;
+void GameObject::doAnimation(int animNum) {
+    if (animList.size() > animNum) {
+        for (int i=0; i<shapeList.size(); i++) {
+            shapeList[i]->animator.doAnimation(animList[animNum]);
+        }
+    } else {
+        cerr << "BAD ANIMATION NUMBER" << endl;
+        return;
+    }
+}
 
-//     const aiScene* scene = importer.ReadFile(
-//         meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
-
-//     createAnimations(scene, animList);
-//     cout << "animations: " << endl;
-//     printAnimations(animList);
-
-//     shared_ptr<Animation> animation = make_shared<Animation>(animList[0].length, animList[0].frames);
-//         for (int i=0; i<this->shapeList.size(); i++) {
-//             this->shapeList[i]->animator.doAnimation(animation);
-//         }
-//     }
-
-//     return mesh;
-//     // objL[objName] = mesh;
-// }
+void GameObject::addAnimation(string fileName) {
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(
+        this->path + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
+    createAnimations(scene, animList);
+}
 
 
 void GameObject::draw(std::shared_ptr<Program> prog) {
