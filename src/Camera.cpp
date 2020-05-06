@@ -20,6 +20,7 @@ void Camera::init() {
 	prevY = 0;
     moveVelocity = .04;
     distance = 5.0f;
+    elevation = vec3(0, .7, 0);
 
 	eye = vec3(0,0,5);
 	lookAtPoint = vec3(
@@ -45,10 +46,10 @@ mat4 Camera::getViewMatrix() {
     //move Eye + LookAtOffset
     // vec3 u = normalize(lookAtPoint);
     // vec3 v = cross(u, up);
-    if (inputHandler->Upflag) {
+    if (inputHandler->Upflag && distance > 1) {
         distance -= .05f;
     }
-    if (inputHandler->Downflag) {
+    if (inputHandler->Downflag && distance < 10) {
         distance += .05f;
     }
     // if (inputHandler->Wflag) {eye += float(moveVelocity)*u;}

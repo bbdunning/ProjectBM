@@ -29,6 +29,8 @@ public:
     int init(std::shared_ptr<InputHandler> ih);
     int update();
     void setViewAngles(GLFWwindow *window);
+    glm::vec3 getForwardDir();
+    glm::vec3 getRightDir();
 };
 
 

@@ -13,6 +13,7 @@ public:
     glm::vec3 eye;
     glm::vec3 lookAtPoint;
     glm::vec3 up;
+	glm::vec3 elevation;
 	float phi;
 	float distance;
 	float theta;

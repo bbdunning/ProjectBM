@@ -156,6 +156,14 @@ int Player::update() {
     return 0;
 }
 
+vec3 Player::getForwardDir() {
+    return normalize(lookAtPoint-location);
+}
+
+vec3 Player::getRightDir() {
+    return cross(normalize(lookAtPoint-location), vec3(0,1,0));
+}
+
 
 Sandbag::Sandbag() {
 }

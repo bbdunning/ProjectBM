@@ -260,7 +260,7 @@ public:
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
-		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_run.dae", "animModel");
+		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_jump.dae", "animModel");
 
 
 		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, -1, 10)));
@@ -411,9 +411,12 @@ public:
 		//set initial material and Light
 		setLight(animProg);
 
-		camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * camera.distance;
+		if (inputHandler->R)
+			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
+		else
+			camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f + camera.elevation;
 		player1->update();
-		camera.lookAtPoint = (player1->location + vec3(0,.5,0)) - camera.eye + (cross(normalize(player1->lookAtPoint-player1->location), vec3(0,1,0)) * .5f);
+		camera.lookAtPoint = player1->location - camera.eye + player1->getRightDir() *.5f + camera.elevation + player1->getForwardDir() * .5f;
 		gethitBoxes(player1, playerHitboxes);
 		//move this to player class
 		float angle = -glm::orientedAngle(normalize(vec3(player1->lookAtPoint.x, 0, player1->lookAtPoint.z)), vec3(1, 0, 0), vec3(0,1,0));
