@@ -22,6 +22,11 @@ class InputHandler {
         bool R;
         bool Q;
         bool E=false;
+        bool n1=false;
+        bool n2=false;
+        bool n3=false;
+        bool n4=false;
+        bool n5=false;
 	    float lightX;
 	    float up_start_time;
 	    float down_start_time;

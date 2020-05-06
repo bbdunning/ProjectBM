@@ -117,4 +117,14 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_R && action == GLFW_RELEASE) { R = false; }
 		if (key == GLFW_KEY_E && action == GLFW_PRESS) { E = true; }
 		if (key == GLFW_KEY_E && action == GLFW_RELEASE) { E = false; }
+		if (key == GLFW_KEY_1 && action == GLFW_PRESS) { n1 = true; }
+		if (key == GLFW_KEY_1 && action == GLFW_RELEASE) { n1 = false; }
+		if (key == GLFW_KEY_2 && action == GLFW_PRESS) { n2 = true; }
+		if (key == GLFW_KEY_2 && action == GLFW_RELEASE) { n2 = false; }
+		if (key == GLFW_KEY_3 && action == GLFW_PRESS) { n3 = true; }
+		if (key == GLFW_KEY_3 && action == GLFW_RELEASE) { n3 = false; }
+		if (key == GLFW_KEY_4 && action == GLFW_PRESS) { n4 = true; }
+		if (key == GLFW_KEY_4 && action == GLFW_RELEASE) { n4 = false; }
+		if (key == GLFW_KEY_5 && action == GLFW_PRESS) { n5 = true; }
+		if (key == GLFW_KEY_5 && action == GLFW_RELEASE) { n5 = false; }
 }

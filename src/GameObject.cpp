@@ -32,7 +32,7 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
     cout << "creating " << objName << endl;
     populateJointMap(jointMap, scene->mRootNode, scene, joints);
     buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
-    createAnimations(scene, animList);
+    // createAnimations(scene, animList);
     cout << "animations: " << endl;
     printAnimations(animList);
     mesh->animList = animList;
@@ -52,7 +52,6 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
     for (int i=0; i< scene->mNumMeshes; i++) {
         mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap, joints));
     }
-    mesh->doAnimation(0);
     return mesh;
 }
 
