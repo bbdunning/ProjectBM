@@ -52,8 +52,6 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE) { Sflag = false; }
 		if (key == GLFW_KEY_C && action == GLFW_PRESS) { Cflag = true; }
 		if (key == GLFW_KEY_C && action == GLFW_RELEASE) { Cflag = false; }
-		if (key == GLFW_KEY_R && action == GLFW_PRESS) { R = true; }
-		if (key == GLFW_KEY_R && action == GLFW_RELEASE) { R = false; }
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) { 
 			Spaceflag = true; 
 			if (!jump)
@@ -73,8 +71,6 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE) { 
 			Shiftflag = false; 
 		}
-		if (key == GLFW_KEY_Q ) { lightX -= 0.3; }
-		if (key == GLFW_KEY_E ) { lightX += 0.3; }
 		if (key == GLFW_KEY_UP && action == GLFW_PRESS) { 
 			Upflag = true; 
 		}
@@ -107,28 +103,18 @@ void InputHandler::setKeyFlags(int key, int action) {
 			right_time = 0;
 		}
 
-		if (key == GLFW_KEY_KP_5 && action == GLFW_PRESS) { 
-			kp5 = true;
-		}
-		if (key == GLFW_KEY_KP_5 && action == GLFW_RELEASE) { 
-			kp5 = false;
-		}
-		if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS) { 
-			kp2 = true;
-		}
-		if (key == GLFW_KEY_KP_2 && action == GLFW_RELEASE) { 
-			kp2 = false;
-		}
-		if (key == GLFW_KEY_KP_1 && action == GLFW_PRESS) { 
-			kp1 = true;
-		}
-		if (key == GLFW_KEY_KP_1 && action == GLFW_RELEASE) { 
-			kp1 = false;
-		}
-		if (key == GLFW_KEY_KP_3 && action == GLFW_PRESS) { 
-			kp3 = true;
-		}
-		if (key == GLFW_KEY_KP_3 && action == GLFW_RELEASE) { 
-			kp3 = false;
-		}
+		if (key == GLFW_KEY_KP_5 && action == GLFW_PRESS) { kp5 = true;}
+		if (key == GLFW_KEY_KP_5 && action == GLFW_RELEASE) { kp5 = false;}
+		if (key == GLFW_KEY_KP_2 && action == GLFW_PRESS) { kp2 = true;}
+		if (key == GLFW_KEY_KP_2 && action == GLFW_RELEASE) { kp2 = false;}
+		if (key == GLFW_KEY_KP_1 && action == GLFW_PRESS) { kp1 = true;}
+		if (key == GLFW_KEY_KP_1 && action == GLFW_RELEASE) { kp1 = false;}
+		if (key == GLFW_KEY_KP_3 && action == GLFW_PRESS) { kp3 = true;}
+		if (key == GLFW_KEY_KP_3 && action == GLFW_RELEASE) { kp3 = false;}
+		if (key == GLFW_KEY_Q && action == GLFW_PRESS) { Q = true; }
+		if (key == GLFW_KEY_Q && action == GLFW_RELEASE) { Q = false; }
+		if (key == GLFW_KEY_R && action == GLFW_PRESS) { R = true; }
+		if (key == GLFW_KEY_R && action == GLFW_RELEASE) { R = false; }
+		if (key == GLFW_KEY_E && action == GLFW_PRESS) { E = true; }
+		if (key == GLFW_KEY_E && action == GLFW_RELEASE) { E = false; }
 }

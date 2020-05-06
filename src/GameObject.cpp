@@ -57,6 +57,8 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
 }
 
 void GameObject::doAnimation(int animNum) {
+    if (animNum == currentAnimationNum)
+        return;
     if (animList.size() > animNum) {
         for (int i=0; i<shapeList.size(); i++) {
             shapeList[i]->animator.doAnimation(animList[animNum]);
@@ -65,6 +67,7 @@ void GameObject::doAnimation(int animNum) {
         cerr << "BAD ANIMATION NUMBER" << endl;
         return;
     }
+    currentAnimationNum = animNum;
 }
 
 void GameObject::addAnimation(string fileName) {

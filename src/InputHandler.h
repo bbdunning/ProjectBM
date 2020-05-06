@@ -21,6 +21,7 @@ class InputHandler {
         bool Rightflag;
         bool R;
         bool Q;
+        bool E=false;
 	    float lightX;
 	    float up_start_time;
 	    float down_start_time;

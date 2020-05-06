@@ -260,8 +260,11 @@ public:
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
-		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_jump.dae", "animModel");
-		objL["animModel"]->addAnimation("toto_run.dae");
+		objL["animModel"] = GameObject::create(rDir + "anim/", "toto_walk.dae", "animModel");
+		objL["animModel"]->addAnimation("toto_dab.dae");
+		objL["animModel"]->addAnimation("toto_jump.dae");
+		// objL["animModel"]->addAnimation("toto_run.dae");
+		// objL["animModel"]->addAnimation("toto_jump.dae");
 
 
 		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, -1, 10)));
@@ -426,14 +429,12 @@ public:
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
 		objL["animModel"]->rotate(PI/2 + angle, vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
-		// if (inputHandler->Q)
-		// 	objL["animModel"]->doAnimation(0);
-		// else
-		// 	objL["animModel"]->doAnimation(1);
-		// if (!player1->facingRight)
-		// 	objL["animModel"]->rotate(-PI/2, vec3(0,1,0));
-		// else 
-		// 	objL["animModel"]->rotate(PI/2, vec3(0,1,0));
+		if (inputHandler->Q)
+			objL["animModel"]->doAnimation(0);
+		if (inputHandler->E)
+			objL["animModel"]->doAnimation(1);
+		if (inputHandler->R)
+			objL["animModel"]->doAnimation(2);
 		setMaterial(1, animProg);
 		objL["animModel"]->setModel(animProg);
 		((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
