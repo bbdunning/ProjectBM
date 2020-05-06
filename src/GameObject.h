@@ -18,6 +18,7 @@ class GameObject {
         glm::vec3 scaleFactor = glm::vec3(1,1,1);
         glm::vec3 min, max;
         std::vector<std::shared_ptr<Hitbox>> hitboxes;
+        std::vector<std::shared_ptr<Animation>> animList;
         
         static std::shared_ptr<GameObject> create(std::string meshPath, std::string fileName, std::string objName);
         virtual void init();

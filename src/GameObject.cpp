@@ -19,7 +19,7 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
     shared_ptr<GameObject> mesh = make_shared<GameObject>();
     mesh->name = objName;
     Joint *rootJoint = nullptr;
-    vector<Animation> animList; 
+    vector<shared_ptr<Animation>> animList; 
     shared_ptr<vector<Joint>> joints = make_shared<vector<Joint>>();
     shared_ptr<map<string, unsigned int>> jointMap = make_shared<map<string, unsigned int>>();
 
@@ -35,6 +35,7 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
     createAnimations(scene, animList);
     cout << "animations: " << endl;
     printAnimations(animList);
+    mesh->animList = animList;
     // printAllJoints(jointMap);
     // for (int i=0; i<joints->size(); i++) {
     // 	cout<< "joint: " << (*joints)[i].name << " has children: " << (*joints)[i].children.size() << endl;
@@ -52,15 +53,34 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
         mesh->shapeList.push_back(createShape(scene, meshPath, fileName, objName, mesh, i, rootJoint, jointMap, joints));
     }
     if (animList.size() > 0) {
-    shared_ptr<Animation> animation = make_shared<Animation>(animList[0].length, animList[0].frames);
         for (int i=0; i<mesh->shapeList.size(); i++) {
-            mesh->shapeList[i]->animator.doAnimation(animation);
+            mesh->shapeList[i]->animator.doAnimation(mesh->animList[0]);
         }
     }
 
     return mesh;
     // objL[objName] = mesh;
 }
+
+// void GameObject::createAnimation() {
+//     Assimp::Importer importer;
+
+//     const aiScene* scene = importer.ReadFile(
+//         meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+//     createAnimations(scene, animList);
+//     cout << "animations: " << endl;
+//     printAnimations(animList);
+
+//     shared_ptr<Animation> animation = make_shared<Animation>(animList[0].length, animList[0].frames);
+//         for (int i=0; i<this->shapeList.size(); i++) {
+//             this->shapeList[i]->animator.doAnimation(animation);
+//         }
+//     }
+
+//     return mesh;
+//     // objL[objName] = mesh;
+// }
 
 
 void GameObject::draw(std::shared_ptr<Program> prog) {
