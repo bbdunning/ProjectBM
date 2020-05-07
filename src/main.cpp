@@ -21,8 +21,8 @@
 #include "Hitbox.h"
 #include "CollisionDetector.h"
 #include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
 
-// value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -33,7 +33,6 @@
 #include <assimp/types.h>
 #include <assimp/texture.h>
 #include <assimp/postprocess.h>
-
 
 using namespace std;
 using namespace glm;
@@ -57,6 +56,15 @@ public:
 	unordered_map<string, shared_ptr<GameObject>> objL;
 	map<string, shared_ptr<GameObject>> platforms;
 	vector<HitSphere> playerHitboxes;
+
+	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
+	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher(collisionConfiguration);
+	btBroadphaseInterface* overlappingPairCache = new btDbvtBroadphase();
+	btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
+	btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher,overlappingPairCache,solver,collisionConfiguration);
+	btAlignedObjectArray<btCollisionShape*> collisionShapes;
+	btTransform groundTransform;
+
 
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
@@ -242,6 +250,75 @@ public:
 		cubeProg->unbind();
 	}
 
+	void initPhysics() {
+	dynamicsWorld->setGravity(btVector3(0,-10,0));
+
+	///-----initialization_end-----
+
+	///create a few basic rigid bodies
+
+	//keep track of the shapes, we release memory at exit.
+	//make sure to re-use collision shapes among rigid bodies whenever possible!
+
+	btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(1.),btScalar(50.)));
+	collisionShapes.push_back(groundShape);
+
+	groundTransform.setIdentity();
+	groundTransform.setOrigin(btVector3(0,-1,0));
+
+	{
+		btScalar mass(0.);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			groundShape->calculateLocalInertia(mass,localInertia);
+
+		//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+		btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
+		btRigidBody* body = new btRigidBody(rbInfo);
+
+		//add the body to the dynamics world
+		dynamicsWorld->addRigidBody(body);
+	}
+
+
+	{
+		//create a dynamic rigidbody
+
+		//btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
+		btCollisionShape* colShape = new btSphereShape(btScalar(1.));
+		collisionShapes.push_back(colShape);
+
+		/// Create Dynamic Objects
+		btTransform startTransform;
+		startTransform.setIdentity();
+
+		btScalar	mass(1.f);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			colShape->calculateLocalInertia(mass,localInertia);
+
+			startTransform.setOrigin(btVector3(2,10,0));
+		
+			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+
+			dynamicsWorld->addRigidBody(body);
+	}
+
+
+	}
+
 	void initGeom(const std::string& resourceDirectory)
 	{
 		string rDir = resourceDirectory + "/";
@@ -342,15 +419,20 @@ public:
 		//set initial material and Light
 		setLight(prog);
 
-		
-		sandbag->update(playerHitboxes);
+		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
+		btRigidBody* body = btRigidBody::upcast(obj);
+		btTransform trans;
+		body->getMotionState()->getWorldTransform(trans);
+		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+
 		setMaterial(1, prog);
-		objL["sandbag"]->translate(sandbag->location + vec3(0,.9,0));
+		objL["sandbag"]->translate(physicsLoc); //+ vec3(0,.9,0));
 		objL["sandbag"]->scale(.05);
 		objL["sandbag"]->rotate(-PI/2, vec3(1,0,0));
 		objL["sandbag"]->setModel(prog);
 		objL["sandbag"]->draw(prog); 
 
+		
 		//Main Stage
 		objL["FoD"]->translate(vec3(0, -1, -2));
 		objL["FoD"]->scale(vec3(0.03f, 0.03f, 0.03f));
@@ -455,6 +537,21 @@ public:
 		// Pop matrix stacks.
 		Projection->popMatrix();
 		playerHitboxes.clear();
+
+		dynamicsWorld->stepSimulation(1.f/60.f,10);
+		
+		//print positions of all objects
+		for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
+		{
+			btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
+			btRigidBody* body = btRigidBody::upcast(obj);
+			if (body && body->getMotionState())
+			{
+				btTransform trans;
+				body->getMotionState()->getWorldTransform(trans);
+				printf("world pos = %f,%f,%f\n",float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+			}
+		}
 	}
 };
 
@@ -478,6 +575,7 @@ int main(int argc, char *argv[])
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
+	application->initPhysics();
 
 	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 1980, 1080, 0);
 
