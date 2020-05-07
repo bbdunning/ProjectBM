@@ -20,7 +20,7 @@
 #include "Camera.h"
 #include "Hitbox.h"
 #include "CollisionDetector.h"
-//#include <btBulletCollisionCommon.h>
+#include <bullet/btBulletCollisionCommon.h>
 
 // value_ptr for glm
 #include <glm/gtc/type_ptr.hpp>
@@ -266,7 +266,7 @@ public:
 		objL["animModel"]->addAnimation("toto_watergun.dae");
 		objL["animModel"]->addAnimation("toto_dab.dae");
 		objL["animModel"]->addAnimation("toto_jump.dae");
-		objL["animModel"]->doAnimation(0);
+		objL["animModel"]->doAnimation(1);
 		// objL["animModel"]->addAnimation("toto_run.dae");
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 

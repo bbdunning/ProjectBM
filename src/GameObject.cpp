@@ -29,12 +29,12 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
     const aiScene* scene = importer.ReadFile(
         meshPath + fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
 
-    cout << "creating " << objName << endl;
+    // cout << "creating " << objName << endl;
     populateJointMap(jointMap, scene->mRootNode, scene, joints);
     buildJointHeirarchy(jointMap, joints, scene->mRootNode, scene);
     // createAnimations(scene, animList);
-    cout << "animations: " << endl;
-    printAnimations(animList);
+    // cout << "animations: " << endl;
+    // printAnimations(animList);
     mesh->animList = animList;
     // printAllJoints(jointMap);
     // for (int i=0; i<joints->size(); i++) {
@@ -44,7 +44,7 @@ shared_ptr<GameObject> GameObject::create(string meshPath, string fileName, stri
 
     if (joints->size() > 0) {
         rootJoint = getRootJoint(jointMap, joints, scene->mRootNode);
-        cout << "\nroot joint name: " << rootJoint->name << endl;
+        // cout << "\nroot joint name: " << rootJoint->name << endl;
         // printJoints(rootJoint);
         mat4 temp(1.0f);
     }
