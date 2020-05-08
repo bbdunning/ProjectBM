@@ -342,7 +342,7 @@ public:
 		platforms["platform3"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform4"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform5"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
-		objL["moon"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "moon");
+		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "ps2");
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
 		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
 		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
@@ -356,29 +356,29 @@ public:
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
 
-		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, -1, 10)));
+		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, 0, 10)));
 
-		platforms["platform"]->location = vec3(-1, -.5, -2);
+		platforms["platform"]->location = vec3(-1, .5, -2);
 		vec3 *temp = &platforms["platform"]->location;
 		platforms["platform"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
 		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform"]->hitboxes[0]));
 
-		platforms["platform2"]->location = vec3(1, -.5, -2);
+		platforms["platform2"]->location = vec3(1, .5, -2);
 		temp = &platforms["platform2"]->location;
 		platforms["platform2"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
 		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform2"]->hitboxes[0]));
 
-		platforms["platform3"]->location = vec3(0, 0.25, -2);
+		platforms["platform3"]->location = vec3(0, 1.25, -2);
 		temp = &platforms["platform3"]->location;
 		platforms["platform3"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
 		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform3"]->hitboxes[0]));
 
-		platforms["platform4"]->location = vec3(2, 0.25, -2);
+		platforms["platform4"]->location = vec3(2, 1.25, -2);
 		temp = &platforms["platform4"]->location;
 		platforms["platform4"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
 		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform4"]->hitboxes[0]));
 
-		platforms["platform5"]->location = vec3(3, -.5, -2);
+		platforms["platform5"]->location = vec3(3, .5, -2);
 		temp = &platforms["platform5"]->location;
 		platforms["platform5"]->hitboxes.push_back(make_shared<AABB>(vec3(-.35f,-0.005,-1.f)+*temp, vec3(.35f,0.05f,1.f)+*temp));
 		cd->environmentBoxes.push_back(dynamic_pointer_cast<AABB>(platforms["platform5"]->hitboxes[0]));
@@ -422,7 +422,7 @@ public:
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 200.0f);
 
-		//draw SKybox
+		//draw Skybox
 		drawSkybox(Model, Projection);
 
 		/* bind standard program */
@@ -435,12 +435,14 @@ public:
 		//set initial material and Light
 		setLight(prog);
 
+		//set up physics
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		btTransform trans;
 		body->getMotionState()->getWorldTransform(trans);
 		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
 
+		//draw sandbag
 		setMaterial(1, prog);
 		objL["sandbag"]->translate(physicsLoc); //+ vec3(0,.9,0));
 		objL["sandbag"]->scale(.05);
@@ -448,65 +450,21 @@ public:
 		objL["sandbag"]->setModel(prog);
 		objL["sandbag"]->draw(prog); 
 
-		
-		//Main Stage
-		objL["FoD"]->translate(vec3(0, -1, -2));
-		objL["FoD"]->scale(vec3(0.03f, 0.03f, 0.03f));
-		setMaterial(3, prog);
-		objL["FoD"]->setModel(prog);
-		// objL["FoD"]->draw(prog);
 
-		objL["moon"]->translate(vec3(0,-2.5,0));
-		objL["moon"]->scale(vec3(.2f, .2f, .2f));
-		objL["moon"]->rotate(-PI/2, vec3(1, 0, 0));
+		//draw ps2
+		objL["ps2"]->translate(vec3(5,-1.80,0));
+		objL["ps2"]->scale(vec3(.2f, .2f, .2f));
+		objL["ps2"]->rotate(-PI/2, vec3(1, 0, 0));
 		setMaterial(1, prog);
-		objL["moon"]->setModel(prog);
-		objL["moon"]->draw(prog);
+		objL["ps2"]->setModel(prog);
+		objL["ps2"]->draw(prog);
 
-		//platform
-		// cout << platforms["platform"]->hitboxes[0]->checkCollision(player1->environmentalHbox)<< endl;
-		// platforms["platform"]->translate(vec3(0, -.5, -2));
+		//draw platforms
 		for (map<string, shared_ptr<GameObject>>::iterator it=platforms.begin(); it!=platforms.end(); ++it) {
 			it->second->translate(it->second->location);
 			it->second->setModel(prog);
 			it->second->draw(prog);
 		}
-
-		// platforms["platform2"]->translate(platforms["platform2"]->location);
-		// platforms["platform2"]->setModel(prog);
-		// platforms["platform2"]->draw(prog);
-
-		// platforms["platform3"]->translate(platforms["platform3"]->location);
-		// platforms["platform3"]->setModel(prog);
-		// platforms["platform3"]->draw(prog);
-
-		//Skyring 1
-		setMaterial(3, prog);
-		objL["skyring1"]->translate(vec3(-2.4, 2, -2));
-		objL["skyring1"]->rotate(.1, vec3(1,0,0));
-		objL["skyring1"]->rotate(2*sin(.2*glfwGetTime()), vec3(0,0,1));
-		objL["skyring1"]->scale(vec3(0.2, 0.2, 0.2));
-		objL["skyring1"]->setModel(prog);
-		// objL["skyring1"]->draw(prog);
-		//Skyring2
-		objL["skyring2"]->translate(vec3(-2.8, 2.1, -.26));
-		objL["skyring2"]->rotate(-2*sin(.2*glfwGetTime()), vec3(0,0,1));
-		objL["skyring2"]->rotate(.3, vec3(1,0,0));
-		objL["skyring2"]->scale(vec3(0.2, 0.2, 0.2));
-		objL["skyring2"]->setModel(prog);
-		// objL["skyring2"]->draw(prog);
-
-		// //draw Captain Falcon
-		// Model->pushMatrix();
-		// 	// getPlayerDisplacement();
-		// 	Model->rotate(-PI/2, vec3(1, 0, 0));
-		// 	Model->rotate(-PI/2, vec3(0, 0, 1));
-		// 	Model->scale(vec3(0.035, 0.035, 0.035));
-		// 	setMaterial(1, prog);
-		// 	setModel(prog, Model);
-		// 	// objL["falcon"]->draw(prog);
-		// Model->popMatrix();
-
 		prog->unbind();
 
 		animProg->bind();
@@ -555,8 +513,7 @@ public:
 		playerHitboxes.clear();
 
 		float ms = getDeltaTimeMicroseconds();
-		dynamicsWorld->stepSimulation(ms / 1000000.f);
-		// dynmaicsWorld->debugDraw();
+		dynamicsWorld->stepSimulation(ms / 10000.f);
 		
 		//print positions of all objects
 		for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)

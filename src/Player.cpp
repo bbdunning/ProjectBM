@@ -22,7 +22,7 @@ Player::Player() {
 int Player::init(shared_ptr<InputHandler> ih) {
     this->velocity=vec3(0,0,0);
     // this->location=vec3(0,-.7,-2);
-    this->location=vec3(0,-1,-2);
+    this->location=vec3(0,0,-2);
     this->ih = ih;
     this->isGrounded = true;
     this->standing = true;
@@ -150,8 +150,8 @@ int Player::update(float dt) {
     if (ih->Shiftflag)
         speed = .08;
 
-    location += velocityDir * speed * dt *.001f;
-    location += vec3(0, velocity.y, 0) * dt *.001f;
+    location += velocityDir * speed;
+    location += vec3(0, velocity.y, 0);
     cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }
