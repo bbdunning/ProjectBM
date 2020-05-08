@@ -395,7 +395,7 @@ public:
 	}
 
 	float getDeltaTimeMicroseconds() {
-		float currentTime = glfwGetTime()/1000;
+		float currentTime = glfwGetTime()*100000;
 		float deltaTime = currentTime - previousTime;
 		previousTime = currentTime;
 		return deltaTime;
@@ -554,7 +554,9 @@ public:
 		Projection->popMatrix();
 		playerHitboxes.clear();
 
-		dynamicsWorld->stepSimulation(1.f/60.f,10);
+		float ms = getDeltaTimeMicroseconds();
+		dynamicsWorld->stepSimulation(ms / 1000000.f);
+		// dynmaicsWorld->debugDraw();
 		
 		//print positions of all objects
 		for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
