@@ -50,7 +50,7 @@ void Player::setViewAngles(GLFWwindow *window) {
     this->prevY = posY;
 }
 
-int Player::update() {
+int Player::update(float dt) {
     // int axesCount;
     // const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
@@ -114,7 +114,7 @@ int Player::update() {
     //jump
     if (ih->Spaceflag && isGrounded) {
         // velocity.y += .065; //fullhop
-        velocity.y = .07; //shorthop
+        velocity.y = .2; //shorthop
         velocity.x = clamp(velocity.x, -0.018f, 0.018f);
         velocity.z = clamp(velocity.z, -0.018f, 0.018f);
         isGrounded = false;
@@ -150,8 +150,8 @@ int Player::update() {
     if (ih->Shiftflag)
         speed = .08;
 
-    location += velocityDir * speed;
-    location += vec3(0, velocity.y, 0);
+    location += velocityDir * speed * dt*100000.f;
+    location += vec3(0, velocity.y, 0) * dt*100000.f;
     cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }
@@ -267,11 +267,11 @@ int Sandbag::update(vector<HitSphere> &hitboxes) {
     }
     
     //double jump
-    if (ih->Upflag && !isGrounded && hasDoubleJump) {
+    // if (ih->Upflag && !isGrounded && hasDoubleJump) {
         //double jump should be able to change velocity direction
-        velocity.y = .05;
-        hasDoubleJump = false;
-    }
+        // velocity.y = .05;
+        // hasDoubleJump = false;
+    // }
     
     //grounded movement
     if (ih->kp1 && velocity.x > -MAX_SPEED && isGrounded) {

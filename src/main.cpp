@@ -22,6 +22,7 @@
 #include "CollisionDetector.h"
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/LinearMath/btAabbUtil2.h>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,7 +47,6 @@ public:
 
 	//create GLFW Window
 	WindowManager * windowManager = nullptr;
-
 	// create shaders
 	std::shared_ptr<Program> prog;
 	std::shared_ptr<Program> cubeProg;
@@ -56,6 +56,7 @@ public:
 	unordered_map<string, shared_ptr<GameObject>> objL;
 	map<string, shared_ptr<GameObject>> platforms;
 	vector<HitSphere> playerHitboxes;
+	float previousTime = 0.0f;
 
 	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
 	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher(collisionConfiguration);
@@ -89,13 +90,20 @@ public:
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
+	// vector<std::string> faces {           
+	// 	"right.jpg",           
+	// 	"left.jpg",           
+	// 	"top.jpg",           
+	// 	"bottom.jpg",           
+	// 	"front.jpg",           
+	// 	"back.jpg"};
 	vector<std::string> faces {           
-		"right.jpg",           
-		"left.jpg",           
-		"top.jpg",           
-		"bottom.jpg",           
-		"front.jpg",           
-		"back.jpg"};
+		"posx.jpg",           
+		"negx.jpg",           
+		"posy.jpg",           
+		"negy.jpg",           
+		"posz.jpg",           
+		"negz.jpg"};
 
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -386,6 +394,13 @@ public:
 			hitboxes.push_back(HitSphere(player->location+offset, .3));
 	}
 
+	float getDeltaTimeMicroseconds() {
+		float currentTime = glfwGetTime()/1000;
+		float deltaTime = currentTime - previousTime;
+		previousTime = currentTime;
+		return deltaTime;
+	}
+
 	void render() {
 		// Get current frame buffer size.
 		int width, height;
@@ -393,6 +408,7 @@ public:
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
 
+		getDeltaTimeMicroseconds();
 		// Clear framebuffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -505,7 +521,7 @@ public:
 			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
 		else
 			camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f + camera.elevation;
-		player1->update();
+		player1->update(getDeltaTimeMicroseconds());
 		camera.lookAtPoint = player1->location - camera.eye + player1->getRightDir() *.5f + camera.elevation + player1->getForwardDir() * .5f;
 		gethitBoxes(player1, playerHitboxes);
 		//move this to player class
@@ -552,6 +568,7 @@ public:
 				printf("world pos = %f,%f,%f\n",float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
 			}
 		}
+		cout << getDeltaTimeMicroseconds() << endl;
 	}
 };
 

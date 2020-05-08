@@ -34,8 +34,11 @@ void Animator::update()
 
 void Animator::increaseAnimationTime() 
 {
+    float currentTime = glfwGetTime()/1000.0f;
+    float dt = currentTime - prevFrameTimeMS;
+    prevFrameTimeMS = currentTime;
     // animTime += (glfwGetTime() / 1000.0f);
-    animTime += .018f;
+    animTime += dt * 1000.f;
     if (animTime > currentAnimation->length) {
         animTime = fmod(animTime, currentAnimation->length);
     }

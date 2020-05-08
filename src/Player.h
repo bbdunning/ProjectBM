@@ -27,7 +27,7 @@ public:
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);
-    int update();
+    int update(float dt);
     void setViewAngles(GLFWwindow *window);
     glm::vec3 getForwardDir();
     glm::vec3 getRightDir();

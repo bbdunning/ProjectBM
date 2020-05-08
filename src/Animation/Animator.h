@@ -35,6 +35,7 @@ public:
     AnimatedShape *entity;
     std::shared_ptr<Animation> currentAnimation;
     float animTime;
+    float prevFrameTimeMS = 0;
 
     void update();
     void doAnimation(std::shared_ptr<Animation> a);
