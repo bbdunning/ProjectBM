@@ -34,6 +34,7 @@ findGLFW3(${CMAKE_PROJECT_NAME})
 findGLM(${CMAKE_PROJECT_NAME})
 #findAssimp(${CMAKE_PROJECT_NAME})
 #findBullet(${CMAKE_PROJECT_NAME})
+include_directories("C:/bins/vcpkg-master/packages/bullet3_x86-windows/include/bullet")
 
 # OS specific options and libraries
 if(NOT WIN32)

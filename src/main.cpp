@@ -66,19 +66,18 @@ public:
 	btAlignedObjectArray<btCollisionShape*> collisionShapes;
 	btTransform groundTransform;
 
-
 	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
 
 	// Data necessary to give our triangle to OpenGL
 	GLuint VertexBufferID;
 
-	shared_ptr<Texture> texture_glass;
-
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
 	shared_ptr<CollisionDetector> cd = make_shared<CollisionDetector>();
 	shared_ptr<Player> player1 = make_shared<Player>();
 	shared_ptr<Sandbag> sandbag = make_shared<Sandbag>();
+	vector<btRigidBody*> projectiles;
+	btRigidBody* playerBody;
 	
 	//animation data
 	float sTheta = 0;
@@ -123,7 +122,6 @@ public:
 	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
 	{
 		double posX, posY;
-		bool lbutton_down;
 
 		if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		{
@@ -164,8 +162,8 @@ public:
 
 	void setLight(shared_ptr<Program> prog) {
 		// glUniform3f(prog->getUniform("LightPos"), .5, .5, 0);
-		glUniform3f(prog->getUniform("LightPos"), 5, 3, -.4);
-		glUniform3f(prog->getUniform("LightCol"), 1, 1, 1); 
+		glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
+		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
 	}
 
 
@@ -259,53 +257,116 @@ public:
 	}
 
 	void initPhysics() {
-	dynamicsWorld->setGravity(btVector3(0,-10,0));
+		dynamicsWorld->setGravity(btVector3(0,-10,0));
 
-	///-----initialization_end-----
+		///-----initialization_end-----
+		///create a few basic rigid bodies
+		//keep track of the shapes, we release memory at exit.
+		//make sure to re-use collision shapes among rigid bodies whenever possible!
 
-	///create a few basic rigid bodies
+		btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(1.),btScalar(50.)));
+		collisionShapes.push_back(groundShape);
 
-	//keep track of the shapes, we release memory at exit.
-	//make sure to re-use collision shapes among rigid bodies whenever possible!
+		groundTransform.setIdentity();
+		groundTransform.setOrigin(btVector3(0,-1,0));
 
-	btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(1.),btScalar(50.)));
-	collisionShapes.push_back(groundShape);
+		{
+			btScalar mass(0.);
 
-	groundTransform.setIdentity();
-	groundTransform.setOrigin(btVector3(0,-1,0));
+			//rigidbody is dynamic if and only if mass is non zero, otherwise static
+			bool isDynamic = (mass != 0.f);
 
-	{
-		btScalar mass(0.);
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				groundShape->calculateLocalInertia(mass,localInertia);
 
-		//rigidbody is dynamic if and only if mass is non zero, otherwise static
-		bool isDynamic = (mass != 0.f);
+			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+			// body->setFriction(1.0);
+			body->setFriction(0.0);
+			body->setRestitution(1.0);
 
-		btVector3 localInertia(0,0,0);
-		if (isDynamic)
-			groundShape->calculateLocalInertia(mass,localInertia);
+			//add the body to the dynamics world
+			dynamicsWorld->addRigidBody(body);
+		}
 
-		//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-		btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
-		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
-		btRigidBody* body = new btRigidBody(rbInfo);
 
-		//add the body to the dynamics world
-		dynamicsWorld->addRigidBody(body);
+		{
+			//create a dynamic rigidbody
+
+			// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
+			btCollisionShape* colShape = new btSphereShape(btScalar(1.));
+			collisionShapes.push_back(colShape);
+
+			/// Create Dynamic Objects
+			btTransform startTransform;
+			startTransform.setIdentity();
+
+			btScalar mass(1.f);
+
+			//rigidbody is dynamic if and only if mass is non zero, otherwise static
+			bool isDynamic = (mass != 0.f);
+
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				colShape->calculateLocalInertia(mass,localInertia);
+
+				startTransform.setOrigin(btVector3(0,10,-1));
+			
+				//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+				btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+				btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+				btRigidBody* body = new btRigidBody(rbInfo);
+
+				dynamicsWorld->addRigidBody(body);
+		}
+
+		{
+			//create a dynamic rigidbody
+
+			// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
+			btCollisionShape* colShape = new btSphereShape(btScalar(1.));
+			collisionShapes.push_back(colShape);
+
+			/// Create Dynamic Objects
+			btTransform startTransform;
+			startTransform.setIdentity();
+
+			btScalar mass(1.f);
+
+			//rigidbody is dynamic if and only if mass is non zero, otherwise static
+			bool isDynamic = (mass != 0.f);
+
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				colShape->calculateLocalInertia(mass,localInertia);
+
+				startTransform.setOrigin(btVector3(0,10,-3));
+			
+				//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+				btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+				btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+				btRigidBody* body = new btRigidBody(rbInfo);
+
+				dynamicsWorld->addRigidBody(body);
+		}
+		playerBody = createPlayerRigidBody(vec3(0,5,-5));
 	}
 
-
-	{
+	btRigidBody* createPlayerRigidBody(vec3 location) {
 		//create a dynamic rigidbody
 
-		//btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
-		btCollisionShape* colShape = new btSphereShape(btScalar(1.));
+		// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
+		btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
 		collisionShapes.push_back(colShape);
 
 		/// Create Dynamic Objects
 		btTransform startTransform;
 		startTransform.setIdentity();
 
-		btScalar	mass(1.f);
+		btScalar mass(1.f);
 
 		//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
@@ -314,7 +375,7 @@ public:
 		if (isDynamic)
 			colShape->calculateLocalInertia(mass,localInertia);
 
-			startTransform.setOrigin(btVector3(2,10,0));
+			startTransform.setOrigin(bt(location));
 		
 			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 			btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
@@ -322,9 +383,66 @@ public:
 			btRigidBody* body = new btRigidBody(rbInfo);
 
 			dynamicsWorld->addRigidBody(body);
+		body->setFriction(1.0f);
+		body->setDamping(0.5f, 0.5f);
+		// body->setRestitution(.8);
+		return body;
 	}
 
+	btRigidBody* createRigidBody(vector<btRigidBody*> &projectiles, vec3 location, vec3 direction, float magnitude) {
+		//create a dynamic rigidbody
 
+		// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
+		btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
+		collisionShapes.push_back(colShape);
+
+		/// Create Dynamic Objects
+		btTransform startTransform;
+		startTransform.setIdentity();
+
+		btScalar mass(1.f);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			colShape->calculateLocalInertia(mass,localInertia);
+
+			startTransform.setOrigin(bt(location));
+		
+			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+
+			dynamicsWorld->addRigidBody(body);
+		body->applyCentralImpulse(bt(direction) * magnitude);
+		body->setFriction(1.0f);
+		body->setDamping(0.2f, 0.5f);
+		// body->setRestitution(.8);
+		projectiles.push_back(body);
+		return body;
+	}
+
+	void renderProjectiles(shared_ptr<Program> prog, unordered_map<string, shared_ptr<GameObject>> &objL, vector<btRigidBody*> &projectiles) {
+		setMaterial(1, prog);
+
+		for (int i=0; i<projectiles.size(); i++) {
+			btCollisionObject* obj = projectiles[i];
+			btRigidBody* body = btRigidBody::upcast(obj);
+			btTransform trans;
+			body->getMotionState()->getWorldTransform(trans);
+			vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+			btQuaternion btQ = body->getOrientation();
+
+			objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
+			objL["sphere"]->scale(.25f);
+			objL["sphere"]->rotate(-PI/2, vec3(1.f,0.f,0.f));
+			objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+			objL["sphere"]->setModel(prog);
+			objL["sphere"]->draw(prog); 
+		}
 	}
 
 	void initGeom(const std::string& resourceDirectory)
@@ -333,10 +451,8 @@ public:
 
 		//load geometry, initialize meshes, create objects
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
+		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["totodile"] = GameObject::create(rDir + "melee/totodile/", "toto.dae", "totodile");
-		objL["FoD"] = GameObject::create(rDir + "melee/fod/", "fountain.fbx", "FoD");
-		objL["skyring1"] = GameObject::create(rDir + "melee/fod/", "skyring1.fbx", "skyring1");
-		objL["skyring2"] = GameObject::create(rDir + "melee/fod/", "skyring2.fbx", "skyring2");
 		platforms["platform"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform2"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		platforms["platform3"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
@@ -394,11 +510,19 @@ public:
 			hitboxes.push_back(HitSphere(player->location+offset, .3));
 	}
 
-	float getDeltaTimeMicroseconds() {
-		float currentTime = glfwGetTime()*100000;
+	float getDeltaTimeSeconds() {
+		float currentTime = glfwGetTime();
 		float deltaTime = currentTime - previousTime;
 		previousTime = currentTime;
 		return deltaTime;
+	}
+
+	btVector3 bt(vec3 v) {
+		return btVector3(v.x, v.y, v.z);
+	}
+
+	vec3 cons(btVector3 v) {
+		return vec3(v.getX(), v.getY(), v.getZ());
 	}
 
 	void render() {
@@ -408,7 +532,7 @@ public:
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
 
-		getDeltaTimeMicroseconds();
+		float dt = getDeltaTimeSeconds();
 		// Clear framebuffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -435,29 +559,71 @@ public:
 		//set initial material and Light
 		setLight(prog);
 
-		//set up physics
+		//getPosition of object
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		btTransform trans;
 		body->getMotionState()->getWorldTransform(trans);
 		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		btQuaternion btQ = body->getOrientation();
 
 		//draw sandbag
 		setMaterial(1, prog);
-		objL["sandbag"]->translate(physicsLoc); //+ vec3(0,.9,0));
-		objL["sandbag"]->scale(.05);
-		objL["sandbag"]->rotate(-PI/2, vec3(1,0,0));
-		objL["sandbag"]->setModel(prog);
-		objL["sandbag"]->draw(prog); 
+		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
+		// objL["sphere"]->scale(.05);
+		objL["sphere"]->rotate(-PI/2, vec3(1.f,0.f,0.f));
+		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		objL["sphere"]->setModel(prog);
+		objL["sphere"]->draw(prog); 
 
+
+		//getPosition of object
+		obj = dynamicsWorld->getCollisionObjectArray()[2];
+		body = btRigidBody::upcast(obj);
+		body->getMotionState()->getWorldTransform(trans);
+		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		btQ = body->getOrientation();
+
+		//draw sphere
+		setMaterial(1, prog);
+		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
+		// objL["sphere"]->scale(.05);
+		objL["sphere"]->rotate(-PI/2, vec3(1.f,0.f,0.f));
+		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		objL["sphere"]->setModel(prog);
+		objL["sphere"]->draw(prog); 
 
 		//draw ps2
 		objL["ps2"]->translate(vec3(5,-1.80,0));
 		objL["ps2"]->scale(vec3(.2f, .2f, .2f));
-		objL["ps2"]->rotate(-PI/2, vec3(1, 0, 0));
+		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
 		setMaterial(1, prog);
 		objL["ps2"]->setModel(prog);
 		objL["ps2"]->draw(prog);
+
+		if (inputHandler->Cflag && player1->projectileCooldown <= 0.0f) {
+			player1->projectileCooldown = 1.0f;
+			createRigidBody(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
+		}
+
+		playerBody->forceActivationState(1);
+		cout << playerBody->isActive() << endl;
+		if (inputHandler->Wflag) {
+			btVector3 dir = bt(normalize(player1->getForwardDir()));
+			float magnitude = 0.2f;
+			playerBody->setAngularVelocity(bt(vec3(0,0,0)));
+			vec3 v = cons(playerBody->getLinearVelocity());
+			// if (length(vec3(v.x, 0, v.z)) < 6)
+				playerBody->applyCentralImpulse(dir * magnitude);
+		}
+		if (inputHandler->Spaceflag) {
+			btVector3 dir = bt(vec3(0,1,0));
+			float magnitude = 1.f;
+			playerBody->applyCentralImpulse(dir * magnitude);
+		}
+
+		renderProjectiles(prog, objL, projectiles);
+
 
 		//draw platforms
 		for (map<string, shared_ptr<GameObject>>::iterator it=platforms.begin(); it!=platforms.end(); ++it) {
@@ -475,11 +641,14 @@ public:
 		//set initial material and Light
 		setLight(animProg);
 
+		playerBody->getMotionState()->getWorldTransform(trans);
+		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		player1->location = physicsLoc;
 		if (inputHandler->R)
 			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
 		else
 			camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f + camera.elevation;
-		player1->update(getDeltaTimeMicroseconds());
+		player1->update(dt);
 		camera.lookAtPoint = player1->location - camera.eye + player1->getRightDir() *.5f + camera.elevation + player1->getForwardDir() * .5f;
 		gethitBoxes(player1, playerHitboxes);
 		//move this to player class
@@ -489,13 +658,13 @@ public:
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
 		objL["animModel"]->rotate(PI/2 + angle, vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
-		if (inputHandler->n1)
+		if (player1->isGrounded)
 			objL["animModel"]->doAnimation(0);
 		if (inputHandler->n2)
 			objL["animModel"]->doAnimation(1);
 		if (inputHandler->n3)
 			objL["animModel"]->doAnimation(2);
-		if (inputHandler->n4)
+		if (!player1->isGrounded)
 			objL["animModel"]->doAnimation(3);
 		setMaterial(1, animProg);
 		objL["animModel"]->setModel(animProg);
@@ -506,28 +675,32 @@ public:
 		animProg->unbind();
 
 		//animation update example
-		sTheta = sin(glfwGetTime());
+		sTheta = sin((float)glfwGetTime());
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
+
 		playerHitboxes.clear();
 
-		float ms = getDeltaTimeMicroseconds();
-		dynamicsWorld->stepSimulation(ms / 10000.f);
+		dynamicsWorld->stepSimulation(dt);
+		for (int i=0; i<projectiles.size(); i++) {
+			btCollisionObject* obj = projectiles[i];
+			btRigidBody* body = btRigidBody::upcast(obj);
+		}
 		
 		//print positions of all objects
-		for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
-		{
-			btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
-			btRigidBody* body = btRigidBody::upcast(obj);
-			if (body && body->getMotionState())
-			{
-				btTransform trans;
-				body->getMotionState()->getWorldTransform(trans);
-				printf("world pos = %f,%f,%f\n",float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-			}
-		}
-		cout << getDeltaTimeMicroseconds() << endl;
+		// for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
+		// {
+		// 	btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
+		// 	btRigidBody* body = btRigidBody::upcast(obj);
+		// 	if (body && body->getMotionState())
+		// 	{
+		// 		btTransform trans;
+		// 		body->getMotionState()->getWorldTransform(trans);
+		// 		printf("world pos = %f,%f,%f\n",float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		// 	}
+		// }
+		// cout << getDeltaTimeMicroseconds() << endl;
 	}
 };
 

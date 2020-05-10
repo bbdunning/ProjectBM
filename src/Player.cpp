@@ -54,6 +54,8 @@ int Player::update(float dt) {
     // int axesCount;
     // const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
+    if (projectileCooldown > 0.0f)
+        projectileCooldown -= dt;
     this->environmentalHbox.center = this->location;
     bool isOnPlatform = false;
 

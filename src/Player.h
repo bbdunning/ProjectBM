@@ -23,6 +23,7 @@ public:
     float phi;
     float prevX;
     float prevY;
+    float projectileCooldown = 0;
     HitSphere environmentalHbox;
 
     Player();
