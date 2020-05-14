@@ -152,8 +152,8 @@ int Player::update(float dt) {
     if (ih->Shiftflag)
         speed = .08;
 
-    location += velocityDir * speed;
-    location += vec3(0, velocity.y, 0);
+    // location += velocityDir * speed;
+    // location += vec3(0, velocity.y, 0);
     cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }

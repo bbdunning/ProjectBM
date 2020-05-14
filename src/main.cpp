@@ -83,6 +83,7 @@ public:
 	float sTheta = 0;
 	int m = 1;
 	float prevOmega = 0.0f;
+	bool leftMouse = false;
 
 	//Camera
 	Camera camera;
@@ -122,6 +123,7 @@ public:
 	void mouseCallback(GLFWwindow *window, int button, int action, int mods)
 	{
 		double posX, posY;
+		leftMouse = true;
 
 		if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		{
@@ -264,11 +266,11 @@ public:
 		//keep track of the shapes, we release memory at exit.
 		//make sure to re-use collision shapes among rigid bodies whenever possible!
 
-		btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(1.),btScalar(50.)));
+		btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.f)));
 		collisionShapes.push_back(groundShape);
 
 		groundTransform.setIdentity();
-		groundTransform.setOrigin(btVector3(0,-1,0));
+		groundTransform.setOrigin(btVector3(-2,-1,-9));
 
 		{
 			btScalar mass(0.);
@@ -358,8 +360,8 @@ public:
 	btRigidBody* createPlayerRigidBody(vec3 location) {
 		//create a dynamic rigidbody
 
-		// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
-		btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
+		btCollisionShape* colShape = new btBoxShape(btVector3(.25,.25,.25));
+		// btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
 		collisionShapes.push_back(colShape);
 
 		/// Create Dynamic Objects
@@ -384,7 +386,7 @@ public:
 
 			dynamicsWorld->addRigidBody(body);
 		body->setFriction(1.0f);
-		body->setDamping(0.5f, 0.5f);
+		// body->setDamping(0.8f, 1.0f);
 		// body->setRestitution(.8);
 		return body;
 	}
@@ -420,7 +422,7 @@ public:
 		body->applyCentralImpulse(bt(direction) * magnitude);
 		body->setFriction(1.0f);
 		body->setDamping(0.2f, 0.5f);
-		// body->setRestitution(.8);
+		body->setRestitution(.8);
 		projectiles.push_back(body);
 		return body;
 	}
@@ -460,14 +462,17 @@ public:
 		platforms["platform5"] = GameObject::create(rDir + "melee/fod/", "platform.fbx", "platform");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "ps2");
 		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
-		// GameObject::create(rDir + "melee/falcon2/", "Captain Falcon.dae", "falcon");
-		// objL["animModel"] = GameObject::create(rDir + "anim/", "model.dae", "animModel");
+
 		objL["animModel"] = GameObject::create(rDir + "anim/", "toto.dae", "animModel");
 		objL["animModel"]->addAnimation("toto_walk.dae");
 		objL["animModel"]->addAnimation("toto_watergun.dae");
 		objL["animModel"]->addAnimation("toto_dab.dae");
 		objL["animModel"]->addAnimation("toto_jump.dae");
-		objL["animModel"]->doAnimation(1);
+		objL["animModel"]->doAnimation(0);
+
+		objL["boko"] = GameObject::create(rDir + "/boko/", "boko.dae", "boko");
+		objL["boko"]->path = rDir + "/boko/";
+		objL["boko"]->addAnimation("boko.dae");
 		// objL["animModel"]->addAnimation("toto_run.dae");
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
@@ -594,26 +599,47 @@ public:
 		objL["sphere"]->draw(prog); 
 
 		//draw ps2
-		objL["ps2"]->translate(vec3(5,-1.80,0));
-		objL["ps2"]->scale(vec3(.2f, .2f, .2f));
+		objL["ps2"]->translate(vec3(5,-3.15f,0));
+		objL["ps2"]->scale(vec3(.35f, .35f, .35f));
 		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
 		setMaterial(1, prog);
 		objL["ps2"]->setModel(prog);
 		objL["ps2"]->draw(prog);
 
-		if (inputHandler->Cflag && player1->projectileCooldown <= 0.0f) {
+		if (leftMouse && player1->projectileCooldown <= 0.0f) {
 			player1->projectileCooldown = 1.0f;
 			createRigidBody(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
 		}
 
 		playerBody->forceActivationState(1);
+		playerBody->setAngularVelocity(bt(vec3(0,0,0)));
 		cout << playerBody->isActive() << endl;
 		if (inputHandler->Wflag) {
 			btVector3 dir = bt(normalize(player1->getForwardDir()));
 			float magnitude = 0.2f;
-			playerBody->setAngularVelocity(bt(vec3(0,0,0)));
 			vec3 v = cons(playerBody->getLinearVelocity());
-			// if (length(vec3(v.x, 0, v.z)) < 6)
+			// if (length(vec3(v.x, 0, v.z)) < 2)
+				playerBody->applyCentralImpulse(dir * magnitude);
+		}
+		if (inputHandler->Dflag) {
+			btVector3 dir = bt(normalize(player1->getRightDir()));
+			float magnitude = 0.2f;
+			vec3 v = cons(playerBody->getLinearVelocity());
+			// if (length(vec3(v.x, 0, v.z)) < 2)
+				playerBody->applyCentralImpulse(dir * magnitude);
+		}
+		if (inputHandler->Aflag) {
+			btVector3 dir = bt(normalize(-player1->getRightDir()));
+			float magnitude = 0.2f;
+			vec3 v = cons(playerBody->getLinearVelocity());
+			// if (length(vec3(v.x, 0, v.z)) < 2)
+				playerBody->applyCentralImpulse(dir * magnitude);
+		}
+		if (inputHandler->Sflag) {
+			btVector3 dir = bt(normalize(-player1->getForwardDir()));
+			float magnitude = 0.2f;
+			vec3 v = cons(playerBody->getLinearVelocity());
+			// if (length(vec3(v.x, 0, v.z)) < 2)
 				playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (inputHandler->Spaceflag) {
@@ -621,6 +647,7 @@ public:
 			float magnitude = 1.f;
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
+
 
 		renderProjectiles(prog, objL, projectiles);
 
@@ -631,6 +658,7 @@ public:
 			it->second->setModel(prog);
 			it->second->draw(prog);
 		}
+
 		prog->unbind();
 
 		animProg->bind();
@@ -641,9 +669,8 @@ public:
 		//set initial material and Light
 		setLight(animProg);
 
-		playerBody->getMotionState()->getWorldTransform(trans);
-		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		player1->location = physicsLoc;
+
+
 		if (inputHandler->R)
 			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
 		else
@@ -654,17 +681,20 @@ public:
 		//move this to player class
 		float angle = -glm::orientedAngle(normalize(vec3(player1->lookAtPoint.x, 0, player1->lookAtPoint.z)), vec3(1, 0, 0), vec3(0,1,0));
 
+		playerBody->getMotionState()->getWorldTransform(trans);
+		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		player1->location = physicsLoc;
 		objL["animModel"]->translate(player1->location);
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
 		objL["animModel"]->rotate(PI/2 + angle, vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
-		if (player1->isGrounded)
+		if (inputHandler->n1)
 			objL["animModel"]->doAnimation(0);
 		if (inputHandler->n2)
 			objL["animModel"]->doAnimation(1);
 		if (inputHandler->n3)
 			objL["animModel"]->doAnimation(2);
-		if (!player1->isGrounded)
+		if (inputHandler->n4)
 			objL["animModel"]->doAnimation(3);
 		setMaterial(1, animProg);
 		objL["animModel"]->setModel(animProg);
@@ -672,6 +702,16 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 		objL["animModel"]->draw(animProg);
 
+		objL["boko"]->translate(player1->location + vec3(0,2,0));
+		objL["boko"]->scale(vec3(0.3, 0.3, 0.3));
+		objL["boko"]->rotate(PI/2 + angle, vec3(0, 1, 0));
+		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
+		objL["boko"]->doAnimation(0);
+		setMaterial(1, animProg);
+		objL["boko"]->setModel(animProg);
+		((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
+		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
+		objL["boko"]->draw(animProg);
 		animProg->unbind();
 
 		//animation update example
@@ -687,6 +727,8 @@ public:
 			btCollisionObject* obj = projectiles[i];
 			btRigidBody* body = btRigidBody::upcast(obj);
 		}
+		// GLDebugDrawer debugDrawer;
+		// dynamicsWorld->debugDrawWorld();
 		
 		//print positions of all objects
 		// for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
@@ -701,6 +743,7 @@ public:
 		// 	}
 		// }
 		// cout << getDeltaTimeMicroseconds() << endl;
+		leftMouse = false;
 	}
 };
 
