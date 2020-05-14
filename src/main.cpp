@@ -470,9 +470,9 @@ public:
 		objL["animModel"]->addAnimation("toto_jump.dae");
 		objL["animModel"]->doAnimation(0);
 
-		objL["boko"] = GameObject::create(rDir + "/boko/", "boko.dae", "boko");
-		objL["boko"]->path = rDir + "/boko/";
-		objL["boko"]->addAnimation("boko.dae");
+		// objL["boko"] = GameObject::create(rDir + "/boko/", "boko.dae", "boko");
+		// objL["boko"]->path = rDir + "/boko/";
+		// objL["boko"]->addAnimation("boko.dae");
 		// objL["animModel"]->addAnimation("toto_run.dae");
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
@@ -702,16 +702,16 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 		objL["animModel"]->draw(animProg);
 
-		objL["boko"]->translate(player1->location + vec3(0,2,0));
-		objL["boko"]->scale(vec3(0.3, 0.3, 0.3));
-		objL["boko"]->rotate(PI/2 + angle, vec3(0, 1, 0));
-		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
-		objL["boko"]->doAnimation(0);
-		setMaterial(1, animProg);
-		objL["boko"]->setModel(animProg);
-		((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
-		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
-		objL["boko"]->draw(animProg);
+		// objL["boko"]->translate(player1->location + vec3(0,2,0));
+		// objL["boko"]->scale(vec3(0.3, 0.3, 0.3));
+		// objL["boko"]->rotate(PI/2 + angle, vec3(0, 1, 0));
+		// objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
+		// objL["boko"]->doAnimation(0);
+		// setMaterial(1, animProg);
+		// objL["boko"]->setModel(animProg);
+		// ((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
+		// glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
+		// objL["boko"]->draw(animProg);
 		animProg->unbind();
 
 		//animation update example
