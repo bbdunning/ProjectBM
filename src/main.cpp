@@ -78,6 +78,7 @@ public:
 	shared_ptr<Sandbag> sandbag = make_shared<Sandbag>();
 	vector<btRigidBody*> projectiles;
 	btRigidBody* playerBody;
+	btRigidBody* bokoBody;
 	
 	//animation data
 	float sTheta = 0;
@@ -355,6 +356,7 @@ public:
 				dynamicsWorld->addRigidBody(body);
 		}
 		playerBody = createPlayerRigidBody(vec3(0,5,-5));
+		bokoBody = createPlayerRigidBody(vec3(4,5,-5));
 	}
 
 	btRigidBody* createPlayerRigidBody(vec3 location) {
@@ -470,9 +472,9 @@ public:
 		objL["animModel"]->addAnimation("toto_jump.dae");
 		objL["animModel"]->doAnimation(0);
 
-		// objL["boko"] = GameObject::create(rDir + "/boko/", "boko.dae", "boko");
-		// objL["boko"]->path = rDir + "/boko/";
-		// objL["boko"]->addAnimation("boko.dae");
+		objL["boko"] = GameObject::create(rDir + "/anim/", "toto.dae", "boko");
+		// objL["boko"]->path = rDir + "/ya_boi/source/";
+		objL["boko"]->addAnimation("toto_walk.dae");
 		// objL["animModel"]->addAnimation("toto_run.dae");
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
@@ -702,16 +704,21 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 		objL["animModel"]->draw(animProg);
 
-		// objL["boko"]->translate(player1->location + vec3(0,2,0));
-		// objL["boko"]->scale(vec3(0.3, 0.3, 0.3));
-		// objL["boko"]->rotate(PI/2 + angle, vec3(0, 1, 0));
-		// objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
-		// objL["boko"]->doAnimation(0);
-		// setMaterial(1, animProg);
-		// objL["boko"]->setModel(animProg);
-		// ((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
-		// glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
-		// objL["boko"]->draw(animProg);
+		bokoBody->forceActivationState(1);
+		bokoBody->getMotionState()->getWorldTransform(trans);
+		btQ = body->getOrientation();
+		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		objL["boko"]->translate(physicsLoc);
+		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
+		// objL["boko"]->scale(vec3(0.005, 0.005, 0.005));
+		objL["boko"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
+		objL["boko"]->doAnimation(0);
+		setMaterial(1, animProg);
+		objL["boko"]->setModel(animProg);
+		((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
+		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
+		objL["boko"]->draw(animProg);
 		animProg->unbind();
 
 		//animation update example
@@ -730,19 +737,6 @@ public:
 		// GLDebugDrawer debugDrawer;
 		// dynamicsWorld->debugDrawWorld();
 		
-		//print positions of all objects
-		// for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--)
-		// {
-		// 	btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
-		// 	btRigidBody* body = btRigidBody::upcast(obj);
-		// 	if (body && body->getMotionState())
-		// 	{
-		// 		btTransform trans;
-		// 		body->getMotionState()->getWorldTransform(trans);
-		// 		printf("world pos = %f,%f,%f\n",float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		// 	}
-		// }
-		// cout << getDeltaTimeMicroseconds() << endl;
 		leftMouse = false;
 	}
 };

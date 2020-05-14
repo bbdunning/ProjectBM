@@ -262,7 +262,7 @@ shared_ptr<AnimatedShape> createShape(const aiScene * scene, string meshPath,
 	newShape->scene = scene;
 	newShape->jointMap = jointMap;
 	newShape->joints = joints;
-	newShape->jointTransforms.resize(50); //max joints
+	newShape->jointTransforms.resize(75); //max joints
 	newShape->createShape(scene->mMeshes[i]);
 	newShape->name = scene->mMeshes[i]->mName.C_Str();
 	newShape->measure();
