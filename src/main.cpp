@@ -92,12 +92,12 @@ public:
 	//skybox
 	unsigned int skyboxTextureId = 0;
 	// vector<std::string> faces {           
-	// 	"right.jpg",           
-	// 	"left.jpg",           
-	// 	"top.jpg",           
-	// 	"bottom.jpg",           
-	// 	"front.jpg",           
-	// 	"back.jpg"};
+	// 	"Newdawn1_right.png",           
+	// 	"Newdawn1_left.png",           
+	// 	"Newdawn1_up.png",           
+	// 	"Newdawn1_down.png",           
+	// 	"Newdawn1_back.png",           
+	// 	"Newdawn1_front.png"};
 	vector<std::string> faces {           
 		"posx.jpg",           
 		"negx.jpg",           
@@ -307,7 +307,7 @@ public:
 			btTransform startTransform;
 			startTransform.setIdentity();
 
-			btScalar mass(1.f);
+			btScalar mass(2.f);
 
 			//rigidbody is dynamic if and only if mass is non zero, otherwise static
 			bool isDynamic = (mass != 0.f);
@@ -337,7 +337,7 @@ public:
 			btTransform startTransform;
 			startTransform.setIdentity();
 
-			btScalar mass(1.f);
+			btScalar mass(2.f);
 
 			//rigidbody is dynamic if and only if mass is non zero, otherwise static
 			bool isDynamic = (mass != 0.f);
@@ -356,7 +356,7 @@ public:
 				dynamicsWorld->addRigidBody(body);
 		}
 		playerBody = createPlayerRigidBody(vec3(0,5,-5));
-		bokoBody = createPlayerRigidBody(vec3(4,5,-5));
+		bokoBody = createGeneralRigidBody(vec3(4,5,-5), vec3(.3, .5, .3));
 	}
 
 	btRigidBody* createPlayerRigidBody(vec3 location) {
@@ -371,6 +371,40 @@ public:
 		startTransform.setIdentity();
 
 		btScalar mass(1.f);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			colShape->calculateLocalInertia(mass,localInertia);
+
+			startTransform.setOrigin(bt(location));
+		
+			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+
+			dynamicsWorld->addRigidBody(body);
+		body->setFriction(1.0f);
+		// body->setDamping(0.8f, 1.0f);
+		// body->setRestitution(.8);
+		return body;
+	}
+
+	btRigidBody* createGeneralRigidBody(vec3 location, vec3 size) {
+		//create a dynamic rigidbody
+
+		btCollisionShape* colShape = new btBoxShape(bt(size));
+		// btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
+		collisionShapes.push_back(colShape);
+
+		/// Create Dynamic Objects
+		btTransform startTransform;
+		startTransform.setIdentity();
+
+		btScalar mass(2.f);
 
 		//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
@@ -474,7 +508,8 @@ public:
 
 		objL["boko"] = GameObject::create(rDir + "/anim/", "toto.dae", "boko");
 		// objL["boko"]->path = rDir + "/ya_boi/source/";
-		objL["boko"]->addAnimation("toto_walk.dae");
+		objL["boko"]->addAnimation("toto_watergun.dae");
+		objL["boko"]->doAnimation(0);
 		// objL["animModel"]->addAnimation("toto_run.dae");
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
@@ -551,7 +586,7 @@ public:
 
 		// Apply perspective projection.
 		Projection->pushMatrix();
-		Projection->perspective(45.0f, aspect, 0.01f, 200.0f);
+		Projection->perspective(45.0f, aspect, 0.01f, 10000.0f);
 
 		//draw Skybox
 		drawSkybox(Model, Projection);
@@ -708,10 +743,11 @@ public:
 		bokoBody->getMotionState()->getWorldTransform(trans);
 		btQ = body->getOrientation();
 		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		objL["boko"]->translate(physicsLoc);
+		objL["boko"]->translate(physicsLoc - vec3(0,.25,0));
 		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
 		// objL["boko"]->scale(vec3(0.005, 0.005, 0.005));
-		objL["boko"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		// objL["boko"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		objL["boko"]->rotate(-PI/2, vec3(0, 1, 0));
 		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
 		objL["boko"]->doAnimation(0);
 		setMaterial(1, animProg);
@@ -763,7 +799,7 @@ int main(int argc, char *argv[])
 	application->initGeom(resourceDir);
 	application->initPhysics();
 
-	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 1980, 1080, 0);
+	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 2650, 1440, 0);
 
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))
