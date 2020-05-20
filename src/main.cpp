@@ -20,6 +20,7 @@
 #include "Camera.h"
 #include "Hitbox.h"
 #include "CollisionDetector.h"
+#include "DynamicCharacterController.h"
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>
 #include <bullet/LinearMath/btAabbUtil2.h>
@@ -79,6 +80,7 @@ public:
 	vector<btRigidBody*> projectiles;
 	btRigidBody* playerBody;
 	btRigidBody* bokoBody;
+	DynamicCharacterController* dcc;
 	
 	//animation data
 	float sTheta = 0;
@@ -267,13 +269,13 @@ public:
 		//keep track of the shapes, we release memory at exit.
 		//make sure to re-use collision shapes among rigid bodies whenever possible!
 
-		btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.f)));
-		collisionShapes.push_back(groundShape);
-
-		groundTransform.setIdentity();
-		groundTransform.setOrigin(btVector3(-2,-1,-9));
-
 		{
+			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.f)));
+			collisionShapes.push_back(groundShape);
+
+			groundTransform.setIdentity();
+			groundTransform.setOrigin(btVector3(-2,-1,-9));
+
 			btScalar mass(0.);
 
 			//rigidbody is dynamic if and only if mass is non zero, otherwise static
@@ -328,7 +330,6 @@ public:
 
 		{
 			//create a dynamic rigidbody
-
 			// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
 			btCollisionShape* colShape = new btSphereShape(btScalar(1.));
 			collisionShapes.push_back(colShape);
@@ -355,6 +356,12 @@ public:
 
 				dynamicsWorld->addRigidBody(body);
 		}
+		{ //setup character controller
+			dcc  = new DynamicCharacterController();
+			dcc->setup();
+			dynamicsWorld->addRigidBody(dcc->getRigidBody());
+		}
+		// dynamicsWorld->addRigidBody(dcc->getCollisionObject());
 		playerBody = createPlayerRigidBody(vec3(0,5,-5));
 		bokoBody = createGeneralRigidBody(vec3(4,5,-5), vec3(.3, .5, .3));
 	}
@@ -648,9 +655,14 @@ public:
 			createRigidBody(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
 		}
 
+		// dcc->preStep(dynamicsWorld);
+		dcc->setForwardDir(bt(vec3(0,0,-1)));
 		playerBody->forceActivationState(1);
 		playerBody->setAngularVelocity(bt(vec3(0,0,0)));
 		cout << playerBody->isActive() << endl;
+		if (inputHandler->Cflag) {
+			dcc->playerStep(dynamicsWorld, dt, 1, 0, 0, 0, 0);
+		}
 		if (inputHandler->Wflag) {
 			btVector3 dir = bt(normalize(player1->getForwardDir()));
 			float magnitude = 0.2f;
@@ -742,7 +754,8 @@ public:
 		bokoBody->forceActivationState(1);
 		bokoBody->getMotionState()->getWorldTransform(trans);
 		btQ = body->getOrientation();
-		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		// physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		physicsLoc = cons(dcc->getLocation());
 		objL["boko"]->translate(physicsLoc - vec3(0,.25,0));
 		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
 		// objL["boko"]->scale(vec3(0.005, 0.005, 0.005));
