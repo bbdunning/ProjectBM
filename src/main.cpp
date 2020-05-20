@@ -48,17 +48,19 @@ public:
 
 	//create GLFW Window
 	WindowManager * windowManager = nullptr;
+	float previousTime = 0.0f;
+
 	// create shaders
 	std::shared_ptr<Program> prog;
 	std::shared_ptr<Program> cubeProg;
 	std::shared_ptr<Program> animProg;
 
-	// Shape to be used (from  file) - modify to support multiple
+	//mesh data
 	unordered_map<string, shared_ptr<GameObject>> objL;
 	map<string, shared_ptr<GameObject>> platforms;
 	vector<HitSphere> playerHitboxes;
-	float previousTime = 0.0f;
 
+	//physics data
 	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
 	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher(collisionConfiguration);
 	btBroadphaseInterface* overlappingPairCache = new btDbvtBroadphase();
@@ -166,7 +168,6 @@ public:
 
 
 	void setLight(shared_ptr<Program> prog) {
-		// glUniform3f(prog->getUniform("LightPos"), .5, .5, 0);
 		glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
 		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
 	}
@@ -263,11 +264,6 @@ public:
 
 	void initPhysics() {
 		dynamicsWorld->setGravity(btVector3(0,-10,0));
-
-		///-----initialization_end-----
-		///create a few basic rigid bodies
-		//keep track of the shapes, we release memory at exit.
-		//make sure to re-use collision shapes among rigid bodies whenever possible!
 
 		{
 			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.f)));
@@ -400,9 +396,8 @@ public:
 		return body;
 	}
 
+	//create a dynamic rigidbody
 	btRigidBody* createGeneralRigidBody(vec3 location, vec3 size) {
-		//create a dynamic rigidbody
-
 		btCollisionShape* colShape = new btBoxShape(bt(size));
 		// btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
 		collisionShapes.push_back(colShape);
@@ -575,37 +570,31 @@ public:
 	}
 
 	void render() {
+		//get frame time
+		float dt = getDeltaTimeSeconds();
+
 		// Get current frame buffer size.
 		int width, height;
-
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
-
-		float dt = getDeltaTimeSeconds();
-		// Clear framebuffer.
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 		float aspect = width/(float)height;
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear FrameBuffer
 
-		// Create the matrix stacks
+		// initialize matrices
 		auto Projection = make_shared<MatrixStack>();
 		auto Model = make_shared<MatrixStack>();
-
-		// Apply perspective projection.
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 10000.0f);
 
 		//draw Skybox
 		drawSkybox(Model, Projection);
 
-		/* bind standard program */
+		/* bind & initialize standard program */
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 		vec3 vd = camera.lookAtPoint - camera.eye;
 		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
-
-		//set initial material and Light
 		setLight(prog);
 
 		//getPosition of object
@@ -619,7 +608,6 @@ public:
 		//draw sandbag
 		setMaterial(1, prog);
 		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
-		// objL["sphere"]->scale(.05);
 		objL["sphere"]->rotate(-PI/2, vec3(1.f,0.f,0.f));
 		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
 		objL["sphere"]->setModel(prog);
@@ -650,6 +638,7 @@ public:
 		objL["ps2"]->setModel(prog);
 		objL["ps2"]->draw(prog);
 
+		//launch projectile
 		if (leftMouse && player1->projectileCooldown <= 0.0f) {
 			player1->projectileCooldown = 1.0f;
 			createRigidBody(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
@@ -697,16 +686,7 @@ public:
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 
-
 		renderProjectiles(prog, objL, projectiles);
-
-
-		//draw platforms
-		for (map<string, shared_ptr<GameObject>>::iterator it=platforms.begin(); it!=platforms.end(); ++it) {
-			it->second->translate(it->second->location);
-			it->second->setModel(prog);
-			it->second->draw(prog);
-		}
 
 		prog->unbind();
 
@@ -714,11 +694,7 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		glUniformMatrix4fv(animProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 		glUniform3f(animProg->getUniform("viewDirection"), vd.x, vd.y, vd.z);
-
-		//set initial material and Light
 		setLight(animProg);
-
-
 
 		if (inputHandler->R)
 			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
