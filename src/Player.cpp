@@ -154,17 +154,29 @@ int Player::update(float dt) {
 
     // location += velocityDir * speed;
     // location += vec3(0, velocity.y, 0);
-    cout << location.x << " " << location.y << " " << location.z << endl;
+    // cout << location.x << " " << location.y << " " << location.z << endl;
     return 0;
 }
 
+//get 3d forward direction
 vec3 Player::getForwardDir() {
     return normalize(lookAtPoint-location);
 }
 
+//get right direction
 vec3 Player::getRightDir() {
     return cross(normalize(lookAtPoint-location), vec3(0,1,0));
 }
+
+//get normailzed forward direction in 2d plane
+vec3 Player::getForwardMoveDir() {
+    vec3 forwardDir = this->getForwardDir();
+    return normalize(vec3(forwardDir.x, 0, forwardDir.z));
+}
+
+// float Player::getForwardSpeed() {
+//     return glm::project(getForwardMoveDir());
+// }
 
 
 Sandbag::Sandbag() {

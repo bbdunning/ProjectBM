@@ -17,6 +17,7 @@ file(GLOB_RECURSE HEADERS "src/*.h" "ext/*/*.h" "ext/glad/*/*.h" "src/*/*.h")
 file(GLOB_RECURSE GLSL "resources/*.glsl")
 
 include_directories("ext")
+include_directories("ext/irrklang")
 include_directories("ext/glad/include")
 
 include_directories("src/Animation")

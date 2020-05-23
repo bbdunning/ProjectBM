@@ -1,6 +1,11 @@
+NOTE:
+    setGravity(btVector3(0,-15,0)); // when in air
+    setGravity(btVector3(0,-10,0)); // when grounded
+
+
 ## 75% Demo ##
-- Character controller
-- interactive stage
+- Character controller //done
+- interactive stage 
 - More Abilities
 - Camera interpolation
 - Shadow Mapping
@@ -42,7 +47,6 @@
 * camera tracking characters
 * camera shake effect
 * airdodge
-* wavedashing
 
 
 ### Additional Notes ###

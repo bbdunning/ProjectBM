@@ -146,10 +146,10 @@ GLint Program::getUniform(const std::string &name) const
 void setMaterial(int i, std::shared_ptr<Program> prog) {  
 	switch (i) {    
 		case 0:
-				glUniform3f(prog->getUniform("MatAmb"), 0.2, 0.2, 0.2);        
-				glUniform3f(prog->getUniform("MatDif"), 0.0, 0.16, 0.9);       
-				glUniform3f(prog->getUniform("MatSpec"), 0.14, 0.2, 0.8);       
-				glUniform1f(prog->getUniform("shine"), 120.0);
+			glUniform3f(prog->getUniform("MatAmb"), 0.2, 0.2, 0.2);        
+			glUniform3f(prog->getUniform("MatDif"), 0.0, 0.16, 0.9);       
+			glUniform3f(prog->getUniform("MatSpec"), 0.14, 0.2, 0.8);       
+			glUniform1f(prog->getUniform("shine"), 120.0);
 		break;    
 		case 1: // 
 			glUniform3f(prog->getUniform("MatAmb"), 0.35, 0.35, 0.35);       
@@ -175,5 +175,11 @@ void setMaterial(int i, std::shared_ptr<Program> prog) {
 			glUniform3f(prog->getUniform("MatSpec"), .8, 0.8, 0.8);       
 			glUniform1f(prog->getUniform("shine"), 100);
 		break;
+		case 5: // 
+			glUniform3f(prog->getUniform("MatAmb"), 0.35, 0.35, 0.35);       
+			glUniform3f(prog->getUniform("MatDif"), 0.3, 0.3, 0.3);       
+			glUniform3f(prog->getUniform("MatSpec"), 0.1, 0.1, 0.1);       
+			glUniform1f(prog->getUniform("shine"), 50.0);
+		break;    
 	}
 }

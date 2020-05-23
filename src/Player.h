@@ -32,6 +32,8 @@ public:
     void setViewAngles(GLFWwindow *window);
     glm::vec3 getForwardDir();
     glm::vec3 getRightDir();
+    glm::vec3 getForwardMoveDir();
+    // float getForwardSpeed();
 };
 
 
