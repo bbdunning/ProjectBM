@@ -160,8 +160,8 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 	if (texture != nullptr)
 		(this->texture)->bind(prog->getUniform("Texture0"));
 
-	if (material != nullptr)
-		material->setMaterial(prog);
+	// if (material != nullptr)
+	// 	material->setMaterial(prog);
 
 	CHECKED_GL_CALL(glBindVertexArray(vaoID));
 

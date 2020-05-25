@@ -50,7 +50,11 @@ class Application : public EventCallbacks
 
 public:
 
-	bool isGrounded = false;
+	//shadow data
+	bool SHADOW = true;
+	GLuint depthMapFBO;
+	GLuint depthMap;
+	const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
 
 	//create GLFW Window
 	WindowManager * windowManager = nullptr;
@@ -60,6 +64,8 @@ public:
 	std::shared_ptr<Program> prog;
 	std::shared_ptr<Program> cubeProg;
 	std::shared_ptr<Program> animProg;
+	std::shared_ptr<Program> DepthProg;
+	std::shared_ptr<Program> DepthProgDebug;
 
 	//mesh data
 	unordered_map<string, shared_ptr<GameObject>> objL;
@@ -98,13 +104,6 @@ public:
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
-	// vector<std::string> faces {           
-	// 	"Newdawn1_right.png",           
-	// 	"Newdawn1_left.png",           
-	// 	"Newdawn1_up.png",           
-	// 	"Newdawn1_down.png",           
-	// 	"Newdawn1_back.png",           
-	// 	"Newdawn1_front.png"};
 	vector<std::string> faces {           
 		"posx.jpg",           
 		"negx.jpg",           
@@ -239,12 +238,61 @@ public:
 		cubeProg->addAttribute("vertPos");
 		cubeProg->addAttribute("vertNor");
 
+		DepthProg = make_shared<Program>();
+		DepthProg->setVerbose(true);
+		DepthProg->setShaderNames(resourceDirectory + "/shaders/depth_vert.glsl", resourceDirectory + "/shaders/depth_frag.glsl");
+		DepthProg->init();
+		DepthProg->addUniform("LP");
+		DepthProg->addUniform("LV");
+		DepthProg->addUniform("M");
+		DepthProg->addAttribute("vertPos");
+		//un-needed, better solution to modifying shape
+		DepthProg->addAttribute("vertNor");
+		DepthProg->addAttribute("vertTex");
+
+		DepthProgDebug = make_shared<Program>();
+		DepthProgDebug->setVerbose(true);
+		DepthProgDebug->setShaderNames(resourceDirectory + "/shaders/depth_vertDebug.glsl", resourceDirectory + "/shaders/depth_fragDebug.glsl");
+		DepthProgDebug->init();
+		DepthProgDebug->addUniform("LP");
+		DepthProgDebug->addUniform("LV");
+		DepthProgDebug->addUniform("M");
+		DepthProgDebug->addAttribute("vertPos");
+		//un-needed, better solution to modifying shape
+		DepthProgDebug->addAttribute("vertNor");
+		DepthProgDebug->addAttribute("vertTex");
+
 		inputHandler->init();
 		camera.init();
 		camera.setInputHandler(inputHandler);
 		player1->init(inputHandler);
 		// player1->playerBody = playerBody;
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
+		initShadow();
+	}
+
+	void initShadow() {
+
+		//generate the FBO for the shadow depth
+		glGenFramebuffers(1, &depthMapFBO);
+
+		//generate the texture
+		glGenTextures(1, &depthMap);
+		glBindTexture(GL_TEXTURE_2D, depthMap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, S_WIDTH, S_HEIGHT, 
+			0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		//bind with framebuffer's depth buffer
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+		glDrawBuffer(GL_NONE);
+		glReadBuffer(GL_NONE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void drawSkybox(shared_ptr<MatrixStack> Model, shared_ptr<MatrixStack> Projection) {
@@ -423,8 +471,8 @@ public:
 		return body;
 	}
 
-	void renderProjectiles(shared_ptr<Program> prog, unordered_map<string, shared_ptr<GameObject>> &objL, vector<btRigidBody*> &projectiles) {
-		setMaterial(5, prog);
+	void renderProjectiles(shared_ptr<Program> currentShader, unordered_map<string, shared_ptr<GameObject>> &objL, vector<btRigidBody*> &projectiles) {
+		// setMaterial(5, currentShader);
 
 		for (int i=0; i<projectiles.size(); i++) {
 			btCollisionObject* obj = projectiles[i];
@@ -438,8 +486,8 @@ public:
 			objL["sphere"]->scale(.25f);
 			objL["sphere"]->rotate(-PI/2, vec3(1.f,0.f,0.f));
 			objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
-			objL["sphere"]->setModel(prog);
-			objL["sphere"]->draw(prog); 
+			objL["sphere"]->setModel(currentShader);
+			objL["sphere"]->draw(currentShader); 
 		}
 	}
 
@@ -464,7 +512,6 @@ public:
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
 	}
-	
 
 	float getDeltaTimeSeconds() {
 		float currentTime = glfwGetTime();
@@ -553,7 +600,7 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
 	}
 
-	void drawObjects() {
+	void drawObjects(shared_ptr<Program> currentShader) {
 		//getPosition of object
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
 		btRigidBody* body = btRigidBody::upcast(obj);
@@ -563,25 +610,41 @@ public:
 		btQuaternion btQ = body->getOrientation();
 
 		//draw sphere
-		setMaterial(1, prog);
+		// setMaterial(1, currentShader);
 		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
 		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
-		objL["sphere"]->setModel(prog);
-		objL["sphere"]->draw(prog); 
+		objL["sphere"]->setModel(currentShader);
+		objL["sphere"]->draw(currentShader); 
 
 		//draw ps2
 		objL["ps2"]->translate(vec3(5,-3.15f,0));
 		objL["ps2"]->scale(vec3(.35f, .35f, .35f));
 		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
-		setMaterial(5, prog);
-		objL["ps2"]->setModel(prog);
-		objL["ps2"]->draw(prog);
+		// setMaterial(5, currentShader);
+		objL["ps2"]->setModel(currentShader);
+		objL["ps2"]->draw(currentShader);
 
 		//renderProjectiles
-		renderProjectiles(prog, objL, projectiles);
+		renderProjectiles(currentShader, objL, projectiles);
 	}
 
 	void drawAnim() {
+	}
+	/* TODO fix */
+	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
+		float edge = 15.f;
+		mat4 ortho = glm::ortho(-edge, edge, -edge, edge, 0.1f, 2*edge);
+		//fill in the glUniform call to send to the right shader!
+		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
+		return ortho;
+	}
+
+	/* TODO fix */
+	mat4 SetLightView(shared_ptr<Program> curShade, vec3 pos, vec3 LA, vec3 up) {
+		mat4 Cam = glm::lookAt(pos, LA, up);
+		glUniformMatrix4fv(curShade->getUniform("LV"), 1, GL_FALSE, value_ptr(Cam));
+		//fill in the glUniform call to send to the right shader!
+		return Cam;
 	}
 
 	void render() {
@@ -603,24 +666,63 @@ public:
 		//draw Skybox
 		drawSkybox(Model, Projection);
 
+		//shadow Data
+		mat4 LP, LV, LS;
+		vec3 lightPos = vec3(5,3,-4);
+		vec3 lightLA = lightPos + vec3(-4,-3,-20);
+		vec3 lightUp = vec3(0,1,0);
+
+		//generate shadow map
+		if (SHADOW) {
+			//set up light's depth map
+			glViewport(0, 0, S_WIDTH, S_WIDTH);
+
+			//sets up the output to be out FBO
+			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			glCullFace(GL_FRONT);
+
+			//set up shadow shader and render the scene
+			DepthProg->bind();
+			LP = SetOrthoMatrix(DepthProg);
+			LV = SetLightView(DepthProg, lightPos, lightLA, lightUp);
+			LS = LP*LV;
+			drawObjects(DepthProg);
+			DepthProg->unbind();
+
+			//set culling back to normal
+			glCullFace(GL_BACK);
+
+			//this sets the output back to the screen
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+		
+		  	DepthProgDebug->bind();
+				//render scene from light's point of view
+				SetOrthoMatrix(DepthProgDebug);
+				SetLightView(DepthProgDebug, lightPos, lightLA, lightUp);
+				drawObjects(DepthProgDebug);
+  			DepthProgDebug->unbind();
+
 		//update player
 		player1->update(dt);
 		player1->move(dt, playerBody, dynamicsWorld);
 		checkAbilities();
 
 		/* bind & initialize standard program */
-		prog->bind();
-			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
-			drawObjects();
-		prog->unbind();
+		// prog->bind();
+		// 	setMaterial(5, prog);
+		// 	sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+		// 	drawObjects(prog);
+		// prog->unbind();
 
-		animProg->bind();
-			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
-			setPlayer();
-			objL["animModel"]->draw(animProg);
-			setBoko();
-			objL["boko"]->draw(animProg);
-		animProg->unbind();
+		// animProg->bind();
+		// 	sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
+		// 	setPlayer();
+		// 	objL["animModel"]->draw(animProg);
+		// 	setBoko();
+		// 	objL["boko"]->draw(animProg);
+		// animProg->unbind();
 
 		player1->updateLocation(playerBody);
 
@@ -648,7 +750,8 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	windowManager->init(1520, 1080);
+	// windowManager->init(1520, 1080);
+	windowManager->init(1024, 1024);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
