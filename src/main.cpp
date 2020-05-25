@@ -55,6 +55,7 @@ public:
 	GLuint depthMapFBO;
 	GLuint depthMap;
 	const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
+	float dx = 0;
 
 	//create GLFW Window
 	WindowManager * windowManager = nullptr;
@@ -65,7 +66,11 @@ public:
 	std::shared_ptr<Program> cubeProg;
 	std::shared_ptr<Program> animProg;
 	std::shared_ptr<Program> DepthProg;
+	//delete me after debug
 	std::shared_ptr<Program> DepthProgDebug;
+	std::shared_ptr<Program> DebugProg;
+	GLuint quad_VertexArrayID;
+	GLuint quad_vertexbuffer;
 
 	//mesh data
 	unordered_map<string, shared_ptr<GameObject>> objL;
@@ -170,7 +175,8 @@ public:
 
 
 	void setLight(shared_ptr<Program> prog) {
-		glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
+		// glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
+		glUniform3f(prog->getUniform("LightPos"), 0.f, 5.f, 0.f);
 		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
 	}
 
@@ -192,6 +198,8 @@ public:
 		prog->addUniform("P");
 		prog->addUniform("V");
 		prog->addUniform("M");
+		prog->addUniform("LS");
+		prog->addUniform("shadowDepth");
 		prog->addAttribute("vertPos");
 		prog->addAttribute("vertNor");
 		prog->addAttribute("vertTex");
@@ -261,6 +269,14 @@ public:
 		//un-needed, better solution to modifying shape
 		DepthProgDebug->addAttribute("vertNor");
 		DepthProgDebug->addAttribute("vertTex");
+
+		DebugProg = make_shared<Program>();
+		DebugProg->setVerbose(true);
+		DebugProg->setShaderNames(resourceDirectory + "/shaders/pass_vert.glsl", resourceDirectory + "/shaders/pass_texfrag.glsl");
+		DebugProg->init();
+		DebugProg->addUniform("texBuf");
+		DebugProg->addAttribute("vertPos");
+
 
 		inputHandler->init();
 		camera.init();
@@ -497,6 +513,7 @@ public:
 
 		//load geometry, initialize meshes, create objects
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
+		objL["cube2"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "ps2");
 		objL["animModel"] = GameObject::create(rDir + "anim/", "toto.dae", "animModel");
@@ -626,15 +643,19 @@ public:
 
 		//renderProjectiles
 		renderProjectiles(currentShader, objL, projectiles);
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
 	}
 
 	void drawAnim() {
 	}
 	/* TODO fix */
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
+		float edge = 20.f;
 		float edge = 15.f;
 		mat4 ortho = glm::ortho(-edge, edge, -edge, edge, 0.1f, 2*edge);
-		//fill in the glUniform call to send to the right shader!
 		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
 		return ortho;
 	}
@@ -645,6 +666,26 @@ public:
 		glUniformMatrix4fv(curShade->getUniform("LV"), 1, GL_FALSE, value_ptr(Cam));
 		//fill in the glUniform call to send to the right shader!
 		return Cam;
+	}
+	//delete me after debug
+	void initQuad() {
+
+	//now set up a simple quad for rendering FBO
+		glGenVertexArrays(1, &quad_VertexArrayID);
+		glBindVertexArray(quad_VertexArrayID);
+
+		static const GLfloat g_quad_vertex_buffer_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		1.0f,  1.0f, 0.0f,
+		};
+
+		glGenBuffers(1, &quad_vertexbuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
 	}
 
 	void render() {
@@ -666,36 +707,49 @@ public:
 		//draw Skybox
 		drawSkybox(Model, Projection);
 
+		if (inputHandler->Ctrlflag)
+			dx += .1;
+		if (inputHandler->Cflag)
+			dx -= .1;
+
 		//shadow Data
 		mat4 LP, LV, LS;
-		vec3 lightPos = vec3(5,3,-4);
-		vec3 lightLA = lightPos + vec3(-4,-3,-20);
+		// vec3 lightPos = vec3(5,3,-4);
+		// vec3 lightPos = vec3(0,5,0);
+		// vec3 lightLA = lightPos + vec3(-4,-3,-20);
+		// vec3 lightPos = vec3(0,20 + dx,-10);
+		// vec3 lightLA = lightPos + vec3(0,-10,1);
+		// vec3 lightUp = vec3(0,1,0);
+		vec3 lightPos = vec3(3,15 + dx,15);
+		vec3 lightLA = lightPos + vec3(0,-10,-10);
 		vec3 lightUp = vec3(0,1,0);
 
 		//generate shadow map
-		if (SHADOW) {
-			//set up light's depth map
-			glViewport(0, 0, S_WIDTH, S_WIDTH);
+		glViewport(0, 0, S_WIDTH, S_WIDTH);
 
-			//sets up the output to be out FBO
-			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			glCullFace(GL_FRONT);
+		//sets up the output to be out FBO
+		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glCullFace(GL_FRONT);
+		
+		//Second pass, now draw the scene (or do debug drawing)
+		glViewport(0, 0, width, height);
+		// Clear framebuffer.
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			//set up shadow shader and render the scene
-			DepthProg->bind();
+		//set up shadow shader and render the scene
+		DepthProg->bind();
 			LP = SetOrthoMatrix(DepthProg);
 			LV = SetLightView(DepthProg, lightPos, lightLA, lightUp);
 			LS = LP*LV;
 			drawObjects(DepthProg);
-			DepthProg->unbind();
+		DepthProg->unbind();
 
-			//set culling back to normal
-			glCullFace(GL_BACK);
+		//set culling back to normal
+		glCullFace(GL_BACK);
 
-			//this sets the output back to the screen
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
+		//this sets the output back to the screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
 		// DepthProgDebug->bind();
 		// 	//render scene from light's point of view
@@ -704,20 +758,38 @@ public:
 		// 	drawObjects(DepthProgDebug);
 		// DepthProgDebug->unbind();
 
+		DebugProg->bind();
+		//send texture
+  			glActiveTexture(GL_TEXTURE0);
+  			glBindTexture(GL_TEXTURE_2D, depthMap);
+  			glUniform1i(DebugProg->getUniform("texBuf"), 0);
+        
+        //draw the quad
+  			glEnableVertexAttribArray(0);
+  			glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+  			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
+  			glDrawArrays(GL_TRIANGLES, 0, 6);
+  			glDisableVertexAttribArray(0);
+		DebugProg->unbind();
+
 		//update player
 		player1->update(dt);
 		player1->move(dt, playerBody, dynamicsWorld);
 		checkAbilities();
 
 		/* bind & initialize standard program */
-		prog->bind();
-			setMaterial(5, prog);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, depthMap);
-			glUniform1i(prog->getUniform("shadowDepth"), 1);
-			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
-			drawObjects(prog);
-		prog->unbind();
+		// prog->bind();
+		// 	setMaterial(5, prog);
+		// 	sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+		// 	glActiveTexture(GL_TEXTURE1);
+		// 	glBindTexture(GL_TEXTURE_2D, depthMap);
+		// 	glUniform1i(prog->getUniform("shadowDepth"), 1);
+		// 	glUniformMatrix4fv(prog->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
+		// 	drawObjects(prog);
+		// 	objL["cube2"]->translate(lightPos);
+		// 	objL["cube2"]->setModel(prog);
+		// 	objL["cube2"]->draw(prog);
+		// prog->unbind();
 
 		// animProg->bind();
 		// 	sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
@@ -753,14 +825,15 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	// windowManager->init(1520, 1080);
-	windowManager->init(1024, 1024);
+	windowManager->init(1520, 1080);
+	// windowManager->init(1024, 1024);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
 	application->initPhysics();
+	application->initQuad();
 
 	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 2650, 1440, 144);
 

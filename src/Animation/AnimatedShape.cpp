@@ -157,8 +157,8 @@ void AnimatedShape::draw(const shared_ptr<Program> prog) const
 	int h_pos, h_nor, h_tex, h_jid, h_wid;
 	h_pos = h_nor = h_tex = h_jid = h_wid = -1;
 
-	if (texture != nullptr)
-		(this->texture)->bind(prog->getUniform("Texture0"));
+	// if (texture != nullptr)
+	// 	(this->texture)->bind(prog->getUniform("Texture0"));
 
 	// if (material != nullptr)
 	// 	material->setMaterial(prog);
