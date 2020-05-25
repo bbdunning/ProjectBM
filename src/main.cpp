@@ -697,12 +697,12 @@ public:
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 		
-		  	DepthProgDebug->bind();
-				//render scene from light's point of view
-				SetOrthoMatrix(DepthProgDebug);
-				SetLightView(DepthProgDebug, lightPos, lightLA, lightUp);
-				drawObjects(DepthProgDebug);
-  			DepthProgDebug->unbind();
+		// DepthProgDebug->bind();
+		// 	//render scene from light's point of view
+		// 	SetOrthoMatrix(DepthProgDebug);
+		// 	SetLightView(DepthProgDebug, lightPos, lightLA, lightUp);
+		// 	drawObjects(DepthProgDebug);
+		// DepthProgDebug->unbind();
 
 		//update player
 		player1->update(dt);
@@ -710,11 +710,14 @@ public:
 		checkAbilities();
 
 		/* bind & initialize standard program */
-		// prog->bind();
-		// 	setMaterial(5, prog);
-		// 	sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
-		// 	drawObjects(prog);
-		// prog->unbind();
+		prog->bind();
+			setMaterial(5, prog);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, depthMap);
+			glUniform1i(prog->getUniform("shadowDepth"), 1);
+			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+			drawObjects(prog);
+		prog->unbind();
 
 		// animProg->bind();
 		// 	sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
