@@ -32,6 +32,7 @@ public:
     float prevY;
     float projectileCooldown = 0;
     HitSphere environmentalHbox;
+    // btRigidBody *playerBody;
 
     Player();
     int init(std::shared_ptr<InputHandler> ih);
@@ -42,26 +43,6 @@ public:
     glm::vec3 getForwardMoveDir();
     float getFacingAngle();
     void move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWorld);
+    void updateLocation(btRigidBody *playerBody);
     // float getForwardSpeed();
-};
-
-
-class Sandbag{
-public:
-    glm::vec3 velocity;
-    glm::vec3 location;
-    std::shared_ptr<InputHandler> ih;
-    std::shared_ptr<CollisionDetector> cd;
-    bool isGrounded;
-    bool standing;
-    bool hasDoubleJump;
-    bool facingRight;
-    HitSphere environmentalHbox;
-    float currentPercent = 0;
-    bool isHitstun = false;
-
-    Sandbag();
-    int init(std::shared_ptr<InputHandler> ih);
-    int update(std::vector<HitSphere> &hitboxes);
-    int checkCollisions(std::vector<HitSphere> &hitboxes);
 };

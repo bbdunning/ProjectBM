@@ -25,19 +25,15 @@ vec3 cons(btVector3 v) {
 
 int Player::init(shared_ptr<InputHandler> ih) {
     this->velocity=vec3(0,0,0);
-    // this->location=vec3(0,-.7,-2);
     this->location=vec3(0,0,-2);
     this->ih = ih;
     this->isGrounded = false;
     this->standing = true;
-    this->hasDoubleJump = true;
-    this->facingRight = true;
     theta = 0;
     phi = 0;
     prevX = 0;
     prevY = 0;
 
-    this->environmentalHbox = HitSphere(this->location, .008);
     return 0;
 }
 
@@ -60,11 +56,6 @@ int Player::update(float dt) {
     // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
     if (projectileCooldown > 0.0f)
         projectileCooldown -= dt;
-    this->environmentalHbox.center = this->location;
-    bool isOnPlatform = false;
-
-    vec3 forward = normalize(vec3(lookAtPoint.x - location.x, 0, lookAtPoint.z - location.z));
-    vec3 right = cross(normalize(lookAtPoint-location), vec3(0,1,0));
 
     float radius = 50;
     lookAtPoint = vec3(
@@ -107,28 +98,24 @@ void Player::move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWo
 			playerMoving = true;
 			btVector3 dir = bt(normalize(getForwardMoveDir()));
 			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Dflag && strafeSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(getRightDir()));
 			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Aflag && strafeSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(-getRightDir()));
 			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Sflag && forwardSpeed < 6) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(-getForwardMoveDir()));
 			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Spaceflag && isGrounded) {
@@ -158,182 +145,13 @@ void Player::move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWo
 		else {
 			playerBody->setGravity(btVector3(0,-18,0));
 		}
-
-
 }
 
-// float Player::getForwardSpeed() {
-//     return glm::project(getForwardMoveDir());
-// }
-
-
-Sandbag::Sandbag() {
-}
-
-int Sandbag::init(shared_ptr<InputHandler> ih) {
-    this->velocity=vec3(0,0,0);
-    // this->location=vec3(0,-.7,-2);
-    this->location=vec3(1,-1,-2);
-    this->ih = ih;
-    this->isGrounded = true;
-    this->standing = true;
-    this->hasDoubleJump = true;
-    this->facingRight = true;
-
-    this->environmentalHbox = HitSphere(this->location, .008);
-    return 0;
-}
-
-int Sandbag::checkCollisions(vector<HitSphere> &hitboxes){
-    for (int i=0; i<hitboxes.size(); i++) {
-        if (CollisionDetector::sphereCheck(this->environmentalHbox, hitboxes[i])) {
-            if (this->environmentalHbox.center.x < hitboxes[i].center.x) {
-                return -1;
-            } else {
-                return 1;
-            }
-        }
-    }
-    return 0;
-}
-
-int Sandbag::update(vector<HitSphere> &hitboxes) {
-    // int axesCount;
-    // const float *axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axesCount);
-    // std::cout << "Left Stick X Axis: " << axes[0] << std::endl;
-    this->environmentalHbox.center = this->location;
-    bool isOnPlatform = false;
-
-    if (this->checkCollisions(hitboxes) != 0) {
-        cout << this->checkCollisions(hitboxes) << endl;
-        this->currentPercent += .06;
-        if (this->checkCollisions(hitboxes) == 1) {
-            this->velocity = vec3(.2,.2,0) * currentPercent;
-        } else {
-            this->velocity = vec3(-.2,.2,0) * currentPercent;
-        }
-        isGrounded = false;
-        standing = false;
-    }
-
-    //landing
-    for (int i=1; i<cd->environmentBoxes.size(); i++) {
-        if (cd->check(*cd->environmentBoxes[i], this->environmentalHbox) && velocity.y <= 0 && !ih->kp2) {// && !isGrounded) {
-            if (!isGrounded) {
-                standing=true;
-            }
-            isGrounded = true;
-            velocity.y = 0;
-            hasDoubleJump = true;
-            isOnPlatform = true;
-            this->location.y = cd->environmentBoxes[i]->max.y;
-        } 
-    }
-    if (cd->check2(*cd->environmentBoxes[0], this->environmentalHbox) && velocity.y <=0) {// && !isGrounded) {
-        if (!isGrounded) {
-            standing=true;
-        }
-        isGrounded = true;
-        velocity.y = 0;
-        hasDoubleJump = true;
-        isOnPlatform = true;
-        this->location.y = cd->environmentBoxes[0]->max.y;
-    } 
-    if (!isOnPlatform || ih->kp2) {
-        isGrounded = false;
-    }
-
-
-    //gravity
-    if (!isGrounded && velocity.y < MAX_GRAVITY)
-        velocity.y -= .004;
-
-    //jump
-    if (ih->kp5 && isGrounded) {
-        // velocity.y += .065; //fullhop
-        velocity.y = .07; //shorthop
-        velocity.x = clamp(velocity.x, -0.018f, 0.018f);
-        isGrounded = false;
-        standing = false;
-    }
-    
-    //double jump
-    // if (ih->Upflag && !isGrounded && hasDoubleJump) {
-        //double jump should be able to change velocity direction
-        // velocity.y = .05;
-        // hasDoubleJump = false;
-    // }
-    
-    //grounded movement
-    if (ih->kp1 && velocity.x > -MAX_SPEED && isGrounded) {
-        if (standing) {
-            velocity.x = -.02;
-            facingRight = false;
-        }
-        else if (!facingRight)
-            velocity.x -= .002;
-        else if (facingRight) {
-            velocity.x = -MAX_SPEED;
-            facingRight = false;
-        }
-        standing = false;
-    }
-    if (ih->kp3 && velocity.x < MAX_SPEED && isGrounded)
-    {
-        if (standing) {
-            velocity.x = .02;
-            facingRight = true;
-        }
-        else if (facingRight)
-            velocity.x += .002;
-        else if (!facingRight) {
-            velocity.x = MAX_SPEED;
-            facingRight = true;
-        }
-        standing = false;
-    }
-
-    //arial movment
-    if (ih->kp1 && (velocity.x > -MAX_AIR_SPEED) && !isGrounded)
-        velocity.x -= .0009;
-    if (ih->kp3 && (velocity.x < MAX_AIR_SPEED) && !isGrounded)
-        velocity.x += .0009;
-    
-    //grounded friction
-    if (isGrounded && velocity.x < 0.0f && !ih->kp1 && !standing)
-    {
-        //stop and stand
-        if (velocity.x > -.009)
-            standing = true;
-        //slow down
-        else
-            velocity.x += .002f;
-    }
-    if (isGrounded && velocity.x > 0.0f && !ih->kp3 && !standing)
-    {
-        if (velocity.x < .009)
-            standing = true;
-        else
-            velocity.x -= .002;
-    }
-
-    if ((velocity.x > -.0005 && velocity.x < .0005) && isGrounded)
-        standing = true;
-
-    if (standing) velocity.x = 0.0f;
-    
-    //controller
-    // if (axes[0]==-1 && velocity.x > -MAX_SPEED)
-    //     velocity.x -= .001;
-    // if (axes[0]==1 && velocity.x < MAX_SPEED)
-    //     velocity.x += .001;
-    // if (!axes[0]==-1 && velocity.x < 0)
-    //     velocity.x += .001;
-    // if (!axes[0]==1 && velocity.x > 0)
-    //     velocity.x -= .001;
-
-    location += velocity;
-    // cout << location.x << " " << location.y << " " << location.z << endl;
-
-    return 0;
+void Player::updateLocation(btRigidBody *playerBody) {
+    btTransform trans;
+    vec3 physicsLoc;
+    btQuaternion btQ;
+    playerBody->getMotionState()->getWorldTransform(trans);
+    physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+    location = physicsLoc;
 }

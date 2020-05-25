@@ -243,6 +243,7 @@ public:
 		camera.init();
 		camera.setInputHandler(inputHandler);
 		player1->init(inputHandler);
+		// player1->playerBody = playerBody;
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
@@ -534,11 +535,6 @@ public:
 
 	//render player in correct position & animation
 	void playerPreRender() {
-		btTransform trans;
-		vec3 physicsLoc;
-		playerBody->getMotionState()->getWorldTransform(trans);
-		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		player1->location = physicsLoc;
 		objL["animModel"]->translate(player1->location - vec3(0,.1,0));
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
 		objL["animModel"]->rotate(PI/2 + player1->getFacingAngle(), vec3(0, 1, 0));
@@ -590,9 +586,15 @@ public:
 		auto Model = make_shared<MatrixStack>();
 		Projection->pushMatrix();
 		Projection->perspective(45.0f, aspect, 0.01f, 10000.0f);
+		setCameraEye();
 
 		//draw Skybox
 		drawSkybox(Model, Projection);
+
+		//update player
+		player1->update(dt);
+		player1->move(dt, playerBody, dynamicsWorld);
+		checkAbilities();
 
 		/* bind & initialize standard program */
 		prog->bind();
@@ -602,12 +604,9 @@ public:
 
 		animProg->bind();
 		sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
-		setCameraEye();
 
-		player1->update(dt);
+		//setup Player
 		playerPreRender();
-		checkAbilities();
-		player1->move(dt, playerBody, dynamicsWorld);
 		//draw player
 		objL["animModel"]->draw(animProg);
 
@@ -626,6 +625,8 @@ public:
 		objL["boko"]->draw(animProg);
 
 		animProg->unbind();
+
+		player1->updateLocation(playerBody);
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
