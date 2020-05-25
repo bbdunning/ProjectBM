@@ -564,6 +564,23 @@ public:
 		}
 	}
 
+	void setBoko() {
+		btTransform trans;
+		vec3 physicsLoc;
+		bokoBody->forceActivationState(1);
+		bokoBody->getMotionState()->getWorldTransform(trans);
+		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		objL["boko"]->translate(physicsLoc - vec3(0,.2,0));
+		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
+		objL["boko"]->rotate(-PI/2, vec3(0, 1, 0));
+		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
+		objL["boko"]->doAnimation(0);
+		setMaterial(5, animProg);
+		objL["boko"]->setModel(animProg);
+		((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
+		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
+	}
+
 	void render() {
 		// Get current frame buffer size & dt
 		float dt = getDeltaTimeSeconds();
@@ -610,18 +627,7 @@ public:
 		//draw player
 		objL["animModel"]->draw(animProg);
 
-		bokoBody->forceActivationState(1);
-		bokoBody->getMotionState()->getWorldTransform(trans);
-		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		objL["boko"]->translate(physicsLoc - vec3(0,.2,0));
-		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
-		objL["boko"]->rotate(-PI/2, vec3(0, 1, 0));
-		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
-		objL["boko"]->doAnimation(0);
-		setMaterial(5, animProg);
-		objL["boko"]->setModel(animProg);
-		((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
-		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
+		setBoko();
 		objL["boko"]->draw(animProg);
 
 		animProg->unbind();
