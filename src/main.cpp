@@ -481,34 +481,6 @@ public:
 		return vec3(v.getX(), v.getY(), v.getZ());
 	}
 
-	void drawObjects() {
-		//getPosition of object
-		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
-		btRigidBody* body = btRigidBody::upcast(obj);
-		btTransform trans;
-		body->getMotionState()->getWorldTransform(trans);
-		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		btQuaternion btQ = body->getOrientation();
-
-		//draw sphere
-		setMaterial(1, prog);
-		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
-		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
-		objL["sphere"]->setModel(prog);
-		objL["sphere"]->draw(prog); 
-
-		//draw ps2
-		objL["ps2"]->translate(vec3(5,-3.15f,0));
-		objL["ps2"]->scale(vec3(.35f, .35f, .35f));
-		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
-		setMaterial(5, prog);
-		objL["ps2"]->setModel(prog);
-		objL["ps2"]->draw(prog);
-
-		//renderProjectiles
-		renderProjectiles(prog, objL, projectiles);
-	}
-
 	void setCameraEye() {
 		if (inputHandler->R)
 			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
@@ -534,7 +506,7 @@ public:
 	}
 
 	//render player in correct position & animation
-	void playerPreRender() {
+	void setPlayer() {
 		objL["animModel"]->translate(player1->location - vec3(0,.1,0));
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
 		objL["animModel"]->rotate(PI/2 + player1->getFacingAngle(), vec3(0, 1, 0));
@@ -581,6 +553,37 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
 	}
 
+	void drawObjects() {
+		//getPosition of object
+		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
+		btRigidBody* body = btRigidBody::upcast(obj);
+		btTransform trans;
+		body->getMotionState()->getWorldTransform(trans);
+		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+		btQuaternion btQ = body->getOrientation();
+
+		//draw sphere
+		setMaterial(1, prog);
+		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
+		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		objL["sphere"]->setModel(prog);
+		objL["sphere"]->draw(prog); 
+
+		//draw ps2
+		objL["ps2"]->translate(vec3(5,-3.15f,0));
+		objL["ps2"]->scale(vec3(.35f, .35f, .35f));
+		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
+		setMaterial(5, prog);
+		objL["ps2"]->setModel(prog);
+		objL["ps2"]->draw(prog);
+
+		//renderProjectiles
+		renderProjectiles(prog, objL, projectiles);
+	}
+
+	void drawAnim() {
+	}
+
 	void render() {
 		// Get current frame buffer size & dt
 		float dt = getDeltaTimeSeconds();
@@ -589,14 +592,6 @@ public:
 		glViewport(0, 0, width, height);
 		float aspect = width/(float)height;
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear FrameBuffer
-
-		//remove all these
-		btCollisionObject* obj;
-		btRigidBody* body;
-		btTransform trans;
-		vec3 physicsLoc;
-		btQuaternion btQ;
-
 
 		// initialize matrices
 		auto Projection = make_shared<MatrixStack>();
@@ -615,21 +610,16 @@ public:
 
 		/* bind & initialize standard program */
 		prog->bind();
-		sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
-		drawObjects();
+			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+			drawObjects();
 		prog->unbind();
 
 		animProg->bind();
-		sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
-
-		//setup Player
-		playerPreRender();
-		//draw player
-		objL["animModel"]->draw(animProg);
-
-		setBoko();
-		objL["boko"]->draw(animProg);
-
+			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
+			setPlayer();
+			objL["animModel"]->draw(animProg);
+			setBoko();
+			objL["boko"]->draw(animProg);
 		animProg->unbind();
 
 		player1->updateLocation(playerBody);
