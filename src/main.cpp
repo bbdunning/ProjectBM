@@ -607,7 +607,7 @@ public:
 		player1->update(dt);
 		playerPreRender();
 		checkAbilities();
-		player1->move(playerBody);
+		player1->move(dt, playerBody, dynamicsWorld);
 		//draw player
 		objL["animModel"]->draw(animProg);
 

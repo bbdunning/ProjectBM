@@ -1,7 +1,3 @@
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-
 #include "WindowManager.h"
 #include "Player.h"
 #include "InputHandler.h"
@@ -17,6 +13,14 @@ using namespace std;
 #define viewFactor .002
 
 Player::Player() {
+}
+
+btVector3 bt(vec3 v) {
+    return btVector3(v.x, v.y, v.z);
+}
+
+vec3 cons(btVector3 v) {
+    return vec3(v.getX(), v.getY(), v.getZ());
 }
 
 int Player::init(shared_ptr<InputHandler> ih) {
@@ -91,50 +95,50 @@ float Player::getFacingAngle() {
     return -glm::orientedAngle(normalize(vec3(lookAtPoint.x, 0, lookAtPoint.z)), vec3(1, 0, 0), vec3(0,1,0));
 }
 
-void Player::move(btRigidBody *playerBody) {
+void Player::move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWorld) {
 		//move player
 		bool playerMoving = false;
 		playerBody->forceActivationState(1);
 		playerBody->setAngularVelocity(bt(vec3(0,0,0)));
-		float forwardSpeed = length(proj(cons(playerBody->getLinearVelocity()), getForwardMoveDir()));
-		float strafeSpeed= length(proj(cons(playerBody->getLinearVelocity()), cross(getForwardMoveDir(),vec3(0,1,0))));
+		float forwardSpeed = length(glm::proj(cons(playerBody->getLinearVelocity()), getForwardMoveDir()));
+		float strafeSpeed= length(glm::proj(cons(playerBody->getLinearVelocity()), cross(getForwardMoveDir(),vec3(0,1,0))));
 
-		if (inputHandler->Wflag && forwardSpeed < 7) {
+		if (ih->Wflag && forwardSpeed < 7) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(getForwardMoveDir()));
 			float magnitude = 25.f * dt;
 			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
-		if (inputHandler->Dflag && strafeSpeed < 5) {
+		if (ih->Dflag && strafeSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(getRightDir()));
 			float magnitude = 25.f * dt;
 			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
-		if (inputHandler->Aflag && strafeSpeed < 5) {
+		if (ih->Aflag && strafeSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(-getRightDir()));
 			float magnitude = 25.f * dt;
 			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
-		if (inputHandler->Sflag && forwardSpeed < 6) {
+		if (ih->Sflag && forwardSpeed < 6) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(-getForwardMoveDir()));
 			float magnitude = 25.f * dt;
 			vec3 v = cons(playerBody->getLinearVelocity());
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
-		if (inputHandler->Spaceflag && isGrounded) {
+		if (ih->Spaceflag && isGrounded) {
 			btVector3 dir = bt(vec3(0,.5,0));
 			playerBody->setLinearVelocity(playerBody->getLinearVelocity() + btVector3(0,1.0f,0));
 		}
 
 		//raycast straight down
-		btVector3 btFrom = bt(location);
-		btVector3 btTo(location.x, location.y - .3f, location.z);
+		btVector3 btFrom = bt(this->location);
+		btVector3 btTo(this->location.x, this->location.y - .3f, this->location.z);
 		btCollisionWorld::ClosestRayResultCallback res(btFrom, btTo);
 		dynamicsWorld->rayTest(btFrom, btTo, res);
 		if(res.hasHit()){
@@ -211,17 +215,6 @@ int Sandbag::update(vector<HitSphere> &hitboxes) {
         isGrounded = false;
         standing = false;
     }
-    //landing
-    // if (location.y <= -1) {
-    //     if (!isGrounded) {
-    //         //add landing lag
-    //         location.y = -1;
-    //         standing = true;
-    //     }
-    //     isGrounded = true;
-    //     velocity.y = 0;
-    //     hasDoubleJump = true;
-    // }
 
     //landing
     for (int i=1; i<cd->environmentBoxes.size(); i++) {

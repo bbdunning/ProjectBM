@@ -1,8 +1,11 @@
 #include <memory>
+#include <iostream>
 #include <string>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/vector_angle.hpp>
+#include <glm/gtx/projection.hpp>
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>
 #include <bullet/LinearMath/btAabbUtil2.h>
@@ -38,7 +41,7 @@ public:
     glm::vec3 getRightDir();
     glm::vec3 getForwardMoveDir();
     float getFacingAngle();
-    void move(btRigidBody *playerBody);
+    void move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWorld);
     // float getForwardSpeed();
 };
 
