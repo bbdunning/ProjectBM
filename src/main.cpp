@@ -83,15 +83,12 @@ public:
 	GLuint VertexBufferID;
 
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
-	shared_ptr<CollisionDetector> cd = make_shared<CollisionDetector>();
 	shared_ptr<Player> player1 = make_shared<Player>();
-	shared_ptr<Sandbag> sandbag = make_shared<Sandbag>();
 	vector<btRigidBody*> projectiles;
 	btRigidBody* playerBody;
 	btRigidBody* bokoBody;
 	
 	//animation data
-	float sTheta = 0;
 	int m = 1;
 	float prevOmega = 0.0f;
 	bool leftMouse = false;
@@ -246,9 +243,6 @@ public:
 		camera.init();
 		camera.setInputHandler(inputHandler);
 		player1->init(inputHandler);
-		player1->cd = cd;
-		sandbag->init(inputHandler);
-		sandbag->cd = cd;
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 	}
 
@@ -455,26 +449,19 @@ public:
 		//load geometry, initialize meshes, create objects
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
-		objL["totodile"] = GameObject::create(rDir + "melee/totodile/", "toto.dae", "totodile");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "ps2");
-		objL["sandbag"] = GameObject::create(rDir + "melee/Sandbag/", "sandbag.fbx", "sandbag");
-
 		objL["animModel"] = GameObject::create(rDir + "anim/", "toto.dae", "animModel");
-		objL["animModel"]->addAnimation("toto_walk.dae");
-		objL["animModel"]->addAnimation("toto_watergun.dae");
-		objL["animModel"]->addAnimation("toto_dab.dae");
-		objL["animModel"]->addAnimation("toto_jump.dae");
-		objL["animModel"]->doAnimation(0);
-
+			objL["animModel"]->addAnimation("toto_walk.dae");
+			objL["animModel"]->addAnimation("toto_watergun.dae");
+			objL["animModel"]->addAnimation("toto_dab.dae");
+			objL["animModel"]->addAnimation("toto_jump.dae");
+			objL["animModel"]->doAnimation(0);
 		objL["boko"] = GameObject::create(rDir + "/anim/", "toto.dae", "boko");
-		// objL["boko"]->path = rDir + "/ya_boi/source/";
 		objL["boko"]->addAnimation("toto_watergun.dae");
 		objL["boko"]->doAnimation(0);
 		// objL["animModel"]->addAnimation("toto_run.dae");
 		// objL["animModel"]->addAnimation("toto_jump.dae");
 
-
-		cd->environmentBoxes.push_back(make_shared<AABB>(vec3(-10, -2, -10), vec3(10, 0, 10)));
 	}
 	
 
@@ -493,34 +480,7 @@ public:
 		return vec3(v.getX(), v.getY(), v.getZ());
 	}
 
-	void render() {
-		//get frame time
-		float dt = getDeltaTimeSeconds();
-
-		// Get current frame buffer size.
-		int width, height;
-		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
-		glViewport(0, 0, width, height);
-		float aspect = width/(float)height;
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear FrameBuffer
-
-		// initialize matrices
-		auto Projection = make_shared<MatrixStack>();
-		auto Model = make_shared<MatrixStack>();
-		Projection->pushMatrix();
-		Projection->perspective(45.0f, aspect, 0.01f, 10000.0f);
-
-		//draw Skybox
-		drawSkybox(Model, Projection);
-
-		/* bind & initialize standard program */
-		prog->bind();
-		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
-		vec3 vd = camera.lookAtPoint - camera.eye;
-		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
-		setLight(prog);
-
+	void drawObjects() {
 		//getPosition of object
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
 		btRigidBody* body = btRigidBody::upcast(obj);
@@ -532,7 +492,6 @@ public:
 		//draw sphere
 		setMaterial(1, prog);
 		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
-		objL["sphere"]->rotate(-PI/2, vec3(1.f,0.f,0.f));
 		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
 		objL["sphere"]->setModel(prog);
 		objL["sphere"]->draw(prog); 
@@ -545,32 +504,44 @@ public:
 		objL["ps2"]->setModel(prog);
 		objL["ps2"]->draw(prog);
 
+		//renderProjectiles
 		renderProjectiles(prog, objL, projectiles);
+	}
 
-		prog->unbind();
-
-		animProg->bind();
-		glUniformMatrix4fv(animProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(animProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
-		glUniform3f(animProg->getUniform("viewDirection"), vd.x, vd.y, vd.z);
-		setLight(animProg);
-
+	void setCameraEye() {
 		if (inputHandler->R)
 			camera.eye = player1->location + normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f  + camera.elevation;
 		else
 			camera.eye = player1->location - normalize(player1->lookAtPoint - player1->location) * camera.distance + player1->getRightDir() * .6f + camera.elevation;
-		player1->update(dt);
 		camera.lookAtPoint = player1->location - camera.eye + player1->getRightDir() *.5f + camera.elevation + player1->getForwardDir() * .5f;
-		//move this to player class
-		float angle = -glm::orientedAngle(normalize(vec3(player1->lookAtPoint.x, 0, player1->lookAtPoint.z)), vec3(1, 0, 0), vec3(0,1,0));
+	}
 
-		//render player in correct position & animation
+	void sendUniforms(shared_ptr<Program> prog, const mat4 &proj, const mat4 &view) {
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(proj));
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(view));
+		vec3 vd = camera.lookAtPoint - camera.eye;
+		glUniform3f(prog->getUniform("viewDirection"), vd.x, vd.y, vd.z);
+		setLight(prog);
+	}
+	
+	void checkAbilities() {
+		//launch projectile
+		if (leftMouse && player1->projectileCooldown <= 0.0f) {
+			player1->projectileCooldown = 1.0f;
+			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
+		}
+	}
+
+	//render player in correct position & animation
+	void playerPreRender() {
+		btTransform trans;
+		vec3 physicsLoc;
 		playerBody->getMotionState()->getWorldTransform(trans);
 		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
 		player1->location = physicsLoc;
 		objL["animModel"]->translate(player1->location - vec3(0,.1,0));
 		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
-		objL["animModel"]->rotate(PI/2 + angle, vec3(0, 1, 0));
+		objL["animModel"]->rotate(PI/2 + player1->getFacingAngle(), vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
 		if (inputHandler->n1)
 			objL["animModel"]->doAnimation(0);
@@ -582,94 +553,69 @@ public:
 			objL["animModel"]->doAnimation(3);
 		setMaterial(5, animProg);
 		objL["animModel"]->setModel(animProg);
+
+		//update armature position
 		((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->update();
-		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
+		//set joint transforms
+		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, 
+			value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 
-		//launch projectile
-		if (leftMouse && player1->projectileCooldown <= 0.0f) {
-			player1->projectileCooldown = 1.0f;
-			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
-		}
-
-		//move player
-		bool playerMoving = false;
-		playerBody->forceActivationState(1);
-		playerBody->setAngularVelocity(bt(vec3(0,0,0)));
-		float forwardSpeed = length(proj(cons(playerBody->getLinearVelocity()), player1->getForwardMoveDir()));
-		float strafeSpeed= length(proj(cons(playerBody->getLinearVelocity()), cross(player1->getForwardMoveDir(),vec3(0,1,0))));
-		if (inputHandler->Wflag && forwardSpeed < 7) {
-			playerMoving = true;
-			btVector3 dir = bt(normalize(player1->getForwardMoveDir()));
-			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
-			playerBody->applyCentralImpulse(dir * magnitude);
-		}
-		if (inputHandler->Dflag && strafeSpeed < 5) {
-			playerMoving = true;
-			btVector3 dir = bt(normalize(player1->getRightDir()));
-			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
-			playerBody->applyCentralImpulse(dir * magnitude);
-		}
-		if (inputHandler->Aflag && strafeSpeed < 5) {
-			playerMoving = true;
-			btVector3 dir = bt(normalize(-player1->getRightDir()));
-			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
-			playerBody->applyCentralImpulse(dir * magnitude);
-		}
-		if (inputHandler->Sflag && forwardSpeed < 6) {
-			playerMoving = true;
-			btVector3 dir = bt(normalize(-player1->getForwardMoveDir()));
-			float magnitude = 25.f * dt;
-			vec3 v = cons(playerBody->getLinearVelocity());
-			playerBody->applyCentralImpulse(dir * magnitude);
-		}
-		if (inputHandler->Spaceflag && isGrounded) {
-			btVector3 dir = bt(vec3(0,.5,0));
-			// float magnitude = 0.5f;
-			// playerBody->applyCentralImpulse(dir * magnitude);
-			playerBody->setLinearVelocity(playerBody->getLinearVelocity() + btVector3(0,1.0f,0));
-		}
-
-		//raycast straight down
-		btVector3 btFrom = bt(player1->location);
-		btVector3 btTo(player1->location.x, player1->location.y - .3f, player1->location.z);
-		btCollisionWorld::ClosestRayResultCallback res(btFrom, btTo);
-		dynamicsWorld->rayTest(btFrom, btTo, res);
-		if(res.hasHit()){
-			// printf("Collision at: <%.2f, %.2f, %.2f>\n", res.m_hitPointWorld.getX(), res.m_hitPointWorld.getY(), res.m_hitPointWorld.getZ());
-			isGrounded = true;
-		} else {
-			isGrounded = false;
-		}
-
-		if (playerMoving)
-			playerBody->setFriction(1.5f);
-		else 
-			playerBody->setFriction(3.0f);
-
-		if (isGrounded) {
-			playerBody->setGravity(btVector3(0,-10,0));
+		if (player1->isGrounded) {
 			objL["animModel"]->doAnimation(0);
 		}
 		else {
-			playerBody->setGravity(btVector3(0,-18,0));
 			objL["animModel"]->doAnimation(3);
 		}
+	}
 
+	void render() {
+		// Get current frame buffer size & dt
+		float dt = getDeltaTimeSeconds();
+		int width, height;
+		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
+		glViewport(0, 0, width, height);
+		float aspect = width/(float)height;
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear FrameBuffer
+
+		//remove all these
+		btCollisionObject* obj;
+		btRigidBody* body;
+		btTransform trans;
+		vec3 physicsLoc;
+		btQuaternion btQ;
+
+
+		// initialize matrices
+		auto Projection = make_shared<MatrixStack>();
+		auto Model = make_shared<MatrixStack>();
+		Projection->pushMatrix();
+		Projection->perspective(45.0f, aspect, 0.01f, 10000.0f);
+
+		//draw Skybox
+		drawSkybox(Model, Projection);
+
+		/* bind & initialize standard program */
+		prog->bind();
+		sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+		drawObjects();
+		prog->unbind();
+
+		animProg->bind();
+		sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
+		setCameraEye();
+
+		player1->update(dt);
+		playerPreRender();
+		checkAbilities();
+		player1->move(playerBody);
 		//draw player
 		objL["animModel"]->draw(animProg);
 
 		bokoBody->forceActivationState(1);
 		bokoBody->getMotionState()->getWorldTransform(trans);
-		btQ = body->getOrientation();
 		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		// physicsLoc = cons(dcc->getLocation());
 		objL["boko"]->translate(physicsLoc - vec3(0,.2,0));
 		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
-		// objL["boko"]->scale(vec3(0.005, 0.005, 0.005));
-		// objL["boko"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
 		objL["boko"]->rotate(-PI/2, vec3(0, 1, 0));
 		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
 		objL["boko"]->doAnimation(0);
@@ -678,23 +624,15 @@ public:
 		((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->update();
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, value_ptr(((shared_ptr<AnimatedShape>) (objL["boko"]->shapeList[0]))->jointTransforms[0]));
 		objL["boko"]->draw(animProg);
-		animProg->unbind();
 
-		//animation update example
-		sTheta = sin((float)glfwGetTime());
+		animProg->unbind();
 
 		// Pop matrix stacks.
 		Projection->popMatrix();
 
 		//step physics simulation
 		dynamicsWorld->stepSimulation(dt);
-		// for (int i=0; i<projectiles.size(); i++) {
-		// 	btCollisionObject* obj = projectiles[i];
-		// 	btRigidBody* body = btRigidBody::upcast(obj);
-		// }
-		// GLDebugDrawer debugDrawer;
-		// dynamicsWorld->debugDrawWorld();
-		
+
 		leftMouse = false;
 	}
 };

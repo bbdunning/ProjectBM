@@ -2,6 +2,10 @@
 #include <string>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/vector_angle.hpp>
+#include <bullet/btBulletCollisionCommon.h>
+#include <bullet/btBulletDynamicsCommon.h>
+#include <bullet/LinearMath/btAabbUtil2.h>
 
 #include "InputHandler.h"
 #include "Physics/Hitbox.h"
@@ -33,6 +37,8 @@ public:
     glm::vec3 getForwardDir();
     glm::vec3 getRightDir();
     glm::vec3 getForwardMoveDir();
+    float getFacingAngle();
+    void move(btRigidBody *playerBody);
     // float getForwardSpeed();
 };
 
