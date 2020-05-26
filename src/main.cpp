@@ -654,7 +654,7 @@ public:
 	/* TODO fix */
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
 		float edge = 20.f;
-		float edge = 15.f;
+		// float edge = 15.f;
 		mat4 ortho = glm::ortho(-edge, edge, -edge, edge, 0.1f, 2*edge);
 		glUniformMatrix4fv(curShade->getUniform("LP"), 1, GL_FALSE, value_ptr(ortho));
 		return ortho;
@@ -720,7 +720,7 @@ public:
 		// vec3 lightPos = vec3(0,20 + dx,-10);
 		// vec3 lightLA = lightPos + vec3(0,-10,1);
 		// vec3 lightUp = vec3(0,1,0);
-		vec3 lightPos = vec3(3,15 + dx,15);
+		vec3 lightPos = vec3(5,15 + dx,15);
 		vec3 lightLA = lightPos + vec3(0,-10,-10);
 		vec3 lightUp = vec3(0,1,0);
 
@@ -758,19 +758,19 @@ public:
 		// 	drawObjects(DepthProgDebug);
 		// DepthProgDebug->unbind();
 
-		DebugProg->bind();
-		//send texture
-  			glActiveTexture(GL_TEXTURE0);
-  			glBindTexture(GL_TEXTURE_2D, depthMap);
-  			glUniform1i(DebugProg->getUniform("texBuf"), 0);
+		// DebugProg->bind();
+		// //send texture
+  		// 	glActiveTexture(GL_TEXTURE0);
+  		// 	glBindTexture(GL_TEXTURE_2D, depthMap);
+  		// 	glUniform1i(DebugProg->getUniform("texBuf"), 0);
         
-        //draw the quad
-  			glEnableVertexAttribArray(0);
-  			glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-  			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
-  			glDrawArrays(GL_TRIANGLES, 0, 6);
-  			glDisableVertexAttribArray(0);
-		DebugProg->unbind();
+        // //draw the quad
+  		// 	glEnableVertexAttribArray(0);
+  		// 	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+  		// 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
+  		// 	glDrawArrays(GL_TRIANGLES, 0, 6);
+  		// 	glDisableVertexAttribArray(0);
+		// DebugProg->unbind();
 
 		//update player
 		player1->update(dt);
@@ -778,18 +778,18 @@ public:
 		checkAbilities();
 
 		/* bind & initialize standard program */
-		// prog->bind();
-		// 	setMaterial(5, prog);
-		// 	sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
-		// 	glActiveTexture(GL_TEXTURE1);
-		// 	glBindTexture(GL_TEXTURE_2D, depthMap);
-		// 	glUniform1i(prog->getUniform("shadowDepth"), 1);
-		// 	glUniformMatrix4fv(prog->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
-		// 	drawObjects(prog);
-		// 	objL["cube2"]->translate(lightPos);
-		// 	objL["cube2"]->setModel(prog);
-		// 	objL["cube2"]->draw(prog);
-		// prog->unbind();
+		prog->bind();
+			setMaterial(5, prog);
+			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, depthMap);
+			glUniform1i(prog->getUniform("shadowDepth"), 1);
+			glUniformMatrix4fv(prog->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
+			drawObjects(prog);
+			objL["cube2"]->translate(lightPos);
+			objL["cube2"]->setModel(prog);
+			objL["cube2"]->draw(prog);
+		prog->unbind();
 
 		// animProg->bind();
 		// 	sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
@@ -825,8 +825,8 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	windowManager->init(1520, 1080);
-	// windowManager->init(1024, 1024);
+	// windowManager->init(1520, 1080);
+	windowManager->init(1024, 1024);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
