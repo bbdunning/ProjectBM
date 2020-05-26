@@ -68,6 +68,7 @@ public:
 	std::shared_ptr<Program> cubeProg;
 	std::shared_ptr<Program> animProg;
 	std::shared_ptr<Program> DepthProg;
+	std::shared_ptr<Program> outlineProg;
 
 	//mesh data
 	unordered_map<string, shared_ptr<GameObject>> objL;
@@ -239,6 +240,19 @@ public:
 		animProg->addUniform("Texture0");
 		animProg->addUniform("jointTransforms");
 
+		outlineProg = make_shared<Program>();
+		outlineProg->setVerbose(true);
+		outlineProg->hasTexture = false;
+		outlineProg->setShaderNames(resourceDirectory + "/shaders/outline_vert.glsl", resourceDirectory + "/shaders/outline_frag.glsl");
+		outlineProg->init();
+		outlineProg->addUniform("P");
+		outlineProg->addUniform("V");
+		outlineProg->addUniform("M");
+		outlineProg->addUniform("outlineOffset");
+		outlineProg->addAttribute("vertPos");
+		outlineProg->addAttribute("vertNor");
+		outlineProg->addAttribute("vertTex");
+
 		cubeProg = make_shared<Program>();
 		cubeProg->setVerbose(true);
 		cubeProg->setShaderNames( resourceDirectory + "/shaders/cube_vert.glsl", resourceDirectory + "/shaders/cube_frag.glsl");
@@ -250,6 +264,7 @@ public:
 		cubeProg->addAttribute("vertNor");
 
 		DepthProg = make_shared<Program>();
+		DepthProg->hasTexture = false;
 		DepthProg->setVerbose(true);
 		DepthProg->setShaderNames(resourceDirectory + "/shaders/depth_vert.glsl", resourceDirectory + "/shaders/depth_frag.glsl");
 		DepthProg->init();
@@ -712,7 +727,7 @@ public:
 			LS = LP*LV;
 			drawObjects(DepthProg);
 			objL["sphere"]->translate(player1->location);// - vec3(0,.1,0));
-			objL["sphere"]->scale(.2);
+			objL["sphere"]->scale(vec3(.2,.08,.2));
 			objL["sphere"]->setModel(DepthProg);
 			objL["sphere"]->draw(DepthProg);
 		DepthProg->unbind();
@@ -752,6 +767,12 @@ public:
 			setBoko();
 			objL["boko"]->draw(animProg);
 		animProg->unbind();
+
+		// outlineProg->bind();
+		// 	glUniform1f(outlineProg->getUniform("outlineOffset"), 1.0);
+		// 	sendUniforms(outlineProg, Projection->topMatrix(), camera.getViewMatrix());
+		// 	drawObjects(outlineProg);
+		// outlineProg->unbind();
 
 		player1->updateLocation(playerBody);
 
