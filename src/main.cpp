@@ -68,11 +68,6 @@ public:
 	std::shared_ptr<Program> cubeProg;
 	std::shared_ptr<Program> animProg;
 	std::shared_ptr<Program> DepthProg;
-	//delete me after debug
-	std::shared_ptr<Program> DepthProgDebug;
-	std::shared_ptr<Program> DebugProg;
-	GLuint quad_VertexArrayID;
-	GLuint quad_vertexbuffer;
 
 	//mesh data
 	unordered_map<string, shared_ptr<GameObject>> objL;
@@ -266,27 +261,6 @@ public:
 		DepthProg->addAttribute("vertNor");
 		DepthProg->addAttribute("vertTex");
 
-		DepthProgDebug = make_shared<Program>();
-		DepthProgDebug->setVerbose(true);
-		DepthProgDebug->setShaderNames(resourceDirectory + "/shaders/depth_vertDebug.glsl", resourceDirectory + "/shaders/depth_fragDebug.glsl");
-		DepthProgDebug->init();
-		DepthProgDebug->addUniform("LP");
-		DepthProgDebug->addUniform("LV");
-		DepthProgDebug->addUniform("M");
-		DepthProgDebug->addAttribute("vertPos");
-		//un-needed, better solution to modifying shape
-		DepthProgDebug->addAttribute("vertNor");
-		DepthProgDebug->addAttribute("vertTex");
-
-		DebugProg = make_shared<Program>();
-		DebugProg->setVerbose(true);
-		DepthProg->hasTexture = false;
-		DebugProg->setShaderNames(resourceDirectory + "/shaders/pass_vert.glsl", resourceDirectory + "/shaders/pass_texfrag.glsl");
-		DebugProg->init();
-		DebugProg->addUniform("texBuf");
-		DebugProg->addAttribute("vertPos");
-
-
 		inputHandler->init();
 		camera.init();
 		camera.setInputHandler(inputHandler);
@@ -396,7 +370,7 @@ public:
 				dynamicsWorld->addRigidBody(body);
 		}
 		playerBody = createPlayerRigidBody(vec3(0,5,-5));
-		bokoBody = createRigidBody(vec3(7,5,-10), vec3(.25, .25, .25));
+		bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
 	}
 
 	btRigidBody* createPlayerRigidBody(vec3 location) {
@@ -429,8 +403,8 @@ public:
 
 	//create a dynamic rigidbody
 	btRigidBody* createRigidBody(vec3 location, vec3 size) {
-		btCollisionShape* colShape = new btBoxShape(bt(size));
-		// btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
+		// btCollisionShape* colShape = new btBoxShape(bt(size));
+		btCollisionShape* colShape = new btSphereShape(size.x);
 		collisionShapes.push_back(colShape);
 
 		/// Create Dynamic Objects
@@ -454,9 +428,7 @@ public:
 			btRigidBody* body = new btRigidBody(rbInfo);
 
 			dynamicsWorld->addRigidBody(body);
-		body->setFriction(1.0f);
-		// body->setDamping(0.8f, 1.0f);
-		// body->setRestitution(.8);
+		body->setFriction(1.5f);
 		return body;
 	}
 
@@ -525,7 +497,7 @@ public:
 		objL["cube2"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
-		objL["ps2_backdrop"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
+		objL["ps2_backdrop"] = GameObject::create(rDir + "melee/ps2/", "ps2_backdrop.dae", "ps2_backdrop");
 		objL["animModel"] = GameObject::create(rDir + "anim/", "toto.dae", "animModel");
 			objL["animModel"]->addAnimation("toto_walk.dae");
 			objL["animModel"]->addAnimation("toto_watergun.dae");
@@ -580,14 +552,14 @@ public:
 		//launch projectile
 		if (leftMouse && player1->projectileCooldown <= 0.0f) {
 			player1->projectileCooldown = 1.0f;
-			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 10.f);
+			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 20.f);
 		}
 	}
 
 	//render player in correct position & animation
 	void setPlayer() {
-		objL["animModel"]->translate(player1->location - vec3(0,.1,0));
-		objL["animModel"]->scale(vec3(0.03, 0.03, 0.03));
+		objL["animModel"]->translate(player1->location - vec3(0,.18,0));
+		objL["animModel"]->scale(vec3(0.04, 0.04, 0.04));
 		objL["animModel"]->rotate(PI/2 + player1->getFacingAngle(), vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
 		if (inputHandler->n1)
@@ -607,11 +579,14 @@ public:
 		glUniformMatrix4fv(animProg->getUniform("jointTransforms"), 50, GL_FALSE, 
 			value_ptr(((shared_ptr<AnimatedShape>) (objL["animModel"]->shapeList[0]))->jointTransforms[0]));
 
-		if (player1->isGrounded) {
+		if (!player1->isGrounded) {
+			objL["animModel"]->doAnimation(3);
+		}
+		else if (player1->isGrounded && length(cons(playerBody->getLinearVelocity())) > 1) {
 			objL["animModel"]->doAnimation(0);
 		}
 		else {
-			objL["animModel"]->doAnimation(3);
+			objL["animModel"]->doAnimation(1);
 		}
 	}
 
@@ -656,6 +631,14 @@ public:
 		objL["ps2"]->setModel(currentShader);
 		objL["ps2"]->draw(currentShader);
 
+		//draw ps2
+		objL["ps2_backdrop"]->translate(vec3(5,-3.15f,0));
+		objL["ps2_backdrop"]->scale(vec3(.35f, .35f, .35f));
+		objL["ps2_backdrop"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
+		// setMaterial(5, currentShader);
+		objL["ps2_backdrop"]->setModel(currentShader);
+		objL["ps2_backdrop"]->draw(currentShader);
+
 		//renderProjectiles
 		renderProjectiles(currentShader, objL, projectiles);
 
@@ -664,9 +647,6 @@ public:
 		glDisableVertexAttribArray(2);
 	}
 
-	void drawAnim() {
-	}
-	/* TODO fix */
 	mat4 SetOrthoMatrix(shared_ptr<Program> curShade) {
 		float edge = 20.f;
 		// float edge = 15.f;
@@ -675,32 +655,11 @@ public:
 		return ortho;
 	}
 
-	/* TODO fix */
 	mat4 SetLightView(shared_ptr<Program> curShade, vec3 pos, vec3 LA, vec3 up) {
 		mat4 Cam = glm::lookAt(pos, LA, up);
 		glUniformMatrix4fv(curShade->getUniform("LV"), 1, GL_FALSE, value_ptr(Cam));
 		//fill in the glUniform call to send to the right shader!
 		return Cam;
-	}
-	//delete me after debug
-	void initQuad() {
-
-	//now set up a simple quad for rendering FBO
-		glGenVertexArrays(1, &quad_VertexArrayID);
-		glBindVertexArray(quad_VertexArrayID);
-
-		static const GLfloat g_quad_vertex_buffer_data[] = {
-		-1.0f, -1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f,
-		1.0f, -1.0f, 0.0f,
-		1.0f,  1.0f, 0.0f,
-		};
-
-		glGenBuffers(1, &quad_vertexbuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
 	}
 
 	void render() {
@@ -741,7 +700,7 @@ public:
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glCullFace(GL_FRONT);
 		
-		//Second pass, now draw the scene (or do debug drawing)
+		//Second pass, now draw the scene
 		glViewport(0, 0, width, height);
 		// Clear framebuffer.
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -752,8 +711,10 @@ public:
 			LV = SetLightView(DepthProg, lightPos, lightLA, lightUp);
 			LS = LP*LV;
 			drawObjects(DepthProg);
-			// objL["animModel"]->draw(DepthProg);
-			// objL["boko"]->draw(DepthProg);
+			objL["sphere"]->translate(player1->location);// - vec3(0,.1,0));
+			objL["sphere"]->scale(.2);
+			objL["sphere"]->setModel(DepthProg);
+			objL["sphere"]->draw(DepthProg);
 		DepthProg->unbind();
 
 		//set culling back to normal
@@ -762,26 +723,6 @@ public:
 		//this sets the output back to the screen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
-		// DepthProgDebug->bind();
-		// 	//render scene from light's point of view
-		// 	SetOrthoMatrix(DepthProgDebug);
-		// 	SetLightView(DepthProgDebug, lightPos, lightLA, lightUp);
-		// 	drawObjects(DepthProgDebug);
-		// DepthProgDebug->unbind();
-
-		// DebugProg->bind();
-		// //send texture
-  		// 	glActiveTexture(GL_TEXTURE0);
-  		// 	glBindTexture(GL_TEXTURE_2D, depthMap);
-  		// 	glUniform1i(DebugProg->getUniform("texBuf"), 0);
-        
-        // //draw the quad
-  		// 	glEnableVertexAttribArray(0);
-  		// 	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
-  		// 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *) 0);
-  		// 	glDrawArrays(GL_TRIANGLES, 0, 6);
-  		// 	glDisableVertexAttribArray(0);
-		// DebugProg->unbind();
 
 		//update player
 		player1->update(dt);
@@ -797,9 +738,6 @@ public:
 			glUniform1i(prog->getUniform("shadowDepth"), 2);
 			glUniformMatrix4fv(prog->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
 			drawObjects(prog);
-			// objL["cube2"]->translate(lightPos);
-			// objL["cube2"]->setModel(prog);
-			// objL["cube2"]->draw(prog);
 		prog->unbind();
 
 		animProg->bind();
@@ -849,7 +787,6 @@ int main(int argc, char *argv[])
 	application->init(resourceDir);
 	application->initGeom(resourceDir);
 	application->initPhysics();
-	application->initQuad();
 
 	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 2650, 1440, 144);
 

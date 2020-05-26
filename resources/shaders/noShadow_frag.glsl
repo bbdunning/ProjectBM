@@ -22,10 +22,8 @@ in vec3 fPos;
 in vec4 fPosLS;
 in vec3 vColor;
 
-const float levels = 3.0;
-
 float TestShadow(vec4 LSfPos) {
-  float bias = .01;
+  float bias = .005;
 
 	//1: shift the coordinates from -1, 1 to 0 ,1
   vec3 shifted = 0.5 * (LSfPos.xyz + vec3(1.0));
@@ -57,20 +55,14 @@ void main()
 	vec3 normal = normalize(fragNor);
 
 	float cosAngIncidence = clamp(dot(normal, lightDir), 0, 1);
-
-	float level = floor(cosAngIncidence * levels);
-	cosAngIncidence = level/levels;
-
 	vec3 H = normalize(lightDir-viewDirection);
-	vec4 texColor0 = texture(Texture0, vTexCoord);
-  	vec3 MatDif = texColor0.xyz;
+	vec3 MatDif = vec3(1,1,1);
 
-	float specularFactor = max(dot(normal, H), 0.0);
-	level = floor(cosAngIncidence * levels);
-	specularFactor = level/levels;
+	vec4 texColor0 = texture(Texture0, vTexCoord);
+  	MatDif = texColor0.xyz;
 
 	vec3 shadeColor = vec3((MatDif * cosAngIncidence) +  //Diffuse Lighting
-		(MatSpec * pow(specularFactor, shine) * LightCol) +  //Blinn-Phong Specular
+		(MatSpec * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
     	(MatDif * MatAmb));                   
 
 	color = vec4(shadeColor, 1.0);

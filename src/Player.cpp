@@ -94,28 +94,28 @@ void Player::move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWo
 		float forwardSpeed = length(glm::proj(cons(playerBody->getLinearVelocity()), getForwardMoveDir()));
 		float strafeSpeed= length(glm::proj(cons(playerBody->getLinearVelocity()), cross(getForwardMoveDir(),vec3(0,1,0))));
 
-		if (ih->Wflag && forwardSpeed < 7) {
+		if (ih->Wflag && forwardSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(getForwardMoveDir()));
-			float magnitude = 25.f * dt;
+			float magnitude = 30.f * dt;
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Dflag && strafeSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(getRightDir()));
-			float magnitude = 25.f * dt;
+			float magnitude = 30.f * dt;
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Aflag && strafeSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(-getRightDir()));
-			float magnitude = 25.f * dt;
+			float magnitude = 30.f * dt;
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
-		if (ih->Sflag && forwardSpeed < 6) {
+		if (ih->Sflag && forwardSpeed < 5) {
 			playerMoving = true;
 			btVector3 dir = bt(normalize(-getForwardMoveDir()));
-			float magnitude = 25.f * dt;
+			float magnitude = 30.f * dt;
 			playerBody->applyCentralImpulse(dir * magnitude);
 		}
 		if (ih->Spaceflag && isGrounded) {
