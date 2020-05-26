@@ -32,20 +32,6 @@ const float levels = 2.0;
 const int pcfCount = 1;
 const float totalTexels = (pcfCount * 2.0 + 1.0) * (pcfCount * 2.0 + 1.0);
 
-float TestShadow(vec4 LSfPos) {
-  float bias = .01;
-
-	//1: shift the coordinates from -1, 1 to 0 ,1
-  vec3 shifted = 0.5 * (LSfPos.xyz + vec3(1.0));
-	//2: read off the stored depth (.) from the ShadowDepth, using the shifted.xy 
-  vec4 Ld = texture(shadowDepth, shifted.xy);
-	//3: compare to the current depth (.z) of the projected depth
-	//4: return 1 if the point is shadowed
-  if (Ld.x < shifted.z - bias)
-    return 1.0;
-  return 0.0;
-}
-
 float getShadowMap(vec4 LSfPos) {
 	vec3 shifted = 0.5 * (LSfPos.xyz + vec3(1.0));
 	vec4 depth = texture(shadowDepth, vec2(shifted.x * aspectRatioX, shifted.y * aspectRatioY));
@@ -61,12 +47,13 @@ float getLightDist(vec4 LSfPos) {
 
 void main()
 {
-	float bias = .005;
+	float bias = .01;
 	float mapSize = 4096.0;
 	float texelSize = 1.0 / mapSize;
 	float total = 0.0;
 	vec3 shifted = 0.5 * (fPosLS.xyz + vec3(1.0));
 
+	//calculate how shadowed fragment is
 	for (int x = -pcfCount; x <= pcfCount; x++) {
 		for (int y = -pcfCount; y <= pcfCount; y++) {
 			vec4 depth = texture(shadowDepth, vec2(shifted.x * aspectRatioX, shifted.y * aspectRatioY) + vec2(x, y) * texelSize);
@@ -79,6 +66,7 @@ void main()
 	}
 
 	total /= totalTexels;
+	total = clamp(total + .2, 0.0, 1.0);
 	float lightFactor = 1.0 - (total);  //shadowCoords.w
 	
 
@@ -103,10 +91,6 @@ void main()
     	(MatDif * MatAmb));                   
 
 	color = vec4(shadeColor, 1.0);
-
-	// if (getLightDist(fPosLS) > getShadowMap(fPosLS) + bias) {
-	// 	color = vec4(shadeColor * .3, 1.0);
-	// }
 }
 
 

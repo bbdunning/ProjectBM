@@ -731,7 +731,7 @@ public:
 			LS = LP*LV;
 			drawObjects(DepthProg);
 			objL["sphere"]->translate(player1->location);// - vec3(0,.1,0));
-			objL["sphere"]->scale(vec3(.2,.08,.2));
+			objL["sphere"]->scale(vec3(.2,.2,.2));
 			objL["sphere"]->setModel(DepthProg);
 			objL["sphere"]->draw(DepthProg);
 		DepthProg->unbind();
