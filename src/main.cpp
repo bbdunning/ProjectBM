@@ -54,7 +54,8 @@ public:
 	bool SHADOW = true;
 	GLuint depthMapFBO;
 	GLuint depthMap;
-	const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
+	// const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
+	const GLuint S_WIDTH = 2048, S_HEIGHT = 2048;
 	float dx = 0;
 
 	//create GLFW Window
@@ -177,7 +178,7 @@ public:
 
 	void setLight(shared_ptr<Program> prog) {
 		// glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
-		glUniform3f(prog->getUniform("LightPos"), 0.f, 5.f, 0.f);
+		glUniform3f(prog->getUniform("LightPos"), 5.f, 15.f, 15.f);
 		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
 	}
 
@@ -213,6 +214,8 @@ public:
 		prog->addUniform("MatSpec");
 		prog->addUniform("shine");
 		prog->addUniform("Texture0");
+		prog->addUniform("aspectRatioX");
+		prog->addUniform("aspectRatioY");
 
 		animProg = make_shared<Program>();
 		animProg->setVerbose(true);
@@ -228,6 +231,8 @@ public:
 		animProg->addAttribute("jointIndices");		
 		animProg->addAttribute("jointWeights");		
 		animProg->addUniform("shadowDepth");
+		animProg->addUniform("aspectRatioX");
+		animProg->addUniform("aspectRatioY");
 
 		animProg->addUniform("viewDirection");
 		animProg->addUniform("LightPos");
@@ -559,6 +564,11 @@ public:
 	}
 
 	void sendUniforms(shared_ptr<Program> prog, const mat4 &proj, const mat4 &view) {
+		int width, height;
+		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
+
+		glUniform1f(prog->getUniform("aspectRatioX"), (float) width/S_WIDTH);
+		glUniform1f(prog->getUniform("aspectRatioY"), (float) height/S_HEIGHT);
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(proj));
 		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(view));
 		vec3 vd = camera.lookAtPoint - camera.eye;
@@ -719,12 +729,6 @@ public:
 
 		//shadow Data
 		mat4 LP, LV, LS;
-		// vec3 lightPos = vec3(5,3,-4);
-		// vec3 lightPos = vec3(0,5,0);
-		// vec3 lightLA = lightPos + vec3(-4,-3,-20);
-		// vec3 lightPos = vec3(0,20 + dx,-10);
-		// vec3 lightLA = lightPos + vec3(0,-10,1);
-		// vec3 lightUp = vec3(0,1,0);
 		vec3 lightPos = vec3(5,15 + dx,15);
 		vec3 lightLA = lightPos + vec3(0,-10,-10);
 		vec3 lightUp = vec3(0,1,0);
@@ -837,8 +841,8 @@ int main(int argc, char *argv[])
 	// and GL context, etc.
 
 	WindowManager *windowManager = new WindowManager();
-	// windowManager->init(1520, 1080);
-	windowManager->init(1024, 1024);
+	windowManager->init(1520, 1080);
+	// windowManager->init(1024, 1024);
 	windowManager->setEventCallbacks(application);
 	application->windowManager = windowManager;
 
