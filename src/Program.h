@@ -20,6 +20,7 @@ public:
 
 	void setVerbose(const bool v) { verbose = v; }
 	bool isVerbose() const { return verbose; }
+	bool hasTexture = true;
 
 	void setShaderNames(const std::string &v, const std::string &f);
 	virtual bool init();

@@ -63,6 +63,7 @@ public:
 
 	// create shaders
 	std::shared_ptr<Program> prog;
+	std::shared_ptr<Program> noShadeProg;
 	std::shared_ptr<Program> cubeProg;
 	std::shared_ptr<Program> animProg;
 	std::shared_ptr<Program> DepthProg;
@@ -220,11 +221,13 @@ public:
 		animProg->addUniform("P");
 		animProg->addUniform("V");
 		animProg->addUniform("M");
+		animProg->addUniform("LS");
 		animProg->addAttribute("vertPos");
 		animProg->addAttribute("vertNor");
 		animProg->addAttribute("vertTex");		
 		animProg->addAttribute("jointIndices");		
 		animProg->addAttribute("jointWeights");		
+		animProg->addUniform("shadowDepth");
 
 		animProg->addUniform("viewDirection");
 		animProg->addUniform("LightPos");
@@ -272,6 +275,7 @@ public:
 
 		DebugProg = make_shared<Program>();
 		DebugProg->setVerbose(true);
+		DepthProg->hasTexture = false;
 		DebugProg->setShaderNames(resourceDirectory + "/shaders/pass_vert.glsl", resourceDirectory + "/shaders/pass_texfrag.glsl");
 		DebugProg->init();
 		DebugProg->addUniform("texBuf");
@@ -515,7 +519,8 @@ public:
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["cube2"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
-		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2.dae", "ps2");
+		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
+		objL["ps2_backdrop"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
 		objL["animModel"] = GameObject::create(rDir + "anim/", "toto.dae", "animModel");
 			objL["animModel"]->addAnimation("toto_walk.dae");
 			objL["animModel"]->addAnimation("toto_watergun.dae");
@@ -743,6 +748,8 @@ public:
 			LV = SetLightView(DepthProg, lightPos, lightLA, lightUp);
 			LS = LP*LV;
 			drawObjects(DepthProg);
+			// objL["animModel"]->draw(DepthProg);
+			// objL["boko"]->draw(DepthProg);
 		DepthProg->unbind();
 
 		//set culling back to normal
@@ -781,23 +788,28 @@ public:
 		prog->bind();
 			setMaterial(5, prog);
 			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
-			glActiveTexture(GL_TEXTURE1);
+			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
-			glUniform1i(prog->getUniform("shadowDepth"), 1);
+			glUniform1i(prog->getUniform("shadowDepth"), 2);
 			glUniformMatrix4fv(prog->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
 			drawObjects(prog);
-			objL["cube2"]->translate(lightPos);
-			objL["cube2"]->setModel(prog);
-			objL["cube2"]->draw(prog);
+			// objL["cube2"]->translate(lightPos);
+			// objL["cube2"]->setModel(prog);
+			// objL["cube2"]->draw(prog);
 		prog->unbind();
 
-		// animProg->bind();
-		// 	sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
-		// 	setPlayer();
-		// 	objL["animModel"]->draw(animProg);
-		// 	setBoko();
-		// 	objL["boko"]->draw(animProg);
-		// animProg->unbind();
+		animProg->bind();
+			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
+			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, depthMap);
+			glUniform1i(animProg->getUniform("shadowDepth"), 2);
+			glUniformMatrix4fv(animProg->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
+			setPlayer();
+			objL["animModel"]->draw(animProg);
+			setBoko();
+			objL["boko"]->draw(animProg);
+		animProg->unbind();
 
 		player1->updateLocation(playerBody);
 

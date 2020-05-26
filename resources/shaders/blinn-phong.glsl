@@ -34,29 +34,11 @@ float TestShadow(vec4 LSfPos) {
   return 0.0;
 }
 
-
-
-// void main()
-// {
-// 	vec3 normal = normalize(fragNor);
-
-// 	float cosAngIncidence = clamp(dot(normal, lightDir), 0, 1);
-// 	vec3 H = normalize(lightDir-viewDirection);
-// 	vec3 MatDif = vec3(1,1,1);
-
-// 	vec4 texColor0 = texture(Texture0, vTexCoord);
-//   	MatDif = texColor0.xyz;
-
-// 	color = vec4((MatDif * cosAngIncidence) +  //Diffuse Lighting
-// 		(MatSpec * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
-//     	(MatDif * MatAmb), //Ambient Lighting
-// 		1.0);                   
-
-// 	// float Shade = TestShadow(fPosLS);
-// 	if (TestShadow(fPosLS) == 1.0) {
-// 		color = vec4(0.0,0.0,0.0,1.0);
-// 	}
-// }
+float getShadowMap(vec4 LSfPos) {
+	vec3 shifted = 0.5 * (LSfPos.xyz + vec3(1.0));
+	vec4 depth = texture(shadowDepth, shifted.xy);
+	return depth.x;
+}
 
 float getLightDist(vec4 LSfPos) {
 	vec3 shifted = 0.5 * (LSfPos.xyz + vec3(1.0));
@@ -64,30 +46,54 @@ float getLightDist(vec4 LSfPos) {
 	return shifted.z;
 }
 
-float getShadowMap(vec4 LSfPos) {
-	vec3 shifted = 0.5 * (LSfPos.xyz + vec3(1.0));
-	vec4 depth = texture(shadowDepth, shifted.xy);
-	return depth.x;
+
+void main()
+{
+	float bias = .005;
+	vec3 normal = normalize(fragNor);
+
+	float cosAngIncidence = clamp(dot(normal, lightDir), 0, 1);
+	vec3 H = normalize(lightDir-viewDirection);
+	vec3 MatDif = vec3(1,1,1);
+
+	vec4 texColor0 = texture(Texture0, vTexCoord);
+  	MatDif = texColor0.xyz;
+
+	vec3 shadeColor = vec3((MatDif * cosAngIncidence) +  //Diffuse Lighting
+		(MatSpec * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
+    	(MatDif * MatAmb));                   
+
+	color = vec4(shadeColor, 1.0);
+
+	if (getLightDist(fPosLS) > getShadowMap(fPosLS) + bias) {
+		color = vec4(shadeColor * .2, 1.0);
+	}
+    // color = vec4(shadeColor * getShadowMap(fPosLS), 1.0);
+
+	// color = vec4((MatDif * cosAngIncidence) +  //Diffuse Lighting
+	// 	(MatSpec * pow(max(dot(normal, H), 0.0), shine) * LightCol) +  //Blinn-Phong Specular
+    // 	(MatDif * MatAmb), //Ambient Lighting
+	// 	1.0);                   
 }
 
-void main() {
+// void main() {
 
-//   float Shade;
-//   float amb = 0.3;
+// //   float Shade;
+// //   float amb = 0.3;
 
-//   vec4 BaseColor = vec4(vColor, 1);
-//   vec4 texColor0 = texture(Texture0, vTexCoord);
+// //   vec4 BaseColor = vec4(vColor, 1);
+// //   vec4 texColor0 = texture(Texture0, vTexCoord);
 
-//   Shade = TestShadow(fPosLS);
+// //   Shade = TestShadow(fPosLS);
 
-//   color = amb*(texColor0) + (1.0-Shade)*texColor0*BaseColor;
-//    color = amb*(texColor0) + (1.0-Shade)*texColor0;
-//   color = vec4(vec3(1.0,1.0,1.0) * (1.0-Shade), 1.0);
+// //   color = amb*(texColor0) + (1.0-Shade)*texColor0*BaseColor;
+// //    color = amb*(texColor0) + (1.0-Shade)*texColor0;
+// //   color = vec4(vec3(1.0,1.0,1.0) * (1.0-Shade), 1.0);
   
-//   color = vec4(vec3(1.0,1.0,1.0) * getLightDist(fPosLS), 1.0);
-  color = vec4(vec3(1.0,1.0,1.0) * getShadowMap(fPosLS), 1.0);
-//   if (getLightDist(fPosLS) > getShadowMap(fPosLS))
-// 	color = vec4(vec3(0.0,0.0,0.0), 1.0);
-//   else
-// 	color = vec4(vec3(1.0,1.0,1.0), 1.0);
-}
+// //   color = vec4(vec3(1.0,1.0,1.0) * getLightDist(fPosLS), 1.0);
+//   color = vec4(vec3(1.0,1.0,1.0) * getShadowMap(fPosLS), 1.0);
+// //   if (getLightDist(fPosLS) > getShadowMap(fPosLS))
+// // 	color = vec4(vec3(0.0,0.0,0.0), 1.0);
+// //   else
+// // 	color = vec4(vec3(1.0,1.0,1.0), 1.0);
+// }

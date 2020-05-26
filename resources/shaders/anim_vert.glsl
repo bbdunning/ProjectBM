@@ -12,14 +12,16 @@ layout(location = 4) in vec4 jointWeights;
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
+uniform mat4 LS;
 uniform vec3 LightPos;
 //contains current transform for all joints in model
 uniform mat4 jointTransforms[MAX_JOINTS];
 
 out vec3 fragNor;
 out vec3 lightDir;
-out float dCo;
 out vec2 vTexCoord;
+
+out vec4 fPosLS;
 
 void main()
 {
@@ -37,9 +39,8 @@ void main()
 	//compute light direction from point light to object in world (not perspective) space
 	lightDir = normalize(LightPos.xyz-(M*vertPos).xyz);
 
-	/* diffuse coefficient for a directional light */
-	dCo = 1.0; //replace with computation
-
 	/* pass through the texture coordinates to be interpolated */
 	vTexCoord = vec2(vertTex.x, 1-vertTex.y);
+
+	fPosLS = LS*M*vertPos;
 }
