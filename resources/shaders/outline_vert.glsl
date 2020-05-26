@@ -10,7 +10,8 @@ uniform float outlineOffet;
 void main()
 {
     vec3 pos = vertPos.xyz;
-    vec3 scaledPos = vec3(pos + (vertNor * outlineOffset));
+    // vec3 scaledPos = vec3(pos + (vertNor * outlineOffset));
 
-	gl_Position = P * V * M * vec4(scaledPos, 1.0);
+	// gl_Position = P * V * M * vec4(scaledPos, 1.0);
+	gl_Position = P * V * M * vertPos;
 }

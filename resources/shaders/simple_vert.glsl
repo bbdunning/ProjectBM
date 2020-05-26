@@ -7,6 +7,7 @@ uniform mat4 V;
 uniform mat4 M;
 uniform mat4 LS;
 uniform vec3 LightPos;
+uniform vec3 cameraPos;
 
 out vec3 fragNor;
 out vec3 lightDir;
@@ -15,6 +16,8 @@ out vec2 vTexCoord;
 out vec3 fPos;
 out vec4 fPosLS;
 out vec3 vColor;
+
+out vec3 vertexToEye;
 
 void main()
 {
@@ -30,6 +33,6 @@ void main()
 	fPos = (M*vertPos).xyz;
 	fPosLS = LS*M*vertPos;
 	vColor = vec3(max(dot(fragNor, normalize(lightDir)), 0));
-	// vColor = vec3(0.0,0.0,0.0);
-	
+
+	vertexToEye = (M * vertPos).xyz - cameraPos;
 }

@@ -14,12 +14,14 @@ uniform mat4 V;
 uniform mat4 M;
 uniform mat4 LS;
 uniform vec3 LightPos;
+uniform vec3 cameraPos;
 //contains current transform for all joints in model
 uniform mat4 jointTransforms[MAX_JOINTS];
 
 out vec3 fragNor;
 out vec3 lightDir;
 out vec2 vTexCoord;
+out vec3 vertexToEye;
 
 out vec4 fPosLS;
 
@@ -43,4 +45,5 @@ void main()
 	vTexCoord = vec2(vertTex.x, 1-vertTex.y);
 
 	fPosLS = LS*M*vertPos;
+	vertexToEye = (M * vertPos).xyz - cameraPos;
 }

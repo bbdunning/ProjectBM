@@ -55,7 +55,7 @@ public:
 	GLuint depthMapFBO;
 	GLuint depthMap;
 	// const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
-	const GLuint S_WIDTH = 2048, S_HEIGHT = 2048;
+	const GLuint S_WIDTH = 4096, S_HEIGHT = 4096;
 	float dx = 0;
 
 	//create GLFW Window
@@ -212,6 +212,7 @@ public:
 		prog->addUniform("Texture0");
 		prog->addUniform("aspectRatioX");
 		prog->addUniform("aspectRatioY");
+		prog->addUniform("cameraPos");
 
 		animProg = make_shared<Program>();
 		animProg->setVerbose(true);
@@ -229,6 +230,7 @@ public:
 		animProg->addUniform("shadowDepth");
 		animProg->addUniform("aspectRatioX");
 		animProg->addUniform("aspectRatioY");
+		animProg->addUniform("cameraPos");
 
 		animProg->addUniform("viewDirection");
 		animProg->addUniform("LightPos");
@@ -513,6 +515,7 @@ public:
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
 		objL["ps2_backdrop"] = GameObject::create(rDir + "melee/ps2/", "ps2_backdrop.dae", "ps2_backdrop");
+		objL["pokeball"] = GameObject::create(rDir + "pokeball/", "pokeball.dae", "pokeball");
 		objL["animModel"] = GameObject::create(rDir + "anim/", "toto.dae", "animModel");
 			objL["animModel"]->addAnimation("toto_walk.dae");
 			objL["animModel"]->addAnimation("toto_watergun.dae");
@@ -633,10 +636,11 @@ public:
 
 		//draw sphere
 		// setMaterial(1, currentShader);
-		objL["sphere"]->translate(physicsLoc); //+ vec3(0,.9,0));
-		objL["sphere"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
-		objL["sphere"]->setModel(currentShader);
-		objL["sphere"]->draw(currentShader); 
+		objL["pokeball"]->translate(physicsLoc); //+ vec3(0,.9,0));
+		objL["pokeball"]->scale(.006); //+ vec3(0,.9,0));
+		objL["pokeball"]->rotate(btQ.getAngle(), cons(btQ.getAxis()));
+		objL["pokeball"]->setModel(currentShader);
+		objL["pokeball"]->draw(currentShader); 
 
 		//draw ps2
 		objL["ps2"]->translate(vec3(5,-3.15f,0));
@@ -748,6 +752,7 @@ public:
 		prog->bind();
 			setMaterial(5, prog);
 			sendUniforms(prog, Projection->topMatrix(), camera.getViewMatrix());
+			glUniform3f(prog->getUniform("cameraPos"), camera.eye.x, camera.eye.y, camera.eye.z);
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			glUniform1i(prog->getUniform("shadowDepth"), 2);
@@ -761,6 +766,7 @@ public:
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			glUniform1i(animProg->getUniform("shadowDepth"), 2);
+			glUniform3f(animProg->getUniform("cameraPos"), camera.eye.x, camera.eye.y, camera.eye.z);
 			glUniformMatrix4fv(animProg->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
 			setPlayer();
 			objL["animModel"]->draw(animProg);
@@ -769,8 +775,9 @@ public:
 		animProg->unbind();
 
 		// outlineProg->bind();
-		// 	glUniform1f(outlineProg->getUniform("outlineOffset"), 1.0);
-		// 	sendUniforms(outlineProg, Projection->topMatrix(), camera.getViewMatrix());
+		// 	glUniformMatrix4fv(outlineProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		// 	glUniformMatrix4fv(outlineProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
+		// 	glUniform1f(outlineProg->getUniform("outlineOffset"), 0.0);
 		// 	drawObjects(outlineProg);
 		// outlineProg->unbind();
 
