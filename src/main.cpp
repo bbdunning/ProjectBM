@@ -107,13 +107,20 @@ public:
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
+	// vector<std::string> faces {           
+	// 	"posx.jpg",           
+	// 	"negx.jpg",           
+	// 	"posy.jpg",           
+	// 	"negy.jpg",           
+	// 	"posz.jpg",           
+	// 	"negz.jpg"};
 	vector<std::string> faces {           
-		"posx.jpg",           
-		"negx.jpg",           
-		"posy.jpg",           
-		"negy.jpg",           
-		"posz.jpg",           
-		"negz.jpg"};
+		"Newdawn1_left.png",           
+		"Newdawn1_right.png",           
+		"Newdawn1_up.png",           
+		"Newdawn1_down.png",           
+		"Newdawn1_front.png",           
+		"Newdawn1_back.png"};          
 
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -152,7 +159,7 @@ public:
 			unsigned char *data = stbi_load((dir+faces[i]).c_str(), &width, &height, &nrChannels, 0);  
 			if (data) {          
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,               
-					0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);  
+					0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);  
 			} else {    
 				cout << "failed to load: " << (dir+faces[i]).c_str() << endl;  
 			}   
@@ -330,7 +337,7 @@ public:
 	void initPhysics() {
 		dynamicsWorld->setGravity(btVector3(0,-10,0));
 
-		{
+		{  //CREATE GROUND
 			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.f)));
 			collisionShapes.push_back(groundShape);
 
@@ -358,7 +365,7 @@ public:
 			dynamicsWorld->addRigidBody(body);
 		}
 
-		{
+		{ //CREATE BALL
 			//create a dynamic rigidbody
 			// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
 			btCollisionShape* colShape = new btSphereShape(btScalar(1.));
@@ -368,7 +375,7 @@ public:
 			btTransform startTransform;
 			startTransform.setIdentity();
 
-			btScalar mass(4.f);
+			btScalar mass(.5f);
 
 			//rigidbody is dynamic if and only if mass is non zero, otherwise static
 			bool isDynamic = (mass != 0.f);
@@ -385,6 +392,7 @@ public:
 				btRigidBody* body = new btRigidBody(rbInfo);
 
 				dynamicsWorld->addRigidBody(body);
+			body->setRestitution(.5);
 		}
 		playerBody = createPlayerRigidBody(vec3(0,5,-5));
 		bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
@@ -730,8 +738,8 @@ public:
 			LV = SetLightView(DepthProg, lightPos, lightLA, lightUp);
 			LS = LP*LV;
 			drawObjects(DepthProg);
-			objL["sphere"]->translate(player1->location);// - vec3(0,.1,0));
-			objL["sphere"]->scale(vec3(.2,.2,.2));
+			objL["sphere"]->translate(player1->location);
+			objL["sphere"]->scale(vec3(.2,.1,.2));
 			objL["sphere"]->setModel(DepthProg);
 			objL["sphere"]->draw(DepthProg);
 		DepthProg->unbind();
