@@ -22,6 +22,7 @@ NOTE:
 
 ## Graphics Technologies Implemented ##
 - Articulated Mesh Animation (wow this took a long time)
+- smooth shadow mapping
 
 ## Game Features Implemented ##
 - Environmental Collision

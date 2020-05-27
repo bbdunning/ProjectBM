@@ -96,6 +96,7 @@ public:
 	vector<btRigidBody*> projectiles;
 	btRigidBody* playerBody;
 	btRigidBody* bokoBody;
+	btRigidBody* pokeballBody;
 	
 	//animation data
 	int m = 1;
@@ -185,6 +186,16 @@ public:
 		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
 	}
 
+	void reposition(btRigidBody *body, btVector3 position,btVector3 orientation) {
+		btTransform initialTransform;
+
+		initialTransform.setOrigin(position);
+		// initialTransform.setRotation(orientation);
+
+		body->setWorldTransform(initialTransform);
+		body->setLinearVelocity(btVector3(0,0,0));
+		// body->getMotionState()->setWorldTransform(initialTransform);
+	}
 
 	void init(const std::string& resourceDirectory)
 	{
@@ -220,6 +231,31 @@ public:
 		prog->addUniform("aspectRatioX");
 		prog->addUniform("aspectRatioY");
 		prog->addUniform("cameraPos");
+
+		noShadeProg = make_shared<Program>();
+		noShadeProg->setVerbose(true);
+		noShadeProg->setShaderNames(resourceDirectory + "/shaders/simple_vert.glsl", resourceDirectory + "/shaders/noShadow_frag.glsl");
+		noShadeProg->init();
+		noShadeProg->addUniform("P");
+		noShadeProg->addUniform("V");
+		noShadeProg->addUniform("M");
+		noShadeProg->addUniform("LS");
+		noShadeProg->addUniform("shadowDepth");
+		noShadeProg->addAttribute("vertPos");
+		noShadeProg->addAttribute("vertNor");
+		noShadeProg->addAttribute("vertTex");
+
+		noShadeProg->addUniform("viewDirection");
+		noShadeProg->addUniform("LightPos");
+		noShadeProg->addUniform("LightCol");
+		noShadeProg->addUniform("MatAmb");
+		noShadeProg->addUniform("MatDif");
+		noShadeProg->addUniform("MatSpec");
+		noShadeProg->addUniform("shine");
+		noShadeProg->addUniform("Texture0");
+		noShadeProg->addUniform("aspectRatioX");
+		noShadeProg->addUniform("aspectRatioY");
+		noShadeProg->addUniform("cameraPos");
 
 		animProg = make_shared<Program>();
 		animProg->setVerbose(true);
@@ -334,6 +370,38 @@ public:
 		cubeProg->unbind();
 	}
 
+	//CREATE BALL
+	btRigidBody* createBall() {
+		//create a dynamic rigidbody
+		// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
+		btCollisionShape* colShape = new btSphereShape(btScalar(1.));
+		collisionShapes.push_back(colShape);
+
+		/// Create Dynamic Objects
+		btTransform startTransform;
+		startTransform.setIdentity();
+
+		btScalar mass(.5f);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			colShape->calculateLocalInertia(mass,localInertia);
+
+			startTransform.setOrigin(btVector3(-1,10,-10));
+		
+			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+
+			dynamicsWorld->addRigidBody(body);
+		body->setRestitution(.5);
+		return body;
+	}
+
 	void initPhysics() {
 		dynamicsWorld->setGravity(btVector3(0,-10,0));
 
@@ -364,36 +432,8 @@ public:
 			//add the body to the dynamics world
 			dynamicsWorld->addRigidBody(body);
 		}
+		pokeballBody = createBall();
 
-		{ //CREATE BALL
-			//create a dynamic rigidbody
-			// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
-			btCollisionShape* colShape = new btSphereShape(btScalar(1.));
-			collisionShapes.push_back(colShape);
-
-			/// Create Dynamic Objects
-			btTransform startTransform;
-			startTransform.setIdentity();
-
-			btScalar mass(.5f);
-
-			//rigidbody is dynamic if and only if mass is non zero, otherwise static
-			bool isDynamic = (mass != 0.f);
-
-			btVector3 localInertia(0,0,0);
-			if (isDynamic)
-				colShape->calculateLocalInertia(mass,localInertia);
-
-				startTransform.setOrigin(btVector3(-1,10,-10));
-			
-				//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-				btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-				btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
-				btRigidBody* body = new btRigidBody(rbInfo);
-
-				dynamicsWorld->addRigidBody(body);
-			body->setRestitution(.5);
-		}
 		playerBody = createPlayerRigidBody(vec3(0,5,-5));
 		bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
 	}
@@ -638,7 +678,7 @@ public:
 		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		btTransform trans;
-		body->getMotionState()->getWorldTransform(trans);
+		pokeballBody->getMotionState()->getWorldTransform(trans);
 		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
 		btQuaternion btQ = body->getOrientation();
 
@@ -657,14 +697,6 @@ public:
 		// setMaterial(5, currentShader);
 		objL["ps2"]->setModel(currentShader);
 		objL["ps2"]->draw(currentShader);
-
-		//draw ps2
-		objL["ps2_backdrop"]->translate(vec3(5,-3.15f,0));
-		objL["ps2_backdrop"]->scale(vec3(.35f, .35f, .35f));
-		objL["ps2_backdrop"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
-		// setMaterial(5, currentShader);
-		objL["ps2_backdrop"]->setModel(currentShader);
-		objL["ps2_backdrop"]->draw(currentShader);
 
 		//renderProjectiles
 		renderProjectiles(currentShader, objL, projectiles);
@@ -712,6 +744,9 @@ public:
 			dx += .1;
 		if (inputHandler->Cflag)
 			dx -= .1;
+		if (inputHandler->period) {
+			reposition(pokeballBody, btVector3(-1,10,-10), btVector3(0,0,0));
+		}
 
 		//shadow Data
 		mat4 LP, LV, LS;
@@ -767,6 +802,23 @@ public:
 			glUniformMatrix4fv(prog->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
 			drawObjects(prog);
 		prog->unbind();
+
+		noShadeProg->bind();
+			setMaterial(5, noShadeProg);
+			sendUniforms(noShadeProg, Projection->topMatrix(), camera.getViewMatrix());
+			glUniform3f(noShadeProg->getUniform("cameraPos"), camera.eye.x, camera.eye.y, camera.eye.z);
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, depthMap);
+			glUniform1i(noShadeProg->getUniform("shadowDepth"), 2);
+			glUniformMatrix4fv(noShadeProg->getUniform("LS"), 1, GL_FALSE, value_ptr(LS));
+
+			objL["ps2_backdrop"]->translate(vec3(5,-3.15f,0));
+			objL["ps2_backdrop"]->scale(vec3(.35f, .35f, .35f));
+			objL["ps2_backdrop"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
+			objL["ps2_backdrop"]->setModel(noShadeProg);
+			objL["ps2_backdrop"]->draw(noShadeProg);
+		noShadeProg->unbind();
+
 
 		animProg->bind();
 			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());

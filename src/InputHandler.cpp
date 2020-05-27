@@ -117,6 +117,8 @@ void InputHandler::setKeyFlags(int key, int action) {
 		if (key == GLFW_KEY_R && action == GLFW_RELEASE) { R = false; }
 		if (key == GLFW_KEY_E && action == GLFW_PRESS) { E = true; }
 		if (key == GLFW_KEY_E && action == GLFW_RELEASE) { E = false; }
+		if (key == GLFW_KEY_PERIOD && action == GLFW_PRESS) { period = true; }
+		if (key == GLFW_KEY_PERIOD && action == GLFW_RELEASE) { period = false; }
 		if (key == GLFW_KEY_1 && action == GLFW_PRESS) { n1 = true; }
 		if (key == GLFW_KEY_1 && action == GLFW_RELEASE) { n1 = false; }
 		if (key == GLFW_KEY_2 && action == GLFW_PRESS) { n2 = true; }

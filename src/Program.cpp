@@ -144,6 +144,8 @@ GLint Program::getUniform(const std::string &name) const
 }
 
 void setMaterial(int i, std::shared_ptr<Program> prog) {  
+	if (!prog->hasTexture) 
+		return;
 	switch (i) {    
 		case 0:
 			glUniform3f(prog->getUniform("MatAmb"), 0.2, 0.2, 0.2);        
@@ -178,8 +180,8 @@ void setMaterial(int i, std::shared_ptr<Program> prog) {
 		case 5: // 
 			glUniform3f(prog->getUniform("MatAmb"), 0.35, 0.35, 0.35);       
 			glUniform3f(prog->getUniform("MatDif"), 0.3, 0.3, 0.3);       
-			glUniform3f(prog->getUniform("MatSpec"), 0.1, 0.1, 0.1);       
-			glUniform1f(prog->getUniform("shine"), 50.0);
+			glUniform3f(prog->getUniform("MatSpec"), 0.3, 0.3, 0.3);       
+			glUniform1f(prog->getUniform("shine"), 100.0);
 		break;    
 	}
 }

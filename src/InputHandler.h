@@ -16,6 +16,7 @@ class InputHandler {
         bool Shiftflag;
         bool Upflag;
         bool Downflag;
+        bool period=false;
         bool Cflag;
         bool Leftflag;
         bool Rightflag;
