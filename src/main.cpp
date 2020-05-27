@@ -372,33 +372,22 @@ public:
 
 	//CREATE BALL
 	btRigidBody* createBall() {
-		//create a dynamic rigidbody
-		// btCollisionShape* colShape = new btBoxShape(btVector3(1,1,1));
 		btCollisionShape* colShape = new btSphereShape(btScalar(1.));
 		collisionShapes.push_back(colShape);
-
-		/// Create Dynamic Objects
 		btTransform startTransform;
 		startTransform.setIdentity();
-
 		btScalar mass(.5f);
-
-		//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
-
 		btVector3 localInertia(0,0,0);
 		if (isDynamic)
 			colShape->calculateLocalInertia(mass,localInertia);
-
-			startTransform.setOrigin(btVector3(-1,10,-10));
-		
-			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-			btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
-			btRigidBody* body = new btRigidBody(rbInfo);
-
-			dynamicsWorld->addRigidBody(body);
+		startTransform.setOrigin(btVector3(0,10,-10));
+		btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
+		btRigidBody* body = new btRigidBody(rbInfo);
+		dynamicsWorld->addRigidBody(body);
 		body->setRestitution(.5);
+		body->setGravity(btVector3(0,-15,0));
 		return body;
 	}
 
@@ -406,30 +395,93 @@ public:
 		dynamicsWorld->setGravity(btVector3(0,-10,0));
 
 		{  //CREATE GROUND
-			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.f)));
+			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(1.f),btScalar(8.4f)));
 			collisionShapes.push_back(groundShape);
-
 			btTransform groundTransform;
 			groundTransform.setIdentity();
-			groundTransform.setOrigin(btVector3(-2,-1,-9));
-
+			groundTransform.setOrigin(btVector3(0,-1,-10));
 			btScalar mass(0.);
-
-			//rigidbody is dynamic if and only if mass is non zero, otherwise static
 			bool isDynamic = (mass != 0.f);
-
 			btVector3 localInertia(0,0,0);
 			if (isDynamic)
 				groundShape->calculateLocalInertia(mass,localInertia);
-
-			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
 			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
 			btRigidBody* body = new btRigidBody(rbInfo);
 			body->setFriction(1.0);
 			body->setRestitution(1.0);
-
-			//add the body to the dynamics world
+			dynamicsWorld->addRigidBody(body);
+		}
+		{  //CREATE GROUND
+			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(100.f),btScalar(1.f)));
+			collisionShapes.push_back(groundShape);
+			btTransform groundTransform;
+			groundTransform.setIdentity();
+			groundTransform.setOrigin(btVector3(0,-1,-18.4));
+			btScalar mass(0.);
+			bool isDynamic = (mass != 0.f);
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				groundShape->calculateLocalInertia(mass,localInertia);
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+			body->setFriction(1.0);
+			body->setRestitution(1.0);
+			dynamicsWorld->addRigidBody(body);
+		}
+		{  //CREATE GROUND
+			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(13.f),btScalar(100.f),btScalar(1.f)));
+			collisionShapes.push_back(groundShape);
+			btTransform groundTransform;
+			groundTransform.setIdentity();
+			groundTransform.setOrigin(btVector3(0,-1,-1.6));
+			btScalar mass(0.);
+			bool isDynamic = (mass != 0.f);
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				groundShape->calculateLocalInertia(mass,localInertia);
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+			body->setFriction(1.0);
+			body->setRestitution(1.0);
+			dynamicsWorld->addRigidBody(body);
+		}
+		{  //CREATE GROUND
+			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(1.f),btScalar(100.f),btScalar(8.4f)));
+			collisionShapes.push_back(groundShape);
+			btTransform groundTransform;
+			groundTransform.setIdentity();
+			groundTransform.setOrigin(btVector3(-13,-1,-10));
+			btScalar mass(0.);
+			bool isDynamic = (mass != 0.f);
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				groundShape->calculateLocalInertia(mass,localInertia);
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+			body->setFriction(1.0);
+			body->setRestitution(1.0);
+			dynamicsWorld->addRigidBody(body);
+		}
+		{  //CREATE GROUND
+			btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(1.f),btScalar(100.f),btScalar(8.4f)));
+			collisionShapes.push_back(groundShape);
+			btTransform groundTransform;
+			groundTransform.setIdentity();
+			groundTransform.setOrigin(btVector3(13,-1,-10));
+			btScalar mass(0.);
+			bool isDynamic = (mass != 0.f);
+			btVector3 localInertia(0,0,0);
+			if (isDynamic)
+				groundShape->calculateLocalInertia(mass,localInertia);
+			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
+			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
+			btRigidBody* body = new btRigidBody(rbInfo);
+			body->setFriction(1.0);
+			body->setRestitution(1.0);
 			dynamicsWorld->addRigidBody(body);
 		}
 		pokeballBody = createBall();
@@ -618,7 +670,7 @@ public:
 		//launch projectile
 		if (leftMouse && player1->projectileCooldown <= 0.0f) {
 			player1->projectileCooldown = 1.0f;
-			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 20.f);
+			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 30.f);
 		}
 	}
 
@@ -675,12 +727,10 @@ public:
 
 	void drawObjects(shared_ptr<Program> currentShader) {
 		//getPosition of object
-		btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[1];
-		btRigidBody* body = btRigidBody::upcast(obj);
 		btTransform trans;
 		pokeballBody->getMotionState()->getWorldTransform(trans);
 		vec3 physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		btQuaternion btQ = body->getOrientation();
+		btQuaternion btQ = pokeballBody->getOrientation();
 
 		//draw sphere
 		// setMaterial(1, currentShader);
@@ -691,7 +741,7 @@ public:
 		objL["pokeball"]->draw(currentShader); 
 
 		//draw ps2
-		objL["ps2"]->translate(vec3(5,-3.15f,0));
+		objL["ps2"]->translate(vec3(6.5,-3.15f,-.7));
 		objL["ps2"]->scale(vec3(.35f, .35f, .35f));
 		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
 		// setMaterial(5, currentShader);
@@ -721,6 +771,13 @@ public:
 		return Cam;
 	}
 
+	void deletePhysicsObject(btRigidBody* rigidBody) {
+		delete rigidBody->getMotionState();
+		delete rigidBody->getCollisionShape();
+		dynamicsWorld->removeRigidBody(rigidBody);
+		delete rigidBody;
+	}
+
 	void render() {
 		// Get current frame buffer size & dt
 		float dt = getDeltaTimeSeconds();
@@ -740,12 +797,14 @@ public:
 		//draw Skybox
 		drawSkybox(Model, Projection);
 
+		pokeballBody->forceActivationState(1);
 		if (inputHandler->Ctrlflag)
 			dx += .1;
 		if (inputHandler->Cflag)
 			dx -= .1;
 		if (inputHandler->period) {
-			reposition(pokeballBody, btVector3(-1,10,-10), btVector3(0,0,0));
+			deletePhysicsObject(pokeballBody);
+			pokeballBody = createBall();
 		}
 
 		//shadow Data

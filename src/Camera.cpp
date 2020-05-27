@@ -19,7 +19,7 @@ void Camera::init() {
 	prevX = 0;
 	prevY = 0;
     moveVelocity = .04;
-    distance = 5.0f;
+    distance = 2.0f;
     elevation = vec3(0, .75, 0);
 
 	eye = vec3(0,0,5);
