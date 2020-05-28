@@ -65,7 +65,7 @@ void main()
 		}
 	}
 	total /= totalTexels;
-	total = clamp(total - .2, 0.0, 1.0);
+	total = clamp(total, 0.0, 1.0) * .5;
 	float lightFactor = 1.0 - (total);  //shadowCoords.w
 	
 
@@ -81,8 +81,8 @@ void main()
   	vec3 MatDif = texColor0.xyz;
 
 	float specularFactor = max(dot(normal, H), 0.0);
-	// level = floor(cosAngIncidence * levels);
-	// specularFactor = level/levels;
+	level = floor(specularFactor * levels);
+	specularFactor = level/levels;
 	MatDif = MatDif * lightFactor;
 
 	vec3 shadeColor = vec3((MatDif * cosAngIncidence) +  //Diffuse Lighting

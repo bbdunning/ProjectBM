@@ -1,6 +1,19 @@
 ## 75% Demo ##
-- Character controller // done
-- Shadow Mapping // done
+- Character controller
+    - animations match character actions
+    - raycast to check if grounded
+- Shadow Mapping
+    - soft shadows
+- Audio
+    - irrKlang
+    - background music
+    - sound effects
+    - ball hitting ground
+- Shading / Visual style
+    - new Fragment Shader
+        - Cell shading
+        - Uses binning
+    - redid textures for the map
 - interactive stage 
 - More Abilities
 - Camera interpolation

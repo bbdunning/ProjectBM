@@ -185,7 +185,7 @@ public:
 
 	void setLight(shared_ptr<Program> prog) {
 		// glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
-		glUniform3f(prog->getUniform("LightPos"), 5.f, 15.f, 15.f);
+		glUniform3f(prog->getUniform("LightPos"), 5.f, 20.f, 15.f);
 		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
 	}
 
@@ -451,7 +451,7 @@ public:
 			collisionShapes.push_back(groundShape);
 			btTransform groundTransform;
 			groundTransform.setIdentity();
-			groundTransform.setOrigin(btVector3(-13,-1,-10));
+			groundTransform.setOrigin(btVector3(-12.4,-1,-10));
 			btScalar mass(0.);
 			bool isDynamic = (mass != 0.f);
 			btVector3 localInertia(0,0,0);
@@ -469,7 +469,7 @@ public:
 			collisionShapes.push_back(groundShape);
 			btTransform groundTransform;
 			groundTransform.setIdentity();
-			groundTransform.setOrigin(btVector3(13,-1,-10));
+			groundTransform.setOrigin(btVector3(12.4,-1,-10));
 			btScalar mass(0.);
 			bool isDynamic = (mass != 0.f);
 			btVector3 localInertia(0,0,0);
@@ -489,30 +489,21 @@ public:
 	}
 
 	btRigidBody* createPlayerRigidBody(vec3 location) {
-		//create a dynamic rigidbody
-
-		// btCollisionShape* colShape = new btBoxShape(btVector3(.25,.25,.25));
 		btCollisionShape* colShape = new btSphereShape(btScalar(0.25f));
 		collisionShapes.push_back(colShape);
-		/// Create Dynamic Objects
 		btTransform startTransform;
 		startTransform.setIdentity();
 		btScalar mass(1.f);
-		//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
 		btVector3 localInertia(0,0,0);
 		if (isDynamic)
 			colShape->calculateLocalInertia(mass,localInertia);
 		startTransform.setOrigin(bt(location));
-		//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
 		btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
 		btRigidBody* body = new btRigidBody(rbInfo);
 		dynamicsWorld->addRigidBody(body);
 		body->setFriction(1.5f);
-		// body->setGravity(btVector3(0, -15, 0));
-		// body->setDamping(0.8f, 1.0f);
-		// body->setRestitution(.2);
 		return body;
 	}
 
@@ -601,6 +592,15 @@ public:
 			objL["sphere"]->setModel(currentShader);
 			objL["sphere"]->draw(currentShader); 
 		}
+	}
+
+	void removeProjectiles() {
+		for (int i=0; i< projectiles.size(); i++) {
+			btCollisionObject* obj = projectiles[i];
+			btRigidBody* body = btRigidBody::upcast(obj);
+			deletePhysicsObject(body);
+		}
+		projectiles.clear();
 	}
 
 	void initGeom(const std::string& resourceDirectory)
@@ -805,7 +805,16 @@ public:
 		if (inputHandler->period) {
 			deletePhysicsObject(pokeballBody);
 			pokeballBody = createBall();
+			removeProjectiles();
+			deletePhysicsObject(playerBody);
+			playerBody = createPlayerRigidBody(vec3(-7,5,-10));
+			deletePhysicsObject(bokoBody);
+			bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
 		}
+
+		// if (pokeballBody->checkCollideWith(playerBody)) {
+		// 	cout << "REEE" << endl;
+		// }
 
 		//shadow Data
 		mat4 LP, LV, LS;
