@@ -38,6 +38,7 @@
 #include <assimp/types.h>
 #include <assimp/texture.h>
 #include <assimp/postprocess.h>
+// #include <AL/al.h>
 
 using namespace std;
 using namespace glm;
@@ -75,7 +76,9 @@ public:
 	vector<HitSphere> playerHitboxes;
 
 	//sound engine
-	// ISoundEngine* engine = createIrrKlangDevice();
+	ISoundEngine* IRengine = createIrrKlangDevice();
+	string audioDir = "D:/source/ProjectBM/resources/";
+	ISound* bgTheme;
 
 	//physics data
 	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -184,17 +187,6 @@ public:
 		// glUniform3f(prog->getUniform("LightPos"), 5.f, 3.f, -.4f);
 		glUniform3f(prog->getUniform("LightPos"), 5.f, 15.f, 15.f);
 		glUniform3f(prog->getUniform("LightCol"), 1.f, 1.f, 1.f); 
-	}
-
-	void reposition(btRigidBody *body, btVector3 position,btVector3 orientation) {
-		btTransform initialTransform;
-
-		initialTransform.setOrigin(position);
-		// initialTransform.setRotation(orientation);
-
-		body->setWorldTransform(initialTransform);
-		body->setLinearVelocity(btVector3(0,0,0));
-		// body->getMotionState()->setWorldTransform(initialTransform);
 	}
 
 	void init(const std::string& resourceDirectory)
@@ -328,6 +320,12 @@ public:
 		// player1->playerBody = playerBody;
 		skyboxTextureId = createSky(resourceDirectory + "/skybox/", faces);
 		initShadow();
+		// IRengine->play2D("D:/source/ProjectBM/resources/audio/ps2.mp3", true);
+		// IRengine->play2D("D:/source/ProjectBM/resources/audio/main_theme.mp3", true);
+		// bgTheme = IRengine->play2D("D:/source/ProjectBM/resources/audio/wild_battle_brawl.mp3", true, false, true);
+		bgTheme = IRengine->play2D("D:/source/ProjectBM/resources/audio/ps2.mp3", true, false, true);
+		if (bgTheme)
+			bgTheme->setVolume(.5);
 	}
 
 	void initShadow() {
@@ -671,6 +669,7 @@ public:
 		if (leftMouse && player1->projectileCooldown <= 0.0f) {
 			player1->projectileCooldown = 1.0f;
 			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 30.f);
+			IRengine->play2D("D:/source/ProjectBM/resources/audio/squirt.wav", false);
 		}
 	}
 
@@ -678,6 +677,7 @@ public:
 	void setPlayer() {
 		objL["animModel"]->translate(player1->location - vec3(0,.18,0));
 		objL["animModel"]->scale(vec3(0.04, 0.04, 0.04));
+		// objL["animModel"]->rotate(-8, player1->getRightDir());
 		objL["animModel"]->rotate(PI/2 + player1->getFacingAngle(), vec3(0, 1, 0));
 		objL["animModel"]->rotate(-PI/2, vec3(1, 0, 0));
 		if (inputHandler->n1)

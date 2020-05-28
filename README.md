@@ -1,14 +1,9 @@
-NOTE:
-    setGravity(btVector3(0,-15,0)); // when in air
-    setGravity(btVector3(0,-10,0)); // when grounded
-
-
 ## 75% Demo ##
-- Character controller //done
+- Character controller // done
+- Shadow Mapping // done
 - interactive stage 
 - More Abilities
 - Camera interpolation
-- Shadow Mapping
 
 ## Queue ##
 - particles

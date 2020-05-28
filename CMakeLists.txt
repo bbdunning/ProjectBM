@@ -26,6 +26,7 @@ include_directories("src/Physics")
 link_directories("src/Physics")
 include_directories("src/GameObjects")
 link_directories("src/GameObjects")
+link_directories("lib/")
 
 # Set the executable.
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES} ${HEADERS} ${GLSL})
@@ -36,6 +37,10 @@ findGLM(${CMAKE_PROJECT_NAME})
 #findAssimp(${CMAKE_PROJECT_NAME})
 #findBullet(${CMAKE_PROJECT_NAME})
 include_directories("C:/bins/vcpkg-master/packages/bullet3_x86-windows/include/bullet")
+# link_libraries("D:/source/ProjectBM/lib/irrKlang.lib")
+# link_libraries("D:/source/ProjectBM/lib/irrKlang.dll")
+# link_libraries("D:/source/ProjectBM/lib/irrKlang.exp")
+# target_link_libraries(${target} "C:/bins/assimp-4.1.0/build/code/libassimp.dll")
 
 # OS specific options and libraries
 if(NOT WIN32)
