@@ -1033,6 +1033,29 @@ int main(int argc, char *argv[])
             ImGui::End();
         }
 
+        {
+            ImGui::Begin("Player 1");
+
+            // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+
+			shared_ptr<Texture> pic = createTexture(resourceDir + "/toto.png");
+			GLuint id = pic->getID();
+			// GLuint id = 6;
+			ImGui::Image((void*)(intptr_t) id, ImVec2(64, 64));
+            ImGui::End();
+        }
+        {
+            ImGui::Begin("Player 2");
+
+            // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+
+			shared_ptr<Texture> pic = createTexture(resourceDir + "/toto.png");
+			GLuint id = pic->getID();
+			// GLuint id = 6;
+			ImGui::Image((void*)(intptr_t) id, ImVec2(64, 64));
+            ImGui::End();
+        }
+
 		
 		ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

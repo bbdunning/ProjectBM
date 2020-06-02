@@ -42,7 +42,7 @@ void main()
 	lightDir = normalize(LightPos.xyz-(M*vertPos).xyz);
 
 	/* pass through the texture coordinates to be interpolated */
-	vTexCoord = vec2(vertTex.x, 1-vertTex.y);
+	vTexCoord = vec2(vertTex.x, vertTex.y);
 
 	fPosLS = LS*M*vertPos;
 	vertexToEye = (M * vertPos).xyz - cameraPos;
