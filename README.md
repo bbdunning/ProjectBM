@@ -8,6 +8,7 @@
 - force field effect on screen
 
 ## 100% Demo ##
+- collectables around stage
 - controller support
 - split screen camera
 

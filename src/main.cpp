@@ -62,6 +62,7 @@ public:
 	//create GLFW Window
 	WindowManager * windowManager = nullptr;
 	float previousTime = 0.0f;
+	float dt = 0.0f;
 
 	// create shaders
 	std::shared_ptr<Program> prog;
@@ -145,6 +146,9 @@ public:
 	{
 		double posX, posY;
 		leftMouse = true;
+
+		if (action == GLFW_RELEASE)
+			leftMouse = false;
 
 		if (action == GLFW_PRESS || action == GLFW_REPEAT)
 		{
@@ -665,12 +669,22 @@ public:
 	}
 	
 	void checkAbilities() {
-		//launch projectile
-		if (leftMouse && player1->projectileCooldown <= 0.0f) {
-			player1->projectileCooldown = 1.0f;
-			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), 30.f);
-			IRengine->play2D("D:/source/ProjectBM/resources/audio/squirt.wav", false);
+		player1->charging = leftMouse;
+
+		//charge projectile
+		if (player1->charging) {
+			player1->projectileChargeTime += dt;
 		}
+
+		//launch projectile
+		if (!player1->charging && player1->prevCharge) {
+			float magnitude = clamp((player1->projectileChargeTime/player1->projectileMaxChargeTime), 0.4f, 1.f) * player1->maxMagnitude;
+			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), magnitude);
+			IRengine->play2D("D:/source/ProjectBM/resources/audio/squirt.wav", false);
+			cout << "shoot" << endl;
+			player1->projectileChargeTime = 0.0f;
+		}
+		player1->prevCharge = player1->charging;
 	}
 
 	//render player in correct position & animation
@@ -780,7 +794,7 @@ public:
 
 	void render() {
 		// Get current frame buffer size & dt
-		float dt = getDeltaTimeSeconds();
+		dt = getDeltaTimeSeconds();
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
 		glViewport(0, 0, width, height);
@@ -916,8 +930,6 @@ public:
 
 		//step physics simulation
 		dynamicsWorld->stepSimulation(dt);
-
-		leftMouse = false;
 	}
 };
 

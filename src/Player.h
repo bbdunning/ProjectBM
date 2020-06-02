@@ -30,8 +30,14 @@ public:
     float phi;
     float prevX;
     float prevY;
+
+    //projectile data
+    float maxMagnitude = 30.0f;
+    bool charging = false;
+    bool prevCharge = false;
     float projectileCooldown = 0;
-    // float projectileMaxCharge
+    float projectileChargeTime = 0.0;
+    const float projectileMaxChargeTime = 1.0;
     HitSphere environmentalHbox;
     // btRigidBody *playerBody;
 

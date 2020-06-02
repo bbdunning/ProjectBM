@@ -86,6 +86,10 @@ float Player::getFacingAngle() {
     return -glm::orientedAngle(normalize(vec3(lookAtPoint.x, 0, lookAtPoint.z)), vec3(1, 0, 0), vec3(0,1,0));
 }
 
+// float Player::chargeProjectile() {
+// 	if 
+// }
+
 void Player::move(float dt, btRigidBody *playerBody, btDynamicsWorld *dynamicsWorld) {
 		//move player
 		bool playerMoving = false;
