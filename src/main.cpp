@@ -325,7 +325,7 @@ public:
 		// bgTheme = IRengine->play2D("D:/source/ProjectBM/resources/audio/wild_battle_brawl.mp3", true, false, true);
 		bgTheme = IRengine->play2D("D:/source/ProjectBM/resources/audio/ps2.mp3", true, false, true);
 		if (bgTheme)
-			bgTheme->setVolume(.5);
+			bgTheme->setVolume(.24);
 	}
 
 	void initShadow() {
@@ -675,7 +675,7 @@ public:
 
 	//render player in correct position & animation
 	void setPlayer() {
-		objL["animModel"]->translate(player1->location - vec3(0,.18,0));
+		objL["animModel"]->translate(player1->location - vec3(0,.25,0));
 		objL["animModel"]->scale(vec3(0.04, 0.04, 0.04));
 		// objL["animModel"]->rotate(-8, player1->getRightDir());
 		objL["animModel"]->rotate(PI/2 + player1->getFacingAngle(), vec3(0, 1, 0));
@@ -714,7 +714,7 @@ public:
 		bokoBody->forceActivationState(1);
 		bokoBody->getMotionState()->getWorldTransform(trans);
 		physicsLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
-		objL["boko"]->translate(physicsLoc - vec3(0,.2,0));
+		objL["boko"]->translate(physicsLoc - vec3(0,.26,0));
 		objL["boko"]->scale(vec3(0.05, 0.05, 0.05));
 		objL["boko"]->rotate(-PI/2, vec3(0, 1, 0));
 		objL["boko"]->rotate(-PI/2, vec3(1, 0, 0));
@@ -741,7 +741,7 @@ public:
 		objL["pokeball"]->draw(currentShader); 
 
 		//draw ps2
-		objL["ps2"]->translate(vec3(6.5,-3.15f,-.7));
+		objL["ps2"]->translate(vec3(6.5,-3.21f,-.7));
 		objL["ps2"]->scale(vec3(.35f, .35f, .35f));
 		objL["ps2"]->rotate(-PI/2, vec3(1.f, 0.f, 0.f));
 		// setMaterial(5, currentShader);
@@ -802,7 +802,7 @@ public:
 			dx += .1;
 		if (inputHandler->Cflag)
 			dx -= .1;
-		if (inputHandler->period) {
+		if (inputHandler->Cflag) {
 			deletePhysicsObject(pokeballBody);
 			pokeballBody = createBall();
 			removeProjectiles();

@@ -1,3 +1,16 @@
+## 90% Demo & Beyond ##
+- Particle System
+- UI
+- charge shot
+- Outline Shader
+- More Abilities
+- Camera interpolation
+- force field effect on screen
+
+## 100% Demo ##
+- controller support
+- split screen camera
+
 ## 75% Demo ##
 - Character controller
     - animations match character actions
@@ -14,18 +27,11 @@
         - Cell shading
         - Uses binning
     - redid textures for the map
-- interactive stage 
-- More Abilities
-- Camera interpolation
 
 ## Queue ##
-- particles
 - deferred shading for lighting on projectiles would be cool
-- later on particles
-- sound
 - bump mapping
 - Cell Shading / Outlines
-- UI
 - Sound Engine (Background music & Sound Effects)
 
 ## Graphics Technologies Implemented ##

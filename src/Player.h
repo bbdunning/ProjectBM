@@ -31,6 +31,7 @@ public:
     float prevX;
     float prevY;
     float projectileCooldown = 0;
+    // float projectileMaxCharge
     HitSphere environmentalHbox;
     // btRigidBody *playerBody;
 
