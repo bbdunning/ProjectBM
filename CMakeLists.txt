@@ -19,6 +19,8 @@ file(GLOB_RECURSE GLSL "resources/*.glsl")
 include_directories("ext")
 include_directories("ext/irrklang")
 include_directories("ext/glad/include")
+include_directories("ext/imgui")
+# link_directories("ext/imgui")
 
 include_directories("src/Animation")
 link_directories("src/Animation")
