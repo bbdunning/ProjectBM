@@ -993,6 +993,8 @@ int main(int argc, char *argv[])
 	bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	// shared_ptr<Texture> totoPic = createTexture(resourceDir + "/toto.png");
+	// GLuint toto_id = totoPic->getID();
 
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))
@@ -1033,28 +1035,20 @@ int main(int argc, char *argv[])
             ImGui::End();
         }
 
-        {
-            ImGui::Begin("Player 1");
+        // {
+        //     ImGui::Begin("Player 1");
 
-            // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+		// 	// GLuint id = 6;
+		// 	ImGui::Image((void*)(intptr_t) toto_id, ImVec2(64, 64));
+        //     ImGui::End();
+        // }
+        // {
+        //     ImGui::Begin("Player 2");
 
-			shared_ptr<Texture> pic = createTexture(resourceDir + "/toto.png");
-			GLuint id = pic->getID();
-			// GLuint id = 6;
-			ImGui::Image((void*)(intptr_t) id, ImVec2(64, 64));
-            ImGui::End();
-        }
-        {
-            ImGui::Begin("Player 2");
-
-            // ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-
-			shared_ptr<Texture> pic = createTexture(resourceDir + "/toto.png");
-			GLuint id = pic->getID();
-			// GLuint id = 6;
-			ImGui::Image((void*)(intptr_t) id, ImVec2(64, 64));
-            ImGui::End();
-        }
+		// 	// GLuint id = 6;
+		// 	ImGui::Image((void*)(intptr_t) toto_id, ImVec2(64, 64));
+        //     ImGui::End();
+        // }
 
 		
 		ImGui::Render();
