@@ -83,6 +83,7 @@ public:
 	ISoundEngine* IRengine = createIrrKlangDevice();
 	string audioDir = "D:/source/ProjectBM/resources/";
 	ISound* bgTheme;
+	bool sound;
 
 	//physics data
 	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -851,6 +852,12 @@ public:
 			rTimer = 4.0f;
 		} else {
 			rTimer -= dt;
+		}
+
+		if (inputHandler->Q) {
+			IRengine->setSoundVolume(0);
+		} else if (inputHandler->E) {
+			IRengine->setSoundVolume(1);
 		}
 
 		//check Pokeball collision
