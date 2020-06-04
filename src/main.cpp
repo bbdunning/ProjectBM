@@ -107,6 +107,7 @@ public:
 	bool leftMouse = false;
 	int player1Lives = 3;
 	int player2Lives = 3;
+	float rTimer = 4.0f;
 	
 	//animation data
 	int m = 1;
@@ -698,10 +699,10 @@ public:
 
 	void removeOneProjectile(vector<btRigidBody*> &projectiles) {
 		if (projectiles.size() > 0) {
-			btCollisionObject* obj = projectiles[i];
+			btCollisionObject* obj = projectiles[0];
 			btRigidBody* body = btRigidBody::upcast(obj);
 			deletePhysicsObject(body);
-			projectiles.clear();
+			projectiles.erase(projectiles.begin());
 		}
 	}
 
@@ -843,6 +844,13 @@ public:
 
 		if (inputHandler->Cflag) {
 			resetPhysicsObjects();
+		}
+
+		if (rTimer <= 0) {
+			removeOneProjectile(projectiles);
+			rTimer = 4.0f;
+		} else {
+			rTimer -= dt;
 		}
 
 		//check Pokeball collision
@@ -1049,10 +1057,11 @@ int main(int argc, char *argv[])
             static float f = 0.0f;
             static int counter = 0;
 
-			const ImVec2 size = ImVec2(10, 100);
+			const ImVec2 size = ImVec2(100, 100);
+			ImGui::SetNextWindowSize(size);
             ImGui::Begin("Hello, world!", (bool*) nullptr, ImGuiWindowFlags_NoDecoration);                          // Create a window called "Hello, world!" and append into it.
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Text("(%.1f FPS)", ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
