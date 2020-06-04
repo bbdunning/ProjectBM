@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int texCount = 0;
+int texCount = 5;
 
 Texture::Texture() :
 	filename(""),

@@ -2,15 +2,17 @@
 - Particle System
 - UI
 - charge shot
-- Outline Shader
-- More Abilities
-- Camera interpolation
-- force field effect on screen
 
 ## 100% Demo ##
 - collectables around stage
 - controller support
 - split screen camera
+- Outline Shader
+
+
+## if I have time ##
+- Camera interpolation
+- force field effect on edges
 
 ## 75% Demo ##
 - Character controller
@@ -32,8 +34,6 @@
 ## Queue ##
 - deferred shading for lighting on projectiles would be cool
 - bump mapping
-- Cell Shading / Outlines
-- Sound Engine (Background music & Sound Effects)
 
 ## Graphics Technologies Implemented ##
 - Articulated Mesh Animation (wow this took a long time)

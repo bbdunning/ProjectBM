@@ -59,9 +59,8 @@ public:
 	bool SHADOW = true;
 	GLuint depthMapFBO;
 	GLuint depthMap;
-	// const GLuint S_WIDTH = 1024, S_HEIGHT = 1024;
 	const GLuint S_WIDTH = 4096, S_HEIGHT = 4096;
-	float dx = 0;
+	float dx = 0; //screen ratio
 
 	//create GLFW Window
 	WindowManager * windowManager = nullptr;
@@ -93,23 +92,24 @@ public:
 	btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher,overlappingPairCache,solver,collisionConfiguration);
 	btAlignedObjectArray<btCollisionShape*> collisionShapes;
 
-	// Contains vertex information for OpenGL
 	GLuint VertexArrayID;
-
-	// Data necessary to give our triangle to OpenGL
 	GLuint VertexBufferID;
 
+	//input data
 	shared_ptr<InputHandler> inputHandler = make_shared<InputHandler>();
+
+	//game data
 	shared_ptr<Player> player1 = make_shared<Player>();
 	vector<btRigidBody*> projectiles;
 	btRigidBody* playerBody;
 	btRigidBody* bokoBody;
 	btRigidBody* pokeballBody;
+	bool leftMouse = false;
+	int player1Lives = 3;
+	int player2Lives = 3;
 	
 	//animation data
 	int m = 1;
-	float prevOmega = 0.0f;
-	bool leftMouse = false;
 
 	//Camera
 	Camera camera;
@@ -382,7 +382,7 @@ public:
 		collisionShapes.push_back(colShape);
 		btTransform startTransform;
 		startTransform.setIdentity();
-		btScalar mass(.5f);
+		btScalar mass(.75f);
 		bool isDynamic = (mass != 0.f);
 		btVector3 localInertia(0,0,0);
 		if (isDynamic)
@@ -681,14 +681,28 @@ public:
 		}
 
 		//launch projectile
-		if (!player1->charging && player1->prevCharge) {
+		if (!player1->charging && player1->prevCharge && (player1->projectileCooldown <= 0)) {
 			float magnitude = clamp((player1->projectileChargeTime/player1->projectileMaxChargeTime), 0.4f, 1.f) * player1->maxMagnitude;
 			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), magnitude);
 			IRengine->play2D("D:/source/ProjectBM/resources/audio/squirt.wav", false);
 			cout << "shoot" << endl;
 			player1->projectileChargeTime = 0.0f;
+			player1->projectileCooldown = .5f;
 		}
 		player1->prevCharge = player1->charging;
+
+		if (player1->projectileCooldown > 0) {
+			player1->projectileCooldown -= dt;
+		}
+	}
+
+	void removeOneProjectile(vector<btRigidBody*> &projectiles) {
+		if (projectiles.size() > 0) {
+			btCollisionObject* obj = projectiles[i];
+			btRigidBody* body = btRigidBody::upcast(obj);
+			deletePhysicsObject(body);
+			projectiles.clear();
+		}
 	}
 
 	//render player in correct position & animation
@@ -796,6 +810,16 @@ public:
 		delete rigidBody;
 	}
 
+	void resetPhysicsObjects() {
+		deletePhysicsObject(pokeballBody);
+		pokeballBody = createBall();
+		removeProjectiles();
+		deletePhysicsObject(playerBody);
+		playerBody = createPlayerRigidBody(vec3(-7,5,-10));
+		deletePhysicsObject(bokoBody);
+		bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
+	}
+
 	void render() {
 		// Get current frame buffer size & dt
 		dt = getDeltaTimeSeconds();
@@ -816,19 +840,27 @@ public:
 		drawSkybox(Model, Projection);
 
 		pokeballBody->forceActivationState(1);
+
 		if (inputHandler->Cflag) {
-			deletePhysicsObject(pokeballBody);
-			pokeballBody = createBall();
-			removeProjectiles();
-			deletePhysicsObject(playerBody);
-			playerBody = createPlayerRigidBody(vec3(-7,5,-10));
-			deletePhysicsObject(bokoBody);
-			bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
+			resetPhysicsObjects();
 		}
 
-		// if (pokeballBody->checkCollideWith(playerBody)) {
-		// 	cout << "REEE" << endl;
-		// }
+		//check Pokeball collision
+		{
+			btTransform trans;
+			vec3 bokoLoc;
+			bokoBody->getMotionState()->getWorldTransform(trans);
+			bokoLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+
+			vec3 pokeLoc;
+			pokeballBody->getMotionState()->getWorldTransform(trans);
+			pokeLoc = vec3(float(trans.getOrigin().getX()),float(trans.getOrigin().getY()),float(trans.getOrigin().getZ()));
+
+			if (length(bokoLoc-pokeLoc) < 1.5) {
+				resetPhysicsObjects();
+				player2Lives -= 1;
+			}
+		}
 
 		//shadow Data
 		mat4 LP, LV, LS;
@@ -993,8 +1025,8 @@ int main(int argc, char *argv[])
 	bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-	// shared_ptr<Texture> totoPic = createTexture(resourceDir + "/toto.png");
-	// GLuint toto_id = totoPic->getID();
+	shared_ptr<Texture> totoPic = createTexture(resourceDir + "/toto.png");
+	GLuint toto_id = totoPic->getID();
 
 	// Loop until the user closes the window.
 	while (! glfwWindowShouldClose(windowManager->getHandle()))
@@ -1017,38 +1049,48 @@ int main(int argc, char *argv[])
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+			const ImVec2 size = ImVec2(10, 100);
+            ImGui::Begin("Hello, world!", (bool*) nullptr, ImGuiWindowFlags_NoDecoration);                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // {
-        //     ImGui::Begin("Player 1");
+        {
+			const ImVec2 size = ImVec2(100, 100);
+			ImGui::SetNextWindowSize(size);
+            ImGui::Begin("Player 1", (bool*) nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration);
+			// ImGui::SetWindowPos(wndPos);
 
-		// 	// GLuint id = 6;
-		// 	ImGui::Image((void*)(intptr_t) toto_id, ImVec2(64, 64));
-        //     ImGui::End();
-        // }
-        // {
-        //     ImGui::Begin("Player 2");
+			// GLuint id = 6;
+			ImGui::Image((void*)(intptr_t) toto_id, ImVec2(64, 64));
+			ImGui::SameLine();
+			ImGui::Text("x%d", application->player1Lives);
+            ImGui::End();
+        }
 
-		// 	// GLuint id = 6;
-		// 	ImGui::Image((void*)(intptr_t) toto_id, ImVec2(64, 64));
-        //     ImGui::End();
-        // }
+        {
+			const ImVec2 size = ImVec2(100, 100);
+			ImGui::SetNextWindowSize(size);
+            ImGui::Begin("Player 2", (bool*) nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration);
+
+			ImGui::Image((void*)(intptr_t) toto_id, ImVec2(64, 64));
+			ImGui::SameLine();
+			ImGui::Text("x%d", application->player2Lives);
+            ImGui::End();
+        }
+
+		if (application->player2Lives <= 0)
+        {
+			const ImVec2 size = ImVec2(256, 140);
+			ImGui::SetNextWindowSize(size);
+            ImGui::Begin("Win", (bool*) nullptr, ImGuiWindowFlags_NoDecoration);
+
+			ImGui::SameLine();
+			ImGui::Text("Player 1 Wins!");
+            ImGui::End();
+        }
+
 
 		
 		ImGui::Render();
