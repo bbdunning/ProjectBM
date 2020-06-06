@@ -31,12 +31,19 @@ class Particle
         }
 
         bool update(float dt) {
-            velocity.y += gravity * dt;
+            // velocity.y += gravity * dt;
             glm::vec3 change = velocity;
             change *= dt;
             position = position + change;
             elapsedTime += dt;
+            std::cout << "position:" <<  glm::to_string(position) << std::endl;
+            std::cout << "velocity:" <<  glm::to_string(velocity) << std::endl;
+            std::cout << "change:" <<  glm::to_string(change) << std::endl;
             return elapsedTime < life;
+        }
+
+        glm::vec3 getPosition() {
+            return this->position;
         }
 };
 

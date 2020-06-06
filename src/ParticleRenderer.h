@@ -20,31 +20,27 @@ public:
 
     ParticleRenderer(std::shared_ptr<Program> prog) {
         this->shader = prog;
-        // initQuad();
     }
 
-    void render(std::shared_ptr<Program> shader, std::vector<Particle> particles, std::shared_ptr<GameObject> obj, 
-        glm::mat4 viewMatrix) {
+    void render(std::shared_ptr<Program> shader, std::vector<Particle> &particles, std::shared_ptr<GameObject> obj, 
+        const glm::mat4 &viewMatrix) {
         shader->bind();
-            // obj->translate(glm::vec3(0,0,0));
-            // obj->scale(glm::vec3(.35f, .35f, .35f));
-            // obj->setModel(shader);
-            // obj->draw(shader);
-            for (Particle p : particles) {
-                glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), p.position);
-                modelMatrix[0][0] = viewMatrix[0][0];
-                modelMatrix[0][1] = viewMatrix[1][0];
-                modelMatrix[0][2] = viewMatrix[2][0];
-                modelMatrix[1][0] = viewMatrix[0][1];
-                modelMatrix[1][1] = viewMatrix[1][1];
-                modelMatrix[1][2] = viewMatrix[2][1];
-                modelMatrix[2][0] = viewMatrix[0][2];
-                modelMatrix[2][1] = viewMatrix[1][2];
-                modelMatrix[2][2] = viewMatrix[2][2];
-                glUniformMatrix4fv(shader->getUniform("M"), 1, GL_FALSE, value_ptr(modelMatrix));
-                glUniformMatrix4fv(shader->getUniform("V"), 1, GL_FALSE, value_ptr(viewMatrix));
-                obj->draw(shader);
-            }
+        for (Particle p : particles) {
+            glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), p.position);
+            modelMatrix[0][0] = viewMatrix[0][0];
+            modelMatrix[0][1] = viewMatrix[1][0];
+            modelMatrix[0][2] = viewMatrix[2][0];
+            modelMatrix[1][0] = viewMatrix[0][1];
+            modelMatrix[1][1] = viewMatrix[1][1];
+            modelMatrix[1][2] = viewMatrix[2][1];
+            modelMatrix[2][0] = viewMatrix[0][2];
+            modelMatrix[2][1] = viewMatrix[1][2];
+            modelMatrix[2][2] = viewMatrix[2][2];
+            modelMatrix *= glm::scale(glm::vec3(p.scale));
+            glUniformMatrix4fv(shader->getUniform("M"), 1, GL_FALSE, value_ptr(modelMatrix));
+            glUniformMatrix4fv(shader->getUniform("V"), 1, GL_FALSE, value_ptr(viewMatrix));
+            obj->draw(shader);
+        }
         shader->unbind();
     }
 
@@ -52,10 +48,10 @@ public:
 
     }
 
-    void updateModelViewMatrix(glm::vec3 position, float rotation, float scale, glm::mat4 viewMatrix) {
-        glm::mat4 modelMatrix = glm::mat4(1);
-        glm::mat4 inv = transpose(modelMatrix);
-    }
+    // void updateModelViewMatrix(glm::vec3 position, float rotation, float scale, glm::mat4 viewMatrix) {
+    //     glm::mat4 modelMatrix = glm::mat4(1);
+    //     glm::mat4 inv = transpose(modelMatrix);
+    // }
 
 //     void initQuad() {
 //         glGenVertexArrays(1, &quad_vertexArrayID);

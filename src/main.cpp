@@ -19,6 +19,7 @@
 #include "Camera.h"
 #include "Hitbox.h"
 #include "Particle.h"
+#include "ParticleSystem.h"
 #include "ParticleRenderer.h"
 #include "CollisionDetector.h"
 #include "DynamicCharacterController.h"
@@ -120,6 +121,7 @@ public:
 
 	//particle data
 	vector<Particle> particles;
+	ParticleSystem partSys = ParticleSystem(vec3(0,0,0), 5, 1);
 	ParticleRenderer pr = ParticleRenderer(prog);
 
 	//skybox
@@ -323,8 +325,8 @@ public:
 		DepthProg->addAttribute("vertNor");
 		DepthProg->addAttribute("vertTex");
 
-		particles.push_back(Particle(vec3(0,0,0), vec3(0,0,0), 0, 100, 0, .35f));
-		particles.push_back(Particle(vec3(0,1,0), vec3(0,0,0), 0, 100, 0, .35f));
+		//IJSDFOIJSDPIOFJ:SLID JFILK:SDJIL:KJIO:EWASJPOWEJFO
+		// partSys.emitParticle();
 
 		inputHandler->init();
 		camera.init();
@@ -966,7 +968,8 @@ public:
 			objL["boko"]->draw(animProg);
 		animProg->unbind();
 
-		pr.render(prog, particles, objL["quad"], camera.getViewMatrix());
+		partSys.update(dt);
+		pr.render(prog, partSys.particles, objL["quad"], camera.getViewMatrix());
 		// outlineProg->bind();
 		// 	glUniformMatrix4fv(outlineProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		// 	glUniformMatrix4fv(outlineProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
