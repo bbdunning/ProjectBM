@@ -18,6 +18,8 @@
 #include "Animation/Animator.h"
 #include "Camera.h"
 #include "Hitbox.h"
+#include "Particle.h"
+#include "ParticleRenderer.h"
 #include "CollisionDetector.h"
 #include "DynamicCharacterController.h"
 #include <bullet/btBulletCollisionCommon.h>
@@ -116,15 +118,12 @@ public:
 	//Camera
 	Camera camera;
 
+	//particle data
+	vector<Particle> particles;
+	ParticleRenderer pr = ParticleRenderer(prog);
+
 	//skybox
 	unsigned int skyboxTextureId = 0;
-	// vector<std::string> faces {           
-	// 	"posx.jpg",           
-	// 	"negx.jpg",           
-	// 	"posy.jpg",           
-	// 	"negy.jpg",           
-	// 	"posz.jpg",           
-	// 	"negz.jpg"};
 	vector<std::string> faces {           
 		"Newdawn1_left.png",           
 		"Newdawn1_right.png",           
@@ -132,6 +131,7 @@ public:
 		"Newdawn1_down.png",           
 		"Newdawn1_front.png",           
 		"Newdawn1_back.png"};          
+
 
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -322,6 +322,9 @@ public:
 		//un-needed, better solution to modifying shape
 		DepthProg->addAttribute("vertNor");
 		DepthProg->addAttribute("vertTex");
+
+		particles.push_back(Particle(vec3(0,0,0), vec3(0,0,0), 0, 100, 0, .35f));
+		particles.push_back(Particle(vec3(0,1,0), vec3(0,0,0), 0, 100, 0, .35f));
 
 		inputHandler->init();
 		camera.init();
@@ -619,6 +622,7 @@ public:
 
 		//load geometry, initialize meshes, create objects
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
+		objL["quad"] = GameObject::create(rDir, "quad.dae", "quad");
 		objL["cube2"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
@@ -951,7 +955,6 @@ public:
 
 		animProg->bind();
 			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
-			sendUniforms(animProg, Projection->topMatrix(), camera.getViewMatrix());
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			glUniform1i(animProg->getUniform("shadowDepth"), 2);
@@ -963,6 +966,7 @@ public:
 			objL["boko"]->draw(animProg);
 		animProg->unbind();
 
+		pr.render(prog, particles, objL["quad"], camera.getViewMatrix());
 		// outlineProg->bind();
 		// 	glUniformMatrix4fv(outlineProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		// 	glUniformMatrix4fv(outlineProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
