@@ -6,3 +6,4 @@ resources/melee
 resources/melee/*
 vsbuild
 vsbuild/*
+imgui.ini
