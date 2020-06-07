@@ -19,12 +19,14 @@ public:
     float timeElapsed = 0.0f;
     std::vector<Particle> particles;
     glm::vec3 systemCenter;
+    std::shared_ptr<GameObject> obj;
 
-    ParticleSystem(glm::vec3 position, float pps, int initialNum, float lifeLength) {
+    ParticleSystem(glm::vec3 position, float pps, int initialNum, float lifeLength, std::shared_ptr<GameObject> obj) {
          this->pps = pps;
          this->lifeLength = lifeLength;
          this->initialNum = initialNum;
          this->systemCenter = position;
+         this->obj = obj;
     }
 
     void generateParticles(float dt) {

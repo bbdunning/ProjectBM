@@ -105,6 +105,8 @@ public:
 	//game data
 	shared_ptr<Player> player1 = make_shared<Player>();
 	vector<btRigidBody*> projectiles;
+	vector<float> projectileTimes;
+	float projectileLifeTime = 4.0f;
 	btRigidBody* playerBody;
 	btRigidBody* bokoBody;
 	btRigidBody* pokeballBody;
@@ -588,6 +590,7 @@ public:
 		body->setDamping(0.2f, 0.5f);
 		body->setRestitution(.8);
 		projectiles.push_back(body);
+		projectileTimes.push_back(0.0f);
 		return body;
 	}
 
@@ -618,6 +621,7 @@ public:
 			deletePhysicsObject(body);
 		}
 		projectiles.clear();
+		projectileTimes.clear();
 	}
 
 	void initGeom(const std::string& resourceDirectory)
@@ -628,7 +632,7 @@ public:
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
 		// objL["quad"] = GameObject::create(rDir, "quad.dae", "quad");
 		objL["quad"] = GameObject::create(rDir, "bubble.dae", "quad");
-		objL["dustcloud"] = GameObject::create(rDir, "bubble.dae", "quad");
+		objL["dustcloud"] = GameObject::create(rDir, "dustcloud.dae", "dustcloud");
 		objL["cube2"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
@@ -700,9 +704,11 @@ public:
 			IRengine->play2D("D:/source/ProjectBM/resources/audio/squirt.wav", false);
 			cout << "shoot" << endl;
 			player1->projectileChargeTime = 0.0f;
+			player1->projectileChargeTime += player1->projectileCooldown * .4;
 			player1->projectileCooldown = .5f;
 
-			particleSystems.push_back(ParticleSystem(launchpos, 0, 15, 1));
+			particleSystems.push_back(ParticleSystem(launchpos, 0, 15, 1, objL["quad"]));
+			projectileTimes.push_back(0.0f);
 		}
 		player1->prevCharge = player1->charging;
 
@@ -717,6 +723,9 @@ public:
 			btRigidBody* body = btRigidBody::upcast(obj);
 			deletePhysicsObject(body);
 			projectiles.erase(projectiles.begin());
+		}
+		if (projectileTimes.size() > 0) {
+			projectileTimes.erase(projectileTimes.begin());
 		}
 	}
 
@@ -843,7 +852,7 @@ public:
 
 		//render particle systems
 		for (int i=0; i<particleSystems.size(); i++) {
-			pr.render(prog, particleSystems[i].particles, objL["quad"], camera.getViewMatrix());
+			pr.render(prog, particleSystems[i].particles, particleSystems[i].obj, camera.getViewMatrix());
 		}
 
 		//remove dead particle systems
@@ -859,11 +868,12 @@ public:
 		pokeBody->getMotionState()->getWorldTransform(trans);
 		btVector3 location = trans.getOrigin();
 		btVector3 btTo(location.getX(), location.getY() - 1.2f, location.getZ());
+		btVector3 particleloc(location.getX(), location.getY() - 1.f, location.getZ());
 		btCollisionWorld::ClosestRayResultCallback res(location, btTo);
 		dynamicsWorld->rayTest(location, btTo, res);
 		if(res.hasHit() && !previousLand){
 			IRengine->play2D("D:/source/ProjectBM/resources/audio/metal.wav", false);
-			particleSystems.push_back(ParticleSystem(cons(btTo), 0, 15, 1));
+			particleSystems.push_back(ParticleSystem(cons(particleloc), 0, 15, .75, objL["dustcloud"]));
 		} else {
 			cout << "air" << endl;
 		}
@@ -895,12 +905,21 @@ public:
 			resetPhysicsObjects();
 		}
 
-		if (rTimer <= 0) {
-			removeOneProjectile(projectiles);
-			rTimer = 4.0f;
-		} else {
-			rTimer -= dt;
+		int pcount = 0;
+		for (int i=0; i < projectiles.size(); i++) {
+			projectileTimes[i] += dt;
+			if (projectileTimes[i] >= projectileLifeTime)
+				pcount++;
 		}
+		for (int i=0; i < pcount; i++) {
+			removeOneProjectile(projectiles);
+		}
+		// if (rTimer <= 0) {
+		// 	removeOneProjectile(projectiles);
+		// 	rTimer = 4.0f;
+		// } else {
+		// 	rTimer -= dt;
+		// }
 
 		if (inputHandler->Q) {
 			IRengine->setSoundVolume(0);
