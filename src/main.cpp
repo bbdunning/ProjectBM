@@ -626,7 +626,8 @@ public:
 
 		//load geometry, initialize meshes, create objects
 		objL["cube"] = GameObject::create(rDir, "cube.obj", "cube");
-		objL["quad"] = GameObject::create(rDir, "quad.dae", "quad");
+		// objL["quad"] = GameObject::create(rDir, "quad.dae", "quad");
+		objL["quad"] = GameObject::create(rDir, "bubble.dae", "quad");
 		objL["cube2"] = GameObject::create(rDir, "cube.obj", "cube");
 		objL["sphere"] = GameObject::create(rDir + "general/", "waterball.dae", "sphere");
 		objL["ps2"] = GameObject::create(rDir + "melee/ps2/", "ps2_stage.dae", "ps2");
@@ -700,7 +701,7 @@ public:
 			player1->projectileChargeTime = 0.0f;
 			player1->projectileCooldown = .5f;
 
-			particleSystems.push_back(ParticleSystem(launchpos, 0, 10, 1));
+			particleSystems.push_back(ParticleSystem(launchpos, 0, 15, 1));
 		}
 		player1->prevCharge = player1->charging;
 

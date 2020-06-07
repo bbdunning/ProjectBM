@@ -43,7 +43,7 @@ public:
         glm::vec3 emit_direction = glm::vec3(fmod((float)rand()/100.0f, 1) - .5, fmod((float)rand()/100.0f, 1) - .5, fmod((float)rand()/100.0f, 1) - .5);
         float speed = 4;
         glm::vec3 velocity = emit_direction * speed;
-		particles.push_back(Particle(systemCenter, velocity, 0, 1, 0, .35f));
+		particles.push_back(Particle(systemCenter, velocity, 0, 1 + fmod((float) rand()/100.0f, 1)*.8 - .4, 0, .1f));
     }
 
     void update(float dt) {

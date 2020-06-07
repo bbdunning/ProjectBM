@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glad/glad.h>
 #include "Program.h"
 #include "Particle.h"
 #include "Shape.h"
@@ -23,8 +24,8 @@ public:
     }
 
     void render(std::shared_ptr<Program> shader, std::vector<Particle> &particles, std::shared_ptr<GameObject> obj, 
-		// glDisable(GL_DEPTH_TEST);
         const glm::mat4 &viewMatrix) { //, const glm::mat4 &projMatrix) {
+		// glDisable(GL_DEPTH_TEST);
         shader->bind();
         for (Particle p : particles) {
             glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), p.position);
