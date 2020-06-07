@@ -36,9 +36,6 @@ class Particle
             change *= dt;
             position = position + change;
             elapsedTime += dt;
-            std::cout << "position:" <<  glm::to_string(position) << std::endl;
-            std::cout << "velocity:" <<  glm::to_string(velocity) << std::endl;
-            std::cout << "change:" <<  glm::to_string(change) << std::endl;
             return elapsedTime < life;
         }
 

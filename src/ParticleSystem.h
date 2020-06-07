@@ -57,7 +57,6 @@ public:
             particles[i].update(dt);
         }
         cullParticles();
-        std::cout << particles.size() << std::endl;
         timeElapsed += dt;
     }
 

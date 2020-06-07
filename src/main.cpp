@@ -108,6 +108,7 @@ public:
 	btRigidBody* playerBody;
 	btRigidBody* bokoBody;
 	btRigidBody* pokeballBody;
+	bool previousLand = false;
 	bool leftMouse = false;
 	int player1Lives = 3;
 	int player2Lives = 3;
@@ -133,7 +134,6 @@ public:
 		"Newdawn1_down.png",           
 		"Newdawn1_front.png",           
 		"Newdawn1_back.png"};          
-
 
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -853,6 +853,23 @@ public:
 		}
 	}
 
+	void detectBallLand(btRigidBody *pokeBody) {
+		//raycast straight down
+		btTransform trans;
+		pokeBody->getMotionState()->getWorldTransform(trans);
+		btVector3 location = trans.getOrigin();
+		btVector3 btTo(location.getX(), location.getY() - 1.2f, location.getZ());
+		btCollisionWorld::ClosestRayResultCallback res(location, btTo);
+		dynamicsWorld->rayTest(location, btTo, res);
+		if(res.hasHit() && !previousLand){
+			IRengine->play2D("D:/source/ProjectBM/resources/audio/metal.wav", false);
+			particleSystems.push_back(ParticleSystem(cons(btTo), 0, 15, 1));
+		} else {
+			cout << "air" << endl;
+		}
+		previousLand = res.hasHit();
+	}
+
 	void render() {
 		// Get current frame buffer size & dt
 		dt = getDeltaTimeSeconds();
@@ -892,6 +909,7 @@ public:
 		}
 
 		//check Pokeball collision
+		detectBallLand(pokeballBody);
 		{
 			btTransform trans;
 			vec3 bokoLoc;
@@ -1034,7 +1052,7 @@ int main(int argc, char *argv[])
 	application->initGeom(resourceDir);
 	application->initPhysics();
 
-	// glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 2650, 1440, 144);
+	glfwSetWindowMonitor(windowManager->getHandle(), glfwGetPrimaryMonitor(), 0, 0, 2650, 1440, 144);
 	#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 		bool err = gl3wInit() != 0;
 	#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
@@ -1097,7 +1115,7 @@ int main(int argc, char *argv[])
 
 			const ImVec2 size = ImVec2(100, 100);
 			ImGui::SetNextWindowSize(size);
-            ImGui::Begin("Hello, world!", (bool*) nullptr, ImGuiWindowFlags_NoDecoration);                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Hello, world!", (bool*) nullptr, ImGuiWindowFlags_NoDecoration);
 
             ImGui::Text("(%.1f FPS)", ImGui::GetIO().Framerate);
             ImGui::End();
