@@ -80,8 +80,8 @@ void main()
 	vec4 texColor0 = texture(Texture0, vTexCoord);
   	vec3 MatDif = texColor0.xyz;
 
-	if (texColor0.w == 0)
-		discard;
+	// if (texColor0.w == 0)
+	// 	discard;
 
 	float specularFactor = max(dot(normal, H), 0.0);
 	level = floor(specularFactor * levels);
@@ -92,5 +92,5 @@ void main()
 		(MatSpec * pow(specularFactor, shine) * LightCol) +  //Blinn-Phong Specular
     	(MatDif * MatAmb));                   
 
-	color = vec4(shadeColor, 1.0);
+	color = vec4(shadeColor, texColor0.a);
 }

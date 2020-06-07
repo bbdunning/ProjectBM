@@ -121,7 +121,7 @@ public:
 
 	//particle data
 	vector<Particle> particles;
-	ParticleSystem partSys = ParticleSystem(vec3(0,0,0), 5, 1);
+	vector<ParticleSystem> particleSystems;
 	ParticleRenderer pr = ParticleRenderer(prog);
 
 	//skybox
@@ -209,6 +209,8 @@ public:
 		glClearColor(.12f, .34f, .56f, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		// Initialize the GLSL program.
 		prog = make_shared<Program>();
@@ -691,11 +693,14 @@ public:
 		//launch projectile
 		if (!player1->charging && player1->prevCharge && (player1->projectileCooldown <= 0)) {
 			float magnitude = clamp((player1->projectileChargeTime/player1->projectileMaxChargeTime), 0.4f, 1.f) * player1->maxMagnitude;
-			createProjectile(projectiles, player1->location + player1->getForwardDir() + vec3(0,.5,0), player1->getForwardDir(), magnitude);
+			vec3 launchpos =player1->location + player1->getForwardDir() + vec3(0,.5,0);
+			createProjectile(projectiles, launchpos, player1->getForwardDir(), magnitude);
 			IRengine->play2D("D:/source/ProjectBM/resources/audio/squirt.wav", false);
 			cout << "shoot" << endl;
 			player1->projectileChargeTime = 0.0f;
 			player1->projectileCooldown = .5f;
+
+			particleSystems.push_back(ParticleSystem(launchpos, 0, 10, 1));
 		}
 		player1->prevCharge = player1->charging;
 
@@ -826,6 +831,24 @@ public:
 		playerBody = createPlayerRigidBody(vec3(-7,5,-10));
 		deletePhysicsObject(bokoBody);
 		bokoBody = createRigidBody(vec3(7,5,-10), vec3(.4, .4, .4));
+	}
+
+	void updateParticleSystems(float dt) {
+		//update particle systems
+		for (int i=0; i<particleSystems.size(); i++) {
+			particleSystems[i].update(dt);
+		}
+
+		//render particle systems
+		for (int i=0; i<particleSystems.size(); i++) {
+			pr.render(prog, particleSystems[i].particles, objL["quad"], camera.getViewMatrix());
+		}
+
+		//remove dead particle systems
+		for (int i=0; i<particleSystems.size(); i++) {
+			if (particleSystems[i].timeElapsed >= particleSystems[i].lifeLength)
+				particleSystems.erase(particleSystems.begin() + i);
+		}
 	}
 
 	void render() {
@@ -968,8 +991,7 @@ public:
 			objL["boko"]->draw(animProg);
 		animProg->unbind();
 
-		partSys.update(dt);
-		pr.render(prog, partSys.particles, objL["quad"], camera.getViewMatrix());
+		updateParticleSystems(dt);
 		// outlineProg->bind();
 		// 	glUniformMatrix4fv(outlineProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
 		// 	glUniformMatrix4fv(outlineProg->getUniform("V"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));

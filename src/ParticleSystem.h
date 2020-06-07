@@ -14,13 +14,16 @@ public:
     float pps;
     float speed;
     float gravityComplient;
+    int initialNum;
     float lifeLength;
+    float timeElapsed = 0.0f;
     std::vector<Particle> particles;
     glm::vec3 systemCenter;
 
-    ParticleSystem(glm::vec3 position, float pps, float lifeLength) {
+    ParticleSystem(glm::vec3 position, float pps, int initialNum, float lifeLength) {
          this->pps = pps;
          this->lifeLength = lifeLength;
+         this->initialNum = initialNum;
          this->systemCenter = position;
     }
 
@@ -37,16 +40,25 @@ public:
     }
 
     void emitParticle() {
-		particles.push_back(Particle(systemCenter, glm::vec3(0,1,0), 0, 1, 0, .35f));
+        glm::vec3 emit_direction = glm::vec3(fmod((float)rand()/100.0f, 1) - .5, fmod((float)rand()/100.0f, 1) - .5, fmod((float)rand()/100.0f, 1) - .5);
+        float speed = 4;
+        glm::vec3 velocity = emit_direction * speed;
+		particles.push_back(Particle(systemCenter, velocity, 0, 1, 0, .35f));
     }
 
     void update(float dt) {
+        if (timeElapsed == 0) {
+            for (int i=0; i<initialNum; i++) {
+                emitParticle();
+            }
+        }
         generateParticles(dt);
         for (int i=0; i < particles.size(); i++) {
             particles[i].update(dt);
         }
         cullParticles();
         std::cout << particles.size() << std::endl;
+        timeElapsed += dt;
     }
 
     void cullParticles() {

@@ -23,7 +23,8 @@ public:
     }
 
     void render(std::shared_ptr<Program> shader, std::vector<Particle> &particles, std::shared_ptr<GameObject> obj, 
-        const glm::mat4 &viewMatrix) {
+		// glDisable(GL_DEPTH_TEST);
+        const glm::mat4 &viewMatrix) { //, const glm::mat4 &projMatrix) {
         shader->bind();
         for (Particle p : particles) {
             glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), p.position);
@@ -39,9 +40,11 @@ public:
             modelMatrix *= glm::scale(glm::vec3(p.scale));
             glUniformMatrix4fv(shader->getUniform("M"), 1, GL_FALSE, value_ptr(modelMatrix));
             glUniformMatrix4fv(shader->getUniform("V"), 1, GL_FALSE, value_ptr(viewMatrix));
+            // glUniformMatrix4fv(shader->getUniform("P"), 1, GL_FALSE, value_ptr(projMatrix));
             obj->draw(shader);
         }
         shader->unbind();
+		// glEnable(GL_DEPTH_TEST);
     }
 
     void prepare() {
