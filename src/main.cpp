@@ -126,6 +126,8 @@ public:
 	vector<Particle> particles;
 	vector<ParticleSystem> particleSystems;
 	ParticleRenderer pr = ParticleRenderer(prog);
+	float walkingParticleSystemElapsedTime = 0.0f;
+	float walkingParticleSystemCooldown = .1f;
 
 	//skybox
 	unsigned int skyboxTextureId = 0;
@@ -758,10 +760,15 @@ public:
 		}
 		else if (player1->isGrounded && length(cons(playerBody->getLinearVelocity())) > 1) {
 			objL["animModel"]->doAnimation(0);
+			if (walkingParticleSystemElapsedTime <= 0) {
+				particleSystems.push_back(ParticleSystem(player1->location - vec3(0,.1,0), 0, 1, .3, objL["dustcloud"]));
+				walkingParticleSystemElapsedTime = walkingParticleSystemCooldown;
+			}
 		}
 		else {
 			objL["animModel"]->doAnimation(1);
 		}
+		walkingParticleSystemElapsedTime -= dt;
 	}
 
 	void setBoko() {
